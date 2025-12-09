@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account - Mod PDF</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/auth.css">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%236366f1' rx='20' width='100' height='100'/><text x='50' y='68' text-anchor='middle' fill='white' font-family='sans-serif' font-size='45' font-weight='bold'>M</text></svg>">
+</head>
+<body class="auth-page">
+  <!-- Background Effects -->
+  <div class="bg-effects"></div>
+
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <a href="/" class="nav-brand">
+          <div class="nav-logo">M</div>
+          <span class="nav-title">Mod <span>PDF</span></span>
+        </a>
+        <h1>Create your account</h1>
+        <p>Start your free trial today</p>
+      </div>
+      
+      <form class="auth-form" id="registerForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="firstName">First Name</label>
+            <input type="text" id="firstName" name="firstName" placeholder="John" required>
+          </div>
+          <div class="form-group">
+            <label for="lastName">Last Name</label>
+            <input type="text" id="lastName" name="lastName" placeholder="Doe" required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" placeholder="you@example.com" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="••••••••" required minlength="8">
+          <div class="password-strength" id="passwordStrength">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="company">Company Name (Optional)</label>
+          <input type="text" id="company" name="company" placeholder="Acme Inc.">
+        </div>
+        
+        <!-- Plan Selection -->
+        <div class="plan-selection" id="planSelection">
+          <label class="plan-option selected" data-plan="starter">
+            <input type="radio" name="plan" value="starter" checked>
+            <h4>Starter</h4>
+            <p>For individuals</p>
+            <div class="price">$19/mo</div>
+          </label>
+          <label class="plan-option" data-plan="pro">
+            <input type="radio" name="plan" value="pro">
+            <h4>Pro</h4>
+            <p>For teams</p>
+            <div class="price">$49/mo</div>
+          </label>
+          <label class="plan-option" data-plan="business">
+            <input type="radio" name="plan" value="business">
+            <h4>Business</h4>
+            <p>For organizations</p>
+            <div class="price">$129/mo</div>
+          </label>
+          <label class="plan-option" data-plan="enterprise">
+            <input type="radio" name="plan" value="enterprise">
+            <h4>Enterprise</h4>
+            <p>Custom solution</p>
+            <div class="price">Custom</div>
+          </label>
+        </div>
+        
+        <div class="form-options">
+          <label class="checkbox-label">
+            <input type="checkbox" name="terms" required>
+            <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></span>
+          </label>
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-large btn-full">
+          Start Free Trial
+        </button>
+        
+        <div class="auth-divider">
+          <span>or sign up with</span>
+        </div>
+        
+        <div class="social-buttons">
+          <button type="button" class="btn btn-secondary social-btn">
+            <span>G</span> Google
+          </button>
+          <button type="button" class="btn btn-secondary social-btn">
+            <span>🔗</span> SSO
+          </button>
+        </div>
+      </form>
+      
+      <div class="auth-footer">
+        <p>Already have an account? <a href="login.html">Sign in</a></p>
+      </div>
+    </div>
+    
+    <div class="auth-side">
+      <div class="auth-side-content">
+        <h2>Start Free Today</h2>
+        <p>No credit card required. Full access to all tools for 14 days.</p>
+        <ul class="auth-features">
+          <li>✓ 50+ PDF tools included</li>
+          <li>✓ AI contract generation</li>
+          <li>✓ Digital signatures</li>
+          <li>✓ Cancel anytime</li>
+          <li>✓ 24/7 support</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Plan selection
+    document.querySelectorAll('.plan-option').forEach(option => {
+      option.addEventListener('click', () => {
+        document.querySelectorAll('.plan-option').forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+        option.querySelector('input').checked = true;
+      });
+    });
+    
+    // Check URL for plan parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const planParam = urlParams.get('plan');
+    if (planParam) {
+      const planOption = document.querySelector(`[data-plan="${planParam}"]`);
+      if (planOption) {
+        document.querySelectorAll('.plan-option').forEach(o => o.classList.remove('selected'));
+        planOption.classList.add('selected');
+        planOption.querySelector('input').checked = true;
+      }
+    }
+    
+    // Password strength indicator
+    const passwordInput = document.getElementById('password');
+    const strengthIndicator = document.getElementById('passwordStrength');
+    
+    passwordInput.addEventListener('input', () => {
+      const password = passwordInput.value;
+      let strength = 0;
+      
+      if (password.length >= 8) strength++;
+      if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+      if (/\d/.test(password)) strength++;
+      if (/[^a-zA-Z\d]/.test(password)) strength++;
+      
+      strengthIndicator.className = 'password-strength';
+      if (strength === 1) strengthIndicator.classList.add('weak');
+      else if (strength === 2 || strength === 3) strengthIndicator.classList.add('medium');
+      else if (strength === 4) strengthIndicator.classList.add('strong');
+    });
+    
+    // Form submission
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData);
+      
+      // Check for Genesis email
+      const GENESIS_EMAIL = 'solutions@pitchmarketing.agency';
+      
+      if (data.email.toLowerCase() === GENESIS_EMAIL.toLowerCase()) {
+        // Genesis account registration
+        localStorage.setItem('genesisInitialized', 'true');
+        localStorage.setItem('userRole', 'root_master_admin');
+        localStorage.setItem('genesisPassword', data.password); // In production, this would be hashed and stored securely
+        window.location.href = 'admin/genesis-setup.html';
+      } else {
+        // Regular user registration
+        window.location.href = 'dashboard.html';
+      }
+    });
+  </script>
+  
+  <style>
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    
+    @media (max-width: 500px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</body>
+</html>

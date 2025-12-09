@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In - Mod PDF</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/auth.css">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%236366f1' rx='20' width='100' height='100'/><text x='50' y='68' text-anchor='middle' fill='white' font-family='sans-serif' font-size='45' font-weight='bold'>M</text></svg>">
+</head>
+<body class="auth-page">
+  <!-- Background Effects -->
+  <div class="bg-effects"></div>
+
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <a href="/" class="nav-brand">
+          <div class="nav-logo">M</div>
+          <span class="nav-title">Mod <span>PDF</span></span>
+        </a>
+        <h1>Welcome back</h1>
+        <p>Sign in to your account to continue</p>
+      </div>
+      
+      <form class="auth-form" id="loginForm">
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" name="email" placeholder="you@example.com" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" placeholder="••••••••" required>
+        </div>
+        
+        <div class="form-options">
+          <label class="checkbox-label">
+            <input type="checkbox" name="remember">
+            <span>Remember me</span>
+          </label>
+          <a href="forgot-password.html" class="forgot-link">Forgot password?</a>
+        </div>
+        
+        <button type="submit" class="btn btn-primary btn-large btn-full">
+          Sign In
+        </button>
+        
+        <div class="auth-divider">
+          <span>or continue with</span>
+        </div>
+        
+        <div class="social-buttons">
+          <button type="button" class="btn btn-secondary social-btn">
+            <span>G</span> Google
+          </button>
+          <button type="button" class="btn btn-secondary social-btn">
+            <span>🔗</span> SSO
+          </button>
+        </div>
+      </form>
+      
+      <div class="auth-footer">
+        <p>Don't have an account? <a href="register.html">Sign up free</a></p>
+      </div>
+    </div>
+    
+    <div class="auth-side">
+      <div class="auth-side-content">
+        <h2>The Complete Document Suite</h2>
+        <p>Access 50+ PDF tools, AI contract generation, blockchain signatures, and more.</p>
+        <ul class="auth-features">
+          <li>✓ Edit, merge, split, and convert PDFs</li>
+          <li>✓ Digital & blockchain-verified signatures</li>
+          <li>✓ AI-powered contract generation</li>
+          <li>✓ Web3 smart contract deployment</li>
+          <li>✓ CRM & document tracking</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Genesis Account Detection
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      // Check for Genesis account
+      const GENESIS_EMAIL = 'solutions@pitchmarketing.agency';
+      
+      if (email.toLowerCase() === GENESIS_EMAIL.toLowerCase()) {
+        // Genesis account login
+        console.log('Genesis account detected');
+        
+        // Check if first login (would check backend in production)
+        const isFirstLogin = !localStorage.getItem('genesisInitialized');
+        
+        if (isFirstLogin) {
+          // First time Genesis login - setup password
+          localStorage.setItem('genesisInitialized', 'true');
+          localStorage.setItem('userRole', 'root_master_admin');
+          window.location.href = 'admin/genesis-setup.html';
+        } else {
+          // Regular Genesis login
+          localStorage.setItem('userRole', 'root_master_admin');
+          window.location.href = 'admin/dashboard.html';
+        }
+      } else {
+        // Regular user login
+        // In production, this would call the auth API
+        window.location.href = 'dashboard.html';
+      }
+    });
+  </script>
+</body>
+</html>

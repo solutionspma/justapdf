@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Mod PDF</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        /* Dashboard-specific styles */
+        .dashboard-container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            background: linear-gradient(180deg, rgba(30,30,30,0.98) 0%, rgba(20,20,20,0.99) 100%);
+            border-right: 1px solid rgba(255,255,255,0.08);
+            padding: 1.5rem;
+            position: fixed;
+            height: 100vh;
+            width: 260px;
+            overflow-y: auto;
+        }
+        
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        
+        .sidebar-logo img { height: 36px; }
+        .sidebar-logo span {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+        
+        .nav-section-title {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 0.75rem;
+            padding-left: 0.75rem;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            transition: all 0.2s;
+            margin-bottom: 0.25rem;
+        }
+        
+        .nav-item:hover {
+            background: rgba(255,255,255,0.05);
+            color: #fff;
+        }
+        
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.2));
+            color: #fff;
+            border: 1px solid rgba(139,92,246,0.3);
+        }
+        
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            opacity: 0.7;
+        }
+        
+        .nav-item.active svg { opacity: 1; }
+        
+        .main-content {
+            margin-left: 260px;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .dashboard-title h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .dashboard-title p {
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9rem;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            gap: 0.5rem;
+        }
+        
+        .search-box input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 0.9rem;
+            width: 200px;
+        }
+        
+        .search-box input::placeholder {
+            color: rgba(255,255,255,0.4);
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(30,30,30,0.8), rgba(40,40,40,0.6));
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .stat-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-card-header span {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.5);
+        }
+        
+        .stat-card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .stat-card-icon.documents { background: rgba(99,102,241,0.2); }
+        .stat-card-icon.signatures { background: rgba(16,185,129,0.2); }
+        .stat-card-icon.pending { background: rgba(245,158,11,0.2); }
+        .stat-card-icon.storage { background: rgba(239,68,68,0.2); }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-change {
+            font-size: 0.8rem;
+            color: rgba(16,185,129,0.8);
+        }
+        
+        .stat-change.negative { color: rgba(239,68,68,0.8); }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+        
+        .content-card {
+            background: linear-gradient(135deg, rgba(30,30,30,0.8), rgba(40,40,40,0.6));
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .content-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .content-card-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .view-all-btn {
+            font-size: 0.85rem;
+            color: #8b5cf6;
+            text-decoration: none;
+        }
+        
+        .document-list {
+            list-style: none;
+        }
+        
+        .document-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .document-item:last-child { border-bottom: none; }
+        
+        .document-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(99,102,241,0.15);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .document-info {
+            flex: 1;
+        }
+        
+        .document-info h4 {
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        
+        .document-info p {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.4);
+        }
+        
+        .document-status {
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .status-draft {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.6);
+        }
+        
+        .status-pending {
+            background: rgba(245,158,11,0.2);
+            color: #f59e0b;
+        }
+        
+        .status-signed {
+            background: rgba(16,185,129,0.2);
+            color: #10b981;
+        }
+        
+        .activity-list {
+            list-style: none;
+        }
+        
+        .activity-item {
+            display: flex;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .activity-item:last-child { border-bottom: none; }
+        
+        .activity-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #8b5cf6;
+            margin-top: 6px;
+        }
+        
+        .activity-content p {
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .activity-content span {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.4);
+        }
+        
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .quick-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .quick-action-btn:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(139,92,246,0.3);
+        }
+        
+        .quick-action-btn span {
+            font-size: 0.85rem;
+        }
+        
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <svg width="36" height="36" viewBox="0 0 40 40" fill="none">
+                    <rect width="40" height="40" rx="8" fill="url(#logoGrad)"/>
+                    <path d="M12 10h12l6 6v14a2 2 0 01-2 2H12a2 2 0 01-2-2V12a2 2 0 012-2z" fill="#fff" fill-opacity="0.9"/>
+                    <path d="M24 10v6h6" fill="none" stroke="#6366f1" stroke-width="2"/>
+                    <path d="M14 20h12M14 24h8" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+                    <defs>
+                        <linearGradient id="logoGrad" x1="0" y1="0" x2="40" y2="40">
+                            <stop offset="0%" stop-color="#6366f1"/>
+                            <stop offset="100%" stop-color="#8b5cf6"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span>Mod PDF</span>
+            </div>
+            
+            <nav class="nav-section">
+                <div class="nav-section-title">Main</div>
+                <a href="/dashboard.html" class="nav-item active">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    Dashboard
+                </a>
+                <a href="/documents.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Documents
+                </a>
+                <a href="/signatures.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    Signatures
+                </a>
+            </nav>
+            
+            <nav class="nav-section">
+                <div class="nav-section-title">Tools</div>
+                <a href="/editor.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    PDF Editor
+                </a>
+                <a href="/design.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    Design Studio
+                </a>
+                <a href="/ai.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    AI Assistant
+                </a>
+                <a href="/templates.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+                    Templates
+                </a>
+            </nav>
+            
+            <nav class="nav-section">
+                <div class="nav-section-title">CRM</div>
+                <a href="/contacts.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    Contacts
+                </a>
+            </nav>
+            
+            <nav class="nav-section">
+                <div class="nav-section-title">Account</div>
+                <a href="/settings.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    Settings
+                </a>
+                <a href="/pricing.html" class="nav-item">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                    Billing
+                </a>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="dashboard-header">
+                <div class="dashboard-title">
+                    <h1>Welcome back!</h1>
+                    <p>Here's what's happening with your documents</p>
+                </div>
+                <div class="header-actions">
+                    <div class="search-box">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input type="text" placeholder="Search documents...">
+                    </div>
+                    <button class="btn btn-primary" id="newDocBtn">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        New Document
+                    </button>
+                    <div class="user-avatar" id="userAvatar">JD</div>
+                </div>
+            </header>
+            
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span>Total Documents</span>
+                        <div class="stat-card-icon documents">
+                            <svg width="20" height="20" fill="none" stroke="#6366f1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        </div>
+                    </div>
+                    <div class="stat-value">247</div>
+                    <div class="stat-change">↑ 12% from last month</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span>Signatures Collected</span>
+                        <div class="stat-card-icon signatures">
+                            <svg width="20" height="20" fill="none" stroke="#10b981" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                        </div>
+                    </div>
+                    <div class="stat-value">89</div>
+                    <div class="stat-change">↑ 8% from last month</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span>Pending Signatures</span>
+                        <div class="stat-card-icon pending">
+                            <svg width="20" height="20" fill="none" stroke="#f59e0b" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                    </div>
+                    <div class="stat-value">5</div>
+                    <div class="stat-change negative">↓ 3 from last week</div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <span>Storage Used</span>
+                        <div class="stat-card-icon storage">
+                            <svg width="20" height="20" fill="none" stroke="#ef4444" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+                        </div>
+                    </div>
+                    <div class="stat-value">2.4 GB</div>
+                    <div class="stat-change">of 50 GB used</div>
+                </div>
+            </div>
+            
+            <!-- Content Grid -->
+            <div class="content-grid">
+                <!-- Recent Documents -->
+                <div class="content-card">
+                    <div class="content-card-header">
+                        <h3>Recent Documents</h3>
+                        <a href="#documents" class="view-all-btn">View All →</a>
+                    </div>
+                    <ul class="document-list">
+                        <li class="document-item">
+                            <div class="document-icon">
+                                <svg width="22" height="22" fill="none" stroke="#6366f1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            </div>
+                            <div class="document-info">
+                                <h4>Q4 Sales Agreement.pdf</h4>
+                                <p>Modified 2 hours ago • 245 KB</p>
+                            </div>
+                            <span class="document-status status-pending">Awaiting Signature</span>
+                        </li>
+                        <li class="document-item">
+                            <div class="document-icon">
+                                <svg width="22" height="22" fill="none" stroke="#6366f1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            </div>
+                            <div class="document-info">
+                                <h4>Client Proposal - Acme Corp.pdf</h4>
+                                <p>Modified yesterday • 1.2 MB</p>
+                            </div>
+                            <span class="document-status status-signed">Signed</span>
+                        </li>
+                        <li class="document-item">
+                            <div class="document-icon">
+                                <svg width="22" height="22" fill="none" stroke="#6366f1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            </div>
+                            <div class="document-info">
+                                <h4>NDA - Smith Industries.pdf</h4>
+                                <p>Modified 3 days ago • 89 KB</p>
+                            </div>
+                            <span class="document-status status-draft">Draft</span>
+                        </li>
+                        <li class="document-item">
+                            <div class="document-icon">
+                                <svg width="22" height="22" fill="none" stroke="#6366f1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            </div>
+                            <div class="document-info">
+                                <h4>Employee Handbook 2024.pdf</h4>
+                                <p>Modified 1 week ago • 3.4 MB</p>
+                            </div>
+                            <span class="document-status status-signed">Signed</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <!-- Right Column -->
+                <div>
+                    <!-- Recent Activity -->
+                    <div class="content-card" style="margin-bottom: 1.5rem;">
+                        <div class="content-card-header">
+                            <h3>Recent Activity</h3>
+                        </div>
+                        <ul class="activity-list">
+                            <li class="activity-item">
+                                <div class="activity-dot"></div>
+                                <div class="activity-content">
+                                    <p>John Smith signed "Q4 Agreement"</p>
+                                    <span>2 hours ago</span>
+                                </div>
+                            </li>
+                            <li class="activity-item">
+                                <div class="activity-dot"></div>
+                                <div class="activity-content">
+                                    <p>You uploaded "Client Proposal"</p>
+                                    <span>Yesterday at 3:45 PM</span>
+                                </div>
+                            </li>
+                            <li class="activity-item">
+                                <div class="activity-dot"></div>
+                                <div class="activity-content">
+                                    <p>Sarah viewed "NDA Template"</p>
+                                    <span>2 days ago</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="content-card">
+                        <div class="content-card-header">
+                            <h3>Quick Actions</h3>
+                        </div>
+                        <div class="quick-actions">
+                            <button class="quick-action-btn">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                <span>Upload PDF</span>
+                            </button>
+                            <button class="quick-action-btn">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                <span>Request Signature</span>
+                            </button>
+                            <button class="quick-action-btn">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                                <span>Merge PDFs</span>
+                            </button>
+                            <button class="quick-action-btn">
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                                <span>AI Contract</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="/js/main.js"></script>
+    <script src="/js/documents.js"></script>
+    <script>
+        // Check authentication (demo mode - skip redirect for now)
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('modpdf_token');
+            const user = JSON.parse(localStorage.getItem('modpdf_user') || '{}');
+            
+            // Update avatar
+            const avatar = document.getElementById('userAvatar');
+            if (user.firstName && user.lastName) {
+                avatar.textContent = user.firstName[0] + user.lastName[0];
+            } else if (user.email) {
+                avatar.textContent = user.email[0].toUpperCase();
+            } else {
+                avatar.textContent = 'U';
+            }
+            
+            // Update welcome message
+            const title = document.querySelector('.dashboard-title h1');
+            if (user.firstName) {
+                title.textContent = `Welcome back, ${user.firstName}!`;
+            } else {
+                title.textContent = 'Welcome to Mod PDF!';
+            }
+            
+            // Update document stats and list from documentManager
+            if (window.documentManager) {
+                const docs = documentManager.getAll();
+                const signedDocs = docs.filter(d => d.signed);
+                
+                // Update stats
+                const statCards = document.querySelectorAll('.stat-value');
+                if (statCards[0]) statCards[0].textContent = docs.length;
+                if (statCards[1]) statCards[1].textContent = signedDocs.length;
+                
+                // Update recent documents list
+                updateRecentDocuments(docs.slice(0, 4));
+            }
+        });
+        
+        function updateRecentDocuments(docs) {
+            const docList = document.querySelector('.document-list');
+            if (!docList) return;
+            
+            if (docs.length === 0) {
+                docList.innerHTML = `
+                    <li class="document-item" style="text-align: center; padding: 40px 20px;">
+                        <p style="color: #666;">No documents yet. Upload your first document!</p>
+                    </li>
+                `;
+                return;
+            }
+            
+            docList.innerHTML = docs.map(doc => `
+                <li class="document-item" onclick="window.location.href='/editor.html?doc=${doc.id}'" style="cursor: pointer;">
+                    <div class="document-icon">
+                        <svg width="22" height="22" fill="none" stroke="#6366f1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </div>
+                    <div class="document-info">
+                        <h4>${doc.name}</h4>
+                        <p>${documentManager.formatDate(doc.modifiedAt)} • ${doc.sizeFormatted}</p>
+                    </div>
+                    <span class="document-status ${doc.signed ? 'status-signed' : 'status-draft'}">${doc.signed ? 'Signed' : doc.type}</span>
+                </li>
+            `).join('');
+        }
+        
+        // New document button
+        document.getElementById('newDocBtn').addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.png,.jpg,.jpeg';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (file && window.documentManager) {
+                    try {
+                        const doc = await documentManager.addDocument(file);
+                        // Open in editor
+                        window.location.href = '/editor.html?doc=' + doc.id;
+                    } catch (err) {
+                        alert('Error uploading document: ' + err.message);
+                    }
+                }
+            };
+            input.click();
+        });
+        
+        // Quick action buttons
+        document.querySelectorAll('.quick-action-btn').forEach((btn, index) => {
+            btn.addEventListener('click', () => {
+                switch(index) {
+                    case 0: // Upload PDF
+                        document.getElementById('newDocBtn').click();
+                        break;
+                    case 1: // Request Signature
+                        window.location.href = '/signatures.html';
+                        break;
+                    case 2: // Merge PDFs
+                        window.location.href = '/editor.html';
+                        break;
+                    case 3: // AI Contract
+                        window.location.href = '/ai.html';
+                        break;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

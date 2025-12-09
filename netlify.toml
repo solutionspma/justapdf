@@ -1,0 +1,18 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+  included_files = ["backend/**", "engines/**", "config/**"]
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+# Serve static HTML files directly - no SPA fallback needed
+# Netlify will automatically serve .html files from /public
+
+[build.environment]
+  NODE_VERSION = "18"

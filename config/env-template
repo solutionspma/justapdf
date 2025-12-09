@@ -1,0 +1,69 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MOD PDF - GENESIS CONFIGURATION
+# Part of Pitch Modular Spaces Ecosystem
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ GENESIS ACCOUNT (Root Master Admin)                                         │
+# └─────────────────────────────────────────────────────────────────────────────┘
+ROOT_EMAIL=solutions@pitchmarketing.agency
+ROOT_PASSWORD=<SET_ON_GENESIS_REGISTRATION>
+JWT_SECRET=<GENERATE_RANDOM_64>
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ DATABASE (Supabase)                                                         │
+# └─────────────────────────────────────────────────────────────────────────────┘
+SUPABASE_URL=<USER_PROVIDED>
+SUPABASE_ANON=<USER_PROVIDED>
+SUPABASE_SERVICE=<USER_PROVIDED>
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ PAYMENT PROCESSORS                                                          │
+# └─────────────────────────────────────────────────────────────────────────────┘
+# Stripe
+STRIPE_PUBLIC_KEY=<USER_PROVIDED>
+STRIPE_SECRET_KEY=<USER_PROVIDED>
+
+# PaymentCloud (Authorize.net) - Placeholder
+PAYCLOUD_MERCHANT_ID=<PLACEHOLDER>
+PAYCLOUD_API_KEY=<PLACEHOLDER>
+PAYCLOUD_SECRET=<PLACEHOLDER>
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ MODCELLULAR DIALER                                                          │
+# └─────────────────────────────────────────────────────────────────────────────┘
+DIALER_API_KEY=<MODCELLULAR_KEY>
+DIALER_SENDER_ID="ModCellular"
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ STORAGE BUCKETS                                                             │
+# └─────────────────────────────────────────────────────────────────────────────┘
+CMS_BUCKET="cms_uploads"
+STATIC_MEDIA_BUCKET="modpdf_static"
+DOCUMENT_BUCKET="modpdf_documents"
+SIGNATURE_BUCKET="modpdf_signatures"
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ BLOCKCHAIN / LEDGER (Document Tokenization)                                 │
+# └─────────────────────────────────────────────────────────────────────────────┘
+LEDGER_NETWORK=<ethereum|polygon|internal>
+LEDGER_RPC_URL=<USER_PROVIDED>
+LEDGER_WALLET_ADDRESS=<USER_PROVIDED>
+LEDGER_PRIVATE_KEY=<USER_PROVIDED>
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ AI SERVICES                                                                 │
+# └─────────────────────────────────────────────────────────────────────────────┘
+OPENAI_API_KEY=<USER_PROVIDED>
+AI_CONTRACT_MODEL="gpt-4"
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ WEB3 / SMART CONTRACTS                                                      │
+# └─────────────────────────────────────────────────────────────────────────────┘
+WEB3_PROVIDER_URL=<USER_PROVIDED>
+SMART_CONTRACT_ADDRESS=<USER_PROVIDED>
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ PEXELS API (Stock Photos)                                                   │
+# └─────────────────────────────────────────────────────────────────────────────┘
+PEXELS_API_KEY=<USER_PROVIDED>
