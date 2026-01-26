@@ -1,23 +1,26 @@
 import Home from './pages/home.js';
-import Editor from './pages/editor.js';
+import Editor, { mountEditor } from './pages/editor.js';
 import Pricing from './pages/pricing.js';
-import Account from './pages/account.js';
-import Login from './pages/login.js';
-import Register from './pages/register.js';
+import Account, { mountAccount } from './pages/account.js';
+import Login, { mountLogin } from './pages/login.js';
+import Register, { mountRegister } from './pages/register.js';
 
 const routes = {
-  '/': Home,
-  '/editor': Editor,
-  '/pricing': Pricing,
-  '/account': Account,
-  '/login': Login,
-  '/register': Register
+  '/': { render: Home },
+  '/editor': { render: Editor, mount: mountEditor },
+  '/pricing': { render: Pricing },
+  '/account': { render: Account, mount: mountAccount },
+  '/login': { render: Login, mount: mountLogin },
+  '/register': { render: Register, mount: mountRegister }
 };
 
 export function render(path = '/') {
-  const view = routes[path] || Home;
+  const route = routes[path] || routes['/'];
   const app = document.getElementById('app');
   if (!app) return;
-  app.innerHTML = view();
+  app.innerHTML = route.render();
   window.scrollTo(0, 0);
+  if (route.mount) {
+    route.mount();
+  }
 }

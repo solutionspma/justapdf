@@ -343,6 +343,96 @@
   color: var(--brand-red);
 }
 
+.auth-status {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.doc-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.doc-row:last-child {
+  border-bottom: none;
+}
+
+.editor-shell {
+  display: grid;
+  gap: 16px;
+}
+
+.editor-status {
+  font-weight: 600;
+}
+
+.editor-auth,
+.editor-dropzone,
+.editor-progress,
+.editor-document,
+.editor-tools,
+.editor-history {
+  display: none;
+}
+
+.editor-shell[data-state="empty"] .editor-auth,
+.editor-shell[data-state="empty"] .editor-dropzone {
+  display: block;
+}
+
+.editor-shell[data-state="uploading"] .editor-progress {
+  display: block;
+}
+
+.editor-shell[data-state="ready"] .editor-document,
+.editor-shell[data-state="ready"] .editor-tools,
+.editor-shell[data-state="ready"] .editor-history {
+  display: block;
+}
+
+.editor-shell[data-state="running_operation"] .editor-document,
+.editor-shell[data-state="running_operation"] .editor-history {
+  display: block;
+}
+
+.editor-dropzone {
+  border: 2px dashed var(--border);
+  text-align: center;
+  padding: 32px;
+  cursor: pointer;
+}
+
+.editor-dropzone.is-dragging {
+  border-color: var(--brand-red);
+  background: rgba(229, 57, 53, 0.06);
+}
+
+.editor-dropzone input {
+  display: none;
+}
+
+.editor-tools {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--brand-red);
+  width: 0%;
+}
+
 @media (max-width: 720px) {
   .hero {
     text-align: center;
