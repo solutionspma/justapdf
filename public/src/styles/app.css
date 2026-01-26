@@ -31,6 +31,12 @@
   gap: 10px;
 }
 
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
 .page {
   padding: 40px;
   min-height: calc(100vh - 140px);
@@ -41,6 +47,34 @@
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 32px;
   align-items: center;
+}
+
+.section {
+  margin: 48px 0;
+}
+
+.section h2 {
+  margin-bottom: 12px;
+}
+
+.plain-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: grid;
+  gap: 8px;
+}
+
+.plain-list li {
+  padding-left: 20px;
+  position: relative;
+}
+
+.plain-list li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--brand-red);
 }
 
 .hero-actions {
@@ -62,7 +96,7 @@
 }
 
 .primary {
-  background: var(--primary);
+  background: var(--brand-red);
   color: #fff;
   box-shadow: var(--shadow);
 }
@@ -77,7 +111,7 @@
   background: var(--surface);
   border: 1px solid var(--border);
   padding: 20px;
-  border-radius: 16px;
+  border-radius: var(--radius);
   box-shadow: var(--shadow);
 }
 
@@ -93,14 +127,14 @@
 
 .auth-card input {
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   border: 1px solid var(--border);
-  background: var(--surface-muted);
+  background: var(--surface);
   color: var(--text);
 }
 
 .ghost-link {
-  color: var(--text-muted);
+  color: var(--muted);
   font-size: 14px;
 }
 
@@ -134,17 +168,17 @@
 .pdf-viewer {
   min-height: 320px;
   border: 1px dashed var(--border);
-  border-radius: 16px;
+  border-radius: var(--radius);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: var(--surface-muted);
+  background: var(--surface);
 }
 
 .empty-state {
   text-align: center;
-  color: var(--text-muted);
+  color: var(--muted);
 }
 
 .empty-state img {
@@ -159,20 +193,20 @@
 }
 
 .hero p {
-  color: var(--text-muted);
+  color: var(--muted);
   max-width: 520px;
 }
 
 .hero .ghost {
-  border-color: rgba(23, 162, 184, 0.4);
-  color: var(--accent);
+  border-color: var(--brand-red);
+  color: var(--brand-red);
 }
 
 .toolbar .ghost {
-  border-color: rgba(229, 57, 53, 0.35);
+  border-color: var(--border);
   color: var(--text);
 }
 
 .app-header .nav-links a:hover {
-  color: var(--accent);
+  color: var(--brand-red);
 }
