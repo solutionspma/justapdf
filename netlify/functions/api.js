@@ -40,10 +40,11 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'mod-pdf-jwt-secret-change-in-production';
-const GENESIS_EMAIL = 'solutions@pitchmarketing.agency';
+const SUPRA_ADMIN_EMAIL = 'justapdf@pitchmarketing.agency';
 
 // Role permissions
 const PERMISSIONS = {
+  supra_admin: ['all', 'supra:access', 'admin:full'],
   root_master_admin: ['all', 'genesis:access', 'admin:full'],
   admin: ['users:manage', 'documents:all', 'signatures:all'],
   user: ['documents:own', 'signatures:sign']
@@ -63,16 +64,17 @@ const authenticate = (req, res, next) => {
     }
     
     const decoded = jwt.verify(token, JWT_SECRET);
-    const isGenesis = decoded.email?.toLowerCase() === GENESIS_EMAIL.toLowerCase();
+    const isSupraAdmin = decoded.email?.toLowerCase() === SUPRA_ADMIN_EMAIL.toLowerCase();
     
     req.user = {
       userId: decoded.userId,
       email: decoded.email,
-      role: isGenesis ? 'root_master_admin' : decoded.role,
+      role: isSupraAdmin ? 'supra_admin' : decoded.role,
       orgId: decoded.orgId,
       plan: decoded.plan,
-      permissions: isGenesis ? PERMISSIONS.root_master_admin : PERMISSIONS[decoded.role] || [],
-      isGenesis
+      permissions: isSupraAdmin ? PERMISSIONS.supra_admin : PERMISSIONS[decoded.role] || [],
+      isSupraAdmin,
+      isGenesis: isSupraAdmin
     };
     
     next();
@@ -93,7 +95,7 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Email and password required' });
     }
     
-    const isGenesis = email.toLowerCase() === GENESIS_EMAIL.toLowerCase();
+    const isSupraAdmin = email.toLowerCase() === SUPRA_ADMIN_EMAIL.toLowerCase();
     const hashedPassword = await bcrypt.hash(password, 12);
     
     const user = {
@@ -101,8 +103,8 @@ app.post('/api/auth/register', async (req, res) => {
       email: email.toLowerCase(),
       firstName,
       lastName,
-      role: isGenesis ? 'root_master_admin' : 'admin',
-      plan: isGenesis ? 'enterprise' : plan,
+      role: isSupraAdmin ? 'supra_admin' : 'admin',
+      plan: isSupraAdmin ? 'enterprise' : plan,
       createdAt: new Date().toISOString()
     };
     
@@ -117,8 +119,9 @@ app.post('/api/auth/register', async (req, res) => {
       success: true,
       user,
       token,
-      isGenesis,
-      message: isGenesis ? 'Genesis account activated' : 'Registration successful'
+      isSupraAdmin,
+      isGenesis: isSupraAdmin,
+      message: isSupraAdmin ? 'Supra admin account activated' : 'Registration successful'
     });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Registration failed' });
@@ -133,14 +136,14 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Email and password required' });
     }
     
-    const isGenesis = email.toLowerCase() === GENESIS_EMAIL.toLowerCase();
+    const isSupraAdmin = email.toLowerCase() === SUPRA_ADMIN_EMAIL.toLowerCase();
     
     // Mock user lookup (in production, query database)
     const user = {
       id: crypto.randomUUID(),
       email: email.toLowerCase(),
-      role: isGenesis ? 'root_master_admin' : 'user',
-      plan: isGenesis ? 'enterprise' : 'pro'
+      role: isSupraAdmin ? 'supra_admin' : 'user',
+      plan: isSupraAdmin ? 'enterprise' : 'pro'
     };
     
     const token = jwt.sign({
@@ -154,8 +157,9 @@ app.post('/api/auth/login', async (req, res) => {
       success: true,
       user,
       token,
-      isGenesis,
-      redirectTo: isGenesis ? '/admin/dashboard.html' : '/dashboard.html'
+      isSupraAdmin,
+      isGenesis: isSupraAdmin,
+      redirectTo: isSupraAdmin ? '/admin/dashboard.html' : '/dashboard.html'
     });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Login failed' });
@@ -277,6 +281,7 @@ app.get('/api/users/me', authenticate, (req, res) => {
       email: req.user.email,
       role: req.user.role,
       plan: req.user.plan,
+      isSupraAdmin: req.user.isSupraAdmin,
       isGenesis: req.user.isGenesis
     }
   });
@@ -287,8 +292,8 @@ app.get('/api/users/me', authenticate, (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 app.get('/api/admin/dashboard', authenticate, (req, res) => {
-  if (!req.user.isGenesis && req.user.role !== 'root_master_admin') {
-    return res.status(403).json({ success: false, error: 'Genesis access required' });
+  if (!req.user.isSupraAdmin && req.user.role !== 'root_master_admin') {
+    return res.status(403).json({ success: false, error: 'Supra admin access required' });
   }
   
   res.json({
@@ -304,8 +309,8 @@ app.get('/api/admin/dashboard', authenticate, (req, res) => {
 });
 
 app.get('/api/admin/users', authenticate, (req, res) => {
-  if (!req.user.isGenesis && req.user.role !== 'root_master_admin') {
-    return res.status(403).json({ success: false, error: 'Genesis access required' });
+  if (!req.user.isSupraAdmin && req.user.role !== 'root_master_admin') {
+    return res.status(403).json({ success: false, error: 'Supra admin access required' });
   }
   
   res.json({
@@ -351,7 +356,8 @@ app.get('/api/health', (req, res) => {
 app.get('/api/genesis/status', (req, res) => {
   res.json({
     success: true,
-    genesisEmail: GENESIS_EMAIL,
+    genesisEmail: SUPRA_ADMIN_EMAIL,
+    supraAdminEmail: SUPRA_ADMIN_EMAIL,
     platform: 'Mod PDF',
     parent: 'Pitch Modular Spaces'
   });

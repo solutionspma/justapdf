@@ -186,13 +186,13 @@
       const formData = new FormData(e.target);
       const data = Object.fromEntries(formData);
       
-      // Check for Genesis email
-      const GENESIS_EMAIL = 'solutions@pitchmarketing.agency';
+      // Check for supra admin email
+      const GENESIS_EMAIL = 'justapdf@pitchmarketing.agency';
       
       if (data.email.toLowerCase() === GENESIS_EMAIL.toLowerCase()) {
-        // Genesis account registration
+        // Supra admin registration
         localStorage.setItem('genesisInitialized', 'true');
-        localStorage.setItem('userRole', 'root_master_admin');
+        localStorage.setItem('userRole', 'supra_admin');
         localStorage.setItem('genesisPassword', data.password); // In production, this would be hashed and stored securely
         window.location.href = 'admin/genesis-setup.html';
       } else {
@@ -215,5 +215,6 @@
       }
     }
   </style>
+  <script type="module" src="js/firebase.js"></script>
 </body>
 </html>

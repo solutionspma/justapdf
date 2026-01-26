@@ -6,12 +6,12 @@
  */
 
 import jwt from 'jsonwebtoken';
+import { SUPRA_ADMIN_EMAIL, SUPRA_ADMIN_ROLE, isSupraAdminEmail } from '../config/security.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'mod-pdf-jwt-secret-change-in-production';
-const GENESIS_EMAIL = 'solutions@pitchmarketing.agency';
-
 // Role hierarchy
 const ROLE_HIERARCHY = {
+  supra_admin: 110,
   root_master_admin: 100,
   delegate: 90,
   enterprise_admin: 80,
@@ -26,6 +26,25 @@ const ROLE_HIERARCHY = {
 
 // Permission definitions
 const PERMISSIONS = {
+  supra_admin: [
+    'all',
+    'supra:access',
+    'admin:full',
+    'users:manage',
+    'orgs:manage',
+    'billing:manage',
+    'features:toggle',
+    'documents:all',
+    'signatures:all',
+    'design:all',
+    'ai:all',
+    'blockchain:all',
+    'api:unlimited',
+    'password:override',
+    'audit:view',
+    'logs:view',
+    'impersonation:all'
+  ],
   root_master_admin: [
     'all',
     'genesis:access',
@@ -141,16 +160,17 @@ export const authenticate = async (req, res, next) => {
     const decoded = jwt.verify(token, JWT_SECRET);
     
     // Check if Genesis account
-    const isGenesis = decoded.email?.toLowerCase() === GENESIS_EMAIL.toLowerCase();
+    const isSupraAdmin = isSupraAdminEmail(decoded.email);
     
     req.user = {
       userId: decoded.userId,
       email: decoded.email,
-      role: isGenesis ? 'root_master_admin' : decoded.role,
+      role: isSupraAdmin ? SUPRA_ADMIN_ROLE : decoded.role,
       orgId: decoded.orgId,
       plan: decoded.plan,
-      permissions: isGenesis ? PERMISSIONS.root_master_admin : PERMISSIONS[decoded.role] || [],
-      isGenesis
+      permissions: isSupraAdmin ? PERMISSIONS.supra_admin : PERMISSIONS[decoded.role] || [],
+      isSupraAdmin,
+      isGenesis: isSupraAdmin
     };
     
     next();
@@ -226,16 +246,17 @@ export const optionalAuth = async (req, res, next) => {
     }
     
     const decoded = jwt.verify(token, JWT_SECRET);
-    const isGenesis = decoded.email?.toLowerCase() === GENESIS_EMAIL.toLowerCase();
+    const isSupraAdmin = isSupraAdminEmail(decoded.email);
     
     req.user = {
       userId: decoded.userId,
       email: decoded.email,
-      role: isGenesis ? 'root_master_admin' : decoded.role,
+      role: isSupraAdmin ? SUPRA_ADMIN_ROLE : decoded.role,
       orgId: decoded.orgId,
       plan: decoded.plan,
-      permissions: isGenesis ? PERMISSIONS.root_master_admin : PERMISSIONS[decoded.role] || [],
-      isGenesis
+      permissions: isSupraAdmin ? PERMISSIONS.supra_admin : PERMISSIONS[decoded.role] || [],
+      isSupraAdmin,
+      isGenesis: isSupraAdmin
     };
     
     next();
@@ -258,7 +279,7 @@ export const requireRole = (...roles) => {
     }
     
     // Genesis always passes
-    if (req.user.isGenesis) {
+    if (req.user.isSupraAdmin) {
       return next();
     }
     
@@ -292,7 +313,7 @@ export const requirePermission = (...permissions) => {
     }
     
     // Genesis always passes
-    if (req.user.isGenesis || req.user.permissions.includes('all')) {
+    if (req.user.isSupraAdmin || req.user.permissions.includes('all')) {
       return next();
     }
     
@@ -316,7 +337,7 @@ export const requirePermission = (...permissions) => {
 /**
  * Require Genesis account
  */
-export const requireGenesis = (req, res, next) => {
+export const requireSupraAdmin = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({
       success: false,
@@ -324,11 +345,11 @@ export const requireGenesis = (req, res, next) => {
     });
   }
   
-  if (!req.user.isGenesis) {
+  if (!req.user.isSupraAdmin) {
     return res.status(403).json({
       success: false,
-      error: 'Genesis account required',
-      code: 'GENESIS_REQUIRED'
+      error: 'Supra admin account required',
+      code: 'SUPRA_ADMIN_REQUIRED'
     });
   }
   
@@ -355,7 +376,7 @@ export const requirePlan = (...plans) => {
     }
     
     // Genesis bypasses plan restrictions
-    if (req.user.isGenesis) {
+    if (req.user.isSupraAdmin) {
       return next();
     }
     
@@ -391,7 +412,7 @@ export const requireOwnership = (getOwnerId) => {
     }
     
     // Genesis and admins bypass ownership
-    if (req.user.isGenesis || ROLE_HIERARCHY[req.user.role] >= ROLE_HIERARCHY.admin) {
+    if (req.user.isSupraAdmin || ROLE_HIERARCHY[req.user.role] >= ROLE_HIERARCHY.admin) {
       return next();
     }
     
@@ -448,7 +469,7 @@ export const rateLimit = (options = {}) => {
     record.count++;
     
     // Genesis gets higher limits
-    const effectiveMax = req.user?.isGenesis ? max * 10 : max;
+    const effectiveMax = req.user?.isSupraAdmin ? max * 10 : max;
     
     if (record.count > effectiveMax) {
       return res.status(429).json({
@@ -471,7 +492,8 @@ export default {
   optionalAuth,
   requireRole,
   requirePermission,
-  requireGenesis,
+  requireSupraAdmin,
+  requireGenesis: requireSupraAdmin,
   requirePlan,
   requireOwnership,
   rateLimit,

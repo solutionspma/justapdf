@@ -6,6 +6,8 @@
 
 import express from 'express';
 import crypto from 'crypto';
+import { db } from '../database/connection.js';
+import { recordActionOutcome } from '../services/credits.js';
 
 const router = express.Router();
 
@@ -270,6 +272,46 @@ router.get('/portal-session', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to create portal session' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CREDIT LEDGER
+// ═══════════════════════════════════════════════════════════════════════════════
+
+router.post('/credits/consume', async (req, res) => {
+  try {
+    const { actionKey, success = true, metadata = {} } = req.body;
+
+    if (!actionKey) {
+      return res.status(400).json({ success: false, error: 'actionKey is required' });
+    }
+
+    const entry = await recordActionOutcome({
+      userId: req.user.userId,
+      actionKey,
+      success,
+      metadata
+    });
+
+    res.status(201).json({ success: true, entry });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to record credit usage' });
+  }
+});
+
+router.get('/credits/ledger', async (req, res) => {
+  try {
+    const { limit = 50, offset = 0 } = req.query;
+    const entries = await db.findMany(
+      'credit_ledger',
+      { user_id: req.user.userId },
+      { limit: parseInt(limit, 10), offset: parseInt(offset, 10), orderBy: 'created_at:desc' }
+    );
+
+    res.json({ success: true, entries });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to fetch credit ledger' });
   }
 });
 

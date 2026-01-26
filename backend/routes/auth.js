@@ -9,10 +9,11 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { db } from '../database/connection.js';
+import { SUPRA_ADMIN_EMAIL, SUPRA_ADMIN_ROLE, isSupraAdminEmail } from '../config/security.js';
+import { getAllPermissions, getDefaultPermissions, getPlanSeats } from '../config/permissions.js';
 
 const router = express.Router();
 
-const GENESIS_EMAIL = 'solutions@pitchmarketing.agency';
 const JWT_EXPIRY = '7d';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -24,7 +25,7 @@ router.post('/register', async (req, res) => {
     const { email, password, firstName, lastName, company, plan } = req.body;
     
     // Check if Genesis account
-    const isGenesis = email.toLowerCase() === GENESIS_EMAIL.toLowerCase();
+    const isSupraAdmin = isSupraAdminEmail(email);
     
     // Hash password
     const salt = await bcrypt.genSalt(12);
@@ -37,8 +38,8 @@ router.post('/register', async (req, res) => {
       password_hash: passwordHash,
       first_name: firstName,
       last_name: lastName,
-      role: isGenesis ? 'root_master_admin' : 'admin',
-      permissions: isGenesis ? getAllPermissions() : getDefaultPermissions(plan),
+      role: isSupraAdmin ? SUPRA_ADMIN_ROLE : 'admin',
+      permissions: isSupraAdmin ? getAllPermissions() : getDefaultPermissions(plan),
       status: 'active',
       created_at: new Date().toISOString()
     };
@@ -71,14 +72,15 @@ router.post('/register', async (req, res) => {
     
     res.status(201).json({
       success: true,
-      message: isGenesis ? 'Genesis account created' : 'Account created successfully',
+      message: isSupraAdmin ? 'Supra admin account created' : 'Account created successfully',
       user: {
         id: user.id,
         email: user.email,
         firstName: user.first_name,
         lastName: user.last_name,
         role: user.role,
-        isGenesis
+        isSupraAdmin,
+        isGenesis: isSupraAdmin
       },
       organization: {
         id: org.id,
@@ -103,7 +105,7 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
     
     // Check if Genesis account
-    const isGenesis = email.toLowerCase() === GENESIS_EMAIL.toLowerCase();
+    const isSupraAdmin = isSupraAdminEmail(email);
     
     // In production, fetch from database
     // const user = await db.users.findByEmail(email);
@@ -113,7 +115,7 @@ router.post('/login', async (req, res) => {
       id: crypto.randomUUID(),
       email: email.toLowerCase(),
       password_hash: await bcrypt.hash(password, 12), // Demo only
-      role: isGenesis ? 'root_master_admin' : 'admin',
+      role: isSupraAdmin ? SUPRA_ADMIN_ROLE : 'admin',
       orgId: crypto.randomUUID()
     };
     
@@ -139,10 +141,11 @@ router.post('/login', async (req, res) => {
         id: user.id,
         email: user.email,
         role: user.role,
-        isGenesis
+        isSupraAdmin,
+        isGenesis: isSupraAdmin
       },
       token,
-      redirectTo: isGenesis ? '/admin/dashboard.html' : '/dashboard.html'
+      redirectTo: isSupraAdmin ? '/admin/dashboard.html' : '/dashboard.html'
     });
     
   } catch (error) {
@@ -175,11 +178,11 @@ router.post('/genesis/setup', async (req, res) => {
     };
     
     // Create Genesis user in database
-    const genesisUser = {
+    const supraAdminUser = {
       id: crypto.randomUUID(),
-      email: GENESIS_EMAIL,
+      email: SUPRA_ADMIN_EMAIL,
       password_hash: passwordHash,
-      role: 'root_master_admin',
+      role: SUPRA_ADMIN_ROLE,
       permissions: getAllPermissions(),
       status: 'active',
       created_at: new Date().toISOString()
@@ -198,9 +201,9 @@ router.post('/genesis/setup', async (req, res) => {
     // Generate token
     const token = jwt.sign(
       { 
-        userId: genesisUser.id, 
-        email: genesisUser.email, 
-        role: genesisUser.role,
+        userId: supraAdminUser.id, 
+        email: supraAdminUser.email, 
+        role: supraAdminUser.role,
         orgId: org.id
       },
       jwtSecret,
@@ -209,11 +212,11 @@ router.post('/genesis/setup', async (req, res) => {
     
     res.json({
       success: true,
-      message: 'Genesis setup complete',
+      message: 'Supra admin setup complete',
       user: {
-        id: genesisUser.id,
-        email: genesisUser.email,
-        role: genesisUser.role
+        id: supraAdminUser.id,
+        email: supraAdminUser.email,
+        role: supraAdminUser.role
       },
       organization: org,
       token
@@ -295,69 +298,5 @@ router.get('/verify', async (req, res) => {
     res.status(401).json({ valid: false });
   }
 });
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// HELPER FUNCTIONS
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function getAllPermissions() {
-  return {
-    pdf: { read: true, edit: true, create: true, delete: true, passwordOverride: true },
-    signatures: { create: true, verify: true, request: true, blockchain: true },
-    design: { full: true },
-    ai: { contracts: true, analysis: true, chat: true },
-    web3: { smartContracts: true, deploy: true },
-    crm: { full: true },
-    admin: { users: true, orgs: true, billing: true, features: true, system: true },
-    billing: { view: true, manage: true },
-    dialer: { sms: true, voice: true },
-    cms: { full: true },
-    ads: { manage: true, view: true }
-  };
-}
-
-function getDefaultPermissions(plan) {
-  const base = {
-    pdf: { read: true, edit: true, create: true, delete: true, passwordOverride: false },
-    signatures: { create: true, verify: true, request: false, blockchain: false },
-    design: { full: false },
-    ai: { contracts: false, analysis: false, chat: false },
-    web3: { smartContracts: false, deploy: false },
-    crm: { full: false },
-    admin: { users: false, orgs: false, billing: false, features: false, system: false },
-    billing: { view: true, manage: false }
-  };
-  
-  switch (plan) {
-    case 'pro':
-      base.signatures.request = true;
-      base.ai.contracts = true;
-      base.ai.chat = true;
-      base.crm.full = true;
-      break;
-    case 'business':
-      base.signatures = { create: true, verify: true, request: true, blockchain: true };
-      base.ai = { contracts: true, analysis: true, chat: true };
-      base.web3 = { smartContracts: true, deploy: true };
-      base.pdf.passwordOverride = true;
-      base.design.full = true;
-      base.crm.full = true;
-      break;
-    case 'enterprise':
-      return getAllPermissions();
-  }
-  
-  return base;
-}
-
-function getPlanSeats(plan) {
-  const seats = {
-    starter: 2,
-    pro: 5,
-    business: -1, // Unlimited
-    enterprise: -1 // Unlimited
-  };
-  return seats[plan] || 2;
-}
 
 export default router;

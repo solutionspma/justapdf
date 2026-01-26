@@ -7,6 +7,7 @@
 
 import express from 'express';
 import crypto from 'crypto';
+import { SUPRA_ADMIN_EMAIL } from '../config/security.js';
 
 const router = express.Router();
 
@@ -90,6 +91,12 @@ router.put('/me/password', async (req, res) => {
 
 router.put('/me/email', async (req, res) => {
   try {
+    if (req.user?.isSupraAdmin) {
+      return res.status(403).json({
+        success: false,
+        error: `Supra admin email is immutable (${SUPRA_ADMIN_EMAIL})`
+      });
+    }
     const { newEmail, password } = req.body;
     
     // Send verification to new email
@@ -157,7 +164,7 @@ router.post('/me/2fa/enable', async (req, res) => {
   try {
     // Generate TOTP secret
     const secret = crypto.randomBytes(20).toString('base64');
-    const qrCodeUrl = `otpauth://totp/ModPDF:${req.user.email}?secret=${secret}&issuer=ModPDF`;
+    const qrCodeUrl = `otpauth://totp/JustaPDF:${req.user.email}?secret=${secret}&issuer=JustaPDF`;
     
     res.json({
       success: true,

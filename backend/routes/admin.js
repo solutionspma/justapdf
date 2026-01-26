@@ -8,21 +8,37 @@
 
 import express from 'express';
 import crypto from 'crypto';
+import { SUPRA_ADMIN_EMAIL, isSupraAdminEmail } from '../config/security.js';
 
 const router = express.Router();
 
 // Middleware to ensure root_master_admin role
-const requireGenesisAdmin = (req, res, next) => {
-  if (req.user?.role !== 'root_master_admin') {
+const requireSupraAdmin = (req, res, next) => {
+  if (!req.user?.isSupraAdmin) {
     return res.status(403).json({ 
       success: false, 
-      error: 'Access denied. Genesis admin privileges required.' 
+      error: 'Access denied. Supra admin privileges required.' 
     });
   }
   next();
 };
 
-router.use(requireGenesisAdmin);
+function blockSupraAdminMutation(req, res) {
+  const targetEmail = req.body?.email || req.body?.targetEmail || req.body?.userEmail;
+  const isSupraAdminTarget = isSupraAdminEmail(targetEmail);
+
+  if (isSupraAdminTarget) {
+    res.status(403).json({
+      success: false,
+      error: `Supra admin (${SUPRA_ADMIN_EMAIL}) is immutable`
+    });
+    return true;
+  }
+
+  return false;
+}
+
+router.use(requireSupraAdmin);
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // SYSTEM OVERVIEW
@@ -116,6 +132,9 @@ router.get('/users', async (req, res) => {
 
 router.put('/users/:id', async (req, res) => {
   try {
+    if (blockSupraAdminMutation(req, res)) {
+      return;
+    }
     const { id } = req.params;
     const updates = req.body;
     
@@ -130,6 +149,9 @@ router.put('/users/:id', async (req, res) => {
 
 router.put('/users/:id/permissions', async (req, res) => {
   try {
+    if (blockSupraAdminMutation(req, res)) {
+      return;
+    }
     const { id } = req.params;
     const { permissions } = req.body;
     
@@ -146,6 +168,9 @@ router.put('/users/:id/permissions', async (req, res) => {
 
 router.put('/users/:id/suspend', async (req, res) => {
   try {
+    if (blockSupraAdminMutation(req, res)) {
+      return;
+    }
     const { id } = req.params;
     const { reason } = req.body;
     

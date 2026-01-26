@@ -1,12 +1,13 @@
 # ═══════════════════════════════════════════════════════════════════════════════
-# MOD PDF - GENESIS CONFIGURATION
+# MOD PDF - SUPRA ADMIN CONFIGURATION
 # Part of Pitch Modular Spaces Ecosystem
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ GENESIS ACCOUNT (Root Master Admin)                                         │
+# │ SUPRA ADMIN (Immutable Root Access)                                         │
 # └─────────────────────────────────────────────────────────────────────────────┘
-ROOT_EMAIL=solutions@pitchmarketing.agency
+SUPRA_ADMIN_EMAIL=justapdf@pitchmarketing.agency
+ROOT_EMAIL=justapdf@pitchmarketing.agency
 ROOT_PASSWORD=<SET_ON_GENESIS_REGISTRATION>
 JWT_SECRET=<GENERATE_RANDOM_64>
 
@@ -16,6 +17,15 @@ JWT_SECRET=<GENERATE_RANDOM_64>
 SUPABASE_URL=<USER_PROVIDED>
 SUPABASE_ANON=<USER_PROVIDED>
 SUPABASE_SERVICE=<USER_PROVIDED>
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ DATABASE (Firebase)                                                         │
+# └─────────────────────────────────────────────────────────────────────────────┘
+FIREBASE_PROJECT_ID=<USER_PROVIDED>
+FIREBASE_CLIENT_EMAIL=<USER_PROVIDED>
+FIREBASE_PRIVATE_KEY=<USER_PROVIDED>
+FIREBASE_SERVICE_ACCOUNT_JSON=<OPTIONAL_JSON_STRING>
+FIREBASE_STORAGE_BUCKET=<OPTIONAL_BUCKET>
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
 # │ PAYMENT PROCESSORS                                                          │
@@ -39,9 +49,9 @@ DIALER_SENDER_ID="ModCellular"
 # │ STORAGE BUCKETS                                                             │
 # └─────────────────────────────────────────────────────────────────────────────┘
 CMS_BUCKET="cms_uploads"
-STATIC_MEDIA_BUCKET="modpdf_static"
-DOCUMENT_BUCKET="modpdf_documents"
-SIGNATURE_BUCKET="modpdf_signatures"
+STATIC_MEDIA_BUCKET="justapdf_static"
+DOCUMENT_BUCKET="justapdf_documents"
+SIGNATURE_BUCKET="justapdf_signatures"
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
 # │ BLOCKCHAIN / LEDGER (Document Tokenization)                                 │
