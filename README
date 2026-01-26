@@ -1,0 +1,70 @@
+# JustaPDF  
+**It’s just a PDF, damn.**
+
+JustaPDF is a modular, credit-based PDF editor built as a fair alternative to subscription-locked PDF software. Users pay only for real PDF operations—edit, sign, merge, OCR—never to download their own files.
+
+---
+
+## Why JustaPDF Exists
+
+PDFs are an open standard.  
+Editing them isn’t magic.  
+Charging $30/month to fix a typo is nonsense.
+
+JustaPDF was built to restore sanity:
+- No forced subscriptions
+- No dark patterns
+- No paywalls on downloads
+- No bloated desktop installs
+
+Pay for the work performed. Then move on.
+
+---
+
+## Core Principles
+
+- **Modular**: Every PDF action is a discrete operation
+- **Transparent**: Credits are spent only on successful actions
+- **Fair**: Downloads and previews are always free
+- **Open-standard aligned**: Built on real PDF object mechanics
+- **User-first**: Finish the task and leave—no hostage SaaS
+
+---
+
+## How Billing Works
+
+PDFs are made of objects (text, images, pages, annotations).
+
+Each meaningful change = one operation = credits.
+
+Examples:
+- Edit text → 1 credit  
+- Add signature → 1 credit  
+- Merge PDFs → 2 credits  
+- OCR page → 3 credits  
+
+Failed actions refund automatically.  
+Downloads never cost credits.
+
+---
+
+## Pricing Model
+
+- **Free Tier** – limited credits to try it out
+- **Credit Packs** – one-time purchase, never expire
+- **Monthly Plans** – recurring credits for frequent users
+- **No lock-ins** – subscriptions are optional, not required
+
+---
+
+## Tech Stack (Reference)
+
+- Frontend: React / Next.js
+- Backend: Node.js / TypeScript
+- PDF Engine: Object-level PDF manipulation
+- Billing: Stripe (subscriptions + one-time credit packs)
+- Auth & Data: Modular (Supabase / Postgres compatible)
+
+---
+
+## Repo Structure (High-Level)
