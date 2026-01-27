@@ -42,6 +42,20 @@ import bcrypt from 'bcrypt';
 const JWT_SECRET = process.env.JWT_SECRET || 'mod-pdf-jwt-secret-change-in-production';
 const SUPRA_ADMIN_EMAIL = 'justapdf@pitchmarketing.agency';
 
+// Client env bootstrap
+app.get('/api/env', (req, res) => {
+  res.json({
+    FIREBASE_API_KEY: process.env.FIREBASE_API_KEY || '',
+    FIREBASE_AUTH_DOMAIN: process.env.FIREBASE_AUTH_DOMAIN || '',
+    FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID || '',
+    FIREBASE_STORAGE_BUCKET: process.env.FIREBASE_STORAGE_BUCKET || '',
+    FIREBASE_MESSAGING_SENDER_ID: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
+    FIREBASE_APP_ID: process.env.FIREBASE_APP_ID || '',
+    FIREBASE_MEASUREMENT_ID: process.env.FIREBASE_MEASUREMENT_ID || '',
+    INTERNAL_ADMIN_UID: process.env.INTERNAL_ADMIN_UID || ''
+  });
+});
+
 // Role permissions
 const PERMISSIONS = {
   supra_admin: ['all', 'supra:access', 'admin:full'],

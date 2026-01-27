@@ -10,6 +10,20 @@
 </head>
 <body>
   <div id="app"></div>
-  <script type="module" src="/src/main.js"></script>
+  <script type="module">
+    async function bootstrap() {
+      try {
+        const response = await fetch('/api/env');
+        if (response.ok) {
+          window.__ENV__ = await response.json();
+        }
+      } catch (error) {
+        console.warn('Env load failed', error);
+      }
+      await import('/src/main.js');
+    }
+
+    bootstrap();
+  </script>
 </body>
 </html>
