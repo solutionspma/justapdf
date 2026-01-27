@@ -1,0 +1,13 @@
+{
+  "$schema": "platform-contract-v1",
+  "platform": "justapdf",
+  "category": "prof-mgmt",
+  "runtime_dependency": null,
+  "billing_model": "per-export",
+  "enforcement_model": "usage-based",
+  "governed_by": "shared",
+  "status": "development",
+  "description": "PDF generation engine for document creation and export",
+  "primary_entities": ["documents", "templates", "exports"],
+  "integrations": ["netlify"]
+}

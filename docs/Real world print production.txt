@@ -1,0 +1,3602 @@
+R  E  A  L    W O  R  L  D
+
+Print Production
+
+with Adobe® Creative Cloud®
+
+INDUSTRIAL-STRENGTH PRODUCTION TECHNIQUES 
+
+Tools for
+designers and
+production artists
+
+Tips for offset
+digital printing
+
+Tricks for maximum
+efficiency
+
+CLAUDIA Mc CUE 
+
+
+R  E  A  L    W O  R  L  D
+
+Print Production
+
+with Adobe® Creative Cloud®
+
+INDUSTRIAL-STRENGTH p RODUCTION TECHNIQUES 
+
+CLAUDIA Mc CUE
+
+
+REAL WORLD PRINT PRODUCTION WITH ADOBE CREATIVE CLOUD
+
+Claudia McCue
+
+Copyright © 2014 by Claudia McCue
+
+For the latest on Adobe Press books, go to www.adobepress.com
+This Adobe Press book is published by Peachpit
+
+To report errors, please send a note to errata@peachpit.com
+Peachpit is a division of Pearson Education
+
+Project Editor: Susan Rimerman
+
+Production Editor: Maureen Forys, Happenstance Type-O-Rama
+Copy Editor: Kelly Kordes Anton
+
+Technical Editor: Chad Chelius
+Proofreader: Suki Gear
+
+Compositor: Craig Woods, Happenstance Type-O-Rama
+Indexer: James Minkin
+
+Cover Design: Charlene Charles Will
+Cover Illustration: Alicia Buelow
+
+Notice of Rights
+
+All rights reserved. No part of this book may be reproduced or transmitted in any form by any
+means, electronic, mechanical, photocopying, recording, or otherwise, without the prior written
+permission of the publisher. For information on getting permission for reprints and excerpts, con-
+tact permissions@peachpit.com.
+
+Notice of Liability
+
+The information in this book is distributed on an “As Is” basis without warranty. While every 
+precau-
+tion has been taken in the preparation of the book, neither the author nor Peachpit shall have any
+liability to any person or entity with respect to any loss or damage caused or alleged to be caused
+directly  or indirectly by the instructions contained in this book or by the computer software and
+hardware products described in it.
+
+Trademarks
+
+Adobe InDesign, Adobe Photoshop, Adobe Illustrator, and Adobe Acrobat are registered trademarks of
+Adobe Systems, Incorporated in the United States and/or other countries. All other trademarks are 
+the
+property of their respective owners. Many of the designations used by manufacturers and sellers to
+distinguish their products are claimed as trademarks. Where those designations appear in this book,
+and Peachpit was aware of a trademark claim, the designations appear as requested by the owner
+
+of the trademark. All other product names and services identified throughout this book are used in
+editorial fashion only and for the benefit of such companies with no intention of infringement of 
+the
+trademark. No such use, or the use of any trade name, is intended to convey endorsement or other
+affiliation with this book.
+
+ISBN-10 0-321-97032-2
+
+ISBN-13 978-032197032-9
+
+9 8 7 6 5 4 3 2 1
+
+Printed and bound in the United States of America
+
+
+Table of Contents
+
+Introduction                                    vi
+
+Chapter One: Life Cycle of a Print Job                      1
+
+The Olden Days                                  2
+
+Designer                                      3
+
+Typesetter                                     3
+
+Photographer                                   3
+
+Trade Shop                                     3
+
+Printer                                       3
+
+Job Submission                                  6
+
+Scenic Tour of a Typical Printing Plant                      6
+
+Glossary of Printing Terms                            21
+
+Chapter Two: Ink on Paper                           39
+
+Fundamentals of Black-and-White Printing                  39
+
+Fundamentals of Color Printing                         42
+
+Press Issues                                    51
+
+Digital Printing                                  59
+
+Your Monitor Is Not Made of Paper                      63
+
+Chapter Three: Trimming, Binding, and Finishing              69
+
+One Size Does Not Fit All                            69
+
+Folding: High-Speed Origami                          74
+
+Imposition                                    76
+
+Binding Methods                                 85
+
+Moving Beyond Two Dimensions                        90
+
+Chapter Four: Preparing Raster Images                   99
+
+Ancient Times: B.P. (Before Pixels)                      100
+
+All About Pixels                                 100
+
+Imaging Software                                102
+
+Resolution and Image Fidelity                          103
+
+Scanning Artwork                                106
+
+Cropping and Transforming Images                      106
+
+Appropriate Image Formats for Print                     109
+
+Inappropriate Image Formats for Print                     119
+
+Chapter Five: Vector Graphics                         121
+
+Vector File Formats                               122
+
+Handling Text                                  125
+
+Incorporating Images into Vector Files                     127
+
+Avoiding Unnecessary Complexity                       128
+
+
+iv  TABLE OF CONTENTS
+
+Chapter Six: Fonts                               131
+
+Font Flavors                                   131
+
+Fonts Installed by Creative Cloud                        138
+
+Activating Fonts in the Operating System                    139
+
+Font-Management Programs                         140
+
+Typekit Desktop Fonts                             141
+
+Font Licensing Issues                              143
+
+Chapter Seven: Cross-Platform Issues                   147
+
+Crossing the Great Divide                            148
+
+Naming Files                                  148
+
+Fonts                                      152
+
+Sending Files from Mac to Windows                      153
+
+Sending Files from Windows to Mac                      154
+
+Graphics Formats                                155
+
+Compressing Files                                155
+
+Chapter Eight: Job Submission                        157
+
+Preparations During the Design Process                     158
+
+Talking with the Printer                             158
+
+Planning for Print                                160
+
+Sending Job Files                                166
+
+Preparing for Proofing Cycles                          170
+
+Attending a Press Check                            174
+
+Chapter Nine: Creative Cloud                         177
+
+Understanding Creative Cloud                         177
+
+Version Determination                             180
+
+Creating Work for Users of Older Versions                   180
+
+Chapter Ten: Photoshop Production Tips                  183
+
+Off to a Good Start                               183
+
+Know the Fate of the Image                           184
+
+Image Resolution                                185
+
+Color Space                                   186
+
+Working in Layers                                188
+
+Transparency                                  195
+
+Silhouettes and Masking                            197
+
+Silhouetting Soft-Edged Subjects                        201
+
+Beyond CMYK                                 205
+
+Adding Spot Color to a CMYK Image                     207
+
+Creating a Spot Varnish Plate                         208
+
+Vector Content                                 209
+
+Saving for Other Applications                          211
+
+
+TABLE OF CONTENTS   v
+
+Chapter Eleven: Illustrator Production Tips                 213
+
+Document Profile and Color Mode                      213
+
+Artboards                                    215
+
+Using Symbols                                 219
+
+Simplifying Complex Artwork                         222
+
+Live Effects                                   224
+
+Using the Appearance Panel                          227
+
+Creating 3D Artwork                              231
+
+Transparency                                  233
+
+Flattening Transparency                            235
+
+Linked and Embedded Images                         237
+
+Blended Objects                                 239
+
+Spot Colors                                   240
+
+Type and Fonts                                 245
+
+Why Versions Matter                              251
+
+Saving for Other Applications                          255
+
+Creating PDF Files                               259
+
+Opening PDF Files in Illustrator                        260
+
+Chapter Twelve: InDesign Production Tips                 261
+
+Graphics                                     261
+
+Using Native Files                                273
+
+Swatches                                    280
+
+Alternate Layouts                                285
+
+Miscellaneous Document Tips                         289
+
+Transparency                                  296
+
+Finding and Fixing Problems                          307
+
+PDF Creation Methods                             314
+
+PDF Creation Settings                              315
+
+Chapter Thirteen: Acrobat Production Tips                 317
+
+Acrobat Product Line                              318
+
+Where Do PDFs Come From?                          319
+
+Creating PDF Files                               319
+
+Editing PDF Files                                327
+
+Comment and Review                             330
+
+Print Production Tools                             339
+
+Using External PDF Editors                           354
+
+Index                                      355
+
+Bonus chapters mentioned in this eBook are available after the index
+
+Chapter Fourteen: Print Production Resources ................................. A-1
+
+
+Introduction
+
+Much has changed in the realm of printing since the original edition of this book. Film has
+been almost totally abandoned in favor of direct-to-plate imaging, and the quality of digi-
+tal printing processes rivals that of traditional offset. Updating the book has been a bit like
+time travel, as I deleted sections devoted to processes that have fallen by the wayside and
+expanded portions that described new-at-the-time techniques that are now commonplace.
+
+I’m not a designer — I’m a printing geek. I spent half my life in prepress, troubleshoot-
+ing, fixing jobs, and meeting impossible deadlines. I still love printing. I love the heavy
+rhythm of presses, the smell of the chemicals, the beehive bustle of a pressroom. I love
+to  see paper roll in one end of the press and printed sheets fly out the other end. I hope
+I can pass some of this printing love on to you.
+
+Who Should Read This Book
+
+If you are a designer or a production artist who would like a better understanding of
+the pitfalls you encounter when using Adobe Creative Cloud software, you’ll find lots of
+pointers in this book to help you avoid problems. Almost all software provides options
+that  are tempting to choose but are dangerous under some circumstances. It’s good to
+know which buttons not to push — and why.
+
+Photoshop, Illustrator, and InDesign form a powerful ecosystem. Consequently, choices
+you make in Photoshop can limit your options when you place an image in InDesign.
+
+Options you choose in InDesign can affect the quality of the PDF you create. And so on.
+You need an aerial view of the programs’ capabilities so you can anticipate the outcome.
+It would help if you were psychic, too, but that’s another book entirely.
+
+I believe that the more designers undertstand about the physical requirements of the
+printing process, the more easily they can avoid problems. This book can explain why your
+printer sometimes asks you to modify your designs for print. Better yet, you can beat them
+to  it, and they will compliment you on how well-prepared your jobs always are.
+
+If you are an in-house designer or marketing department member, you may have been
+thrown into the deep end, suddenly given the responsibility of preparing work for print.
+This book may help you understand the mysterious new world of print.
+
+
+WHAT THIS BOOK IS NOT  vii
+
+
+If you are a prepress production operator, you’ll find many reminders of
+subtle problems that can lurk in graphics or page layouts. If you’re new to
+printing, you’ll find beneficial insights into what’s happening on the other
+side   of the pressroom door. And if you’re looking for a gentle way to educate
+clients who keep submitting nightmare jobs, well, a book always makes a
+nice gift, doesn’t it?
+
+For purchasing this book, you are also entitled to bonus Chapter 14, “Print
+Production Resources.” To download, register your book at peachpit.com/
+register. Create an account if you don’t have one (it’s free!). Then add this
+isbn: 0321970322. Look for the content on the “My Registered Products”
+page and click “Access Bonus Content.” If you purchased an ebook, bonus
+Chapter 14 is already included at the end.
+
+What This Book Is Not
+
+If you’re in the market for a hot-tips-and-tricks book, this isn’t it. It’s not a
+guide for stunning special effects (unless you consider it a special effect to get
+your job to print as expected). And, although this book demonstrates how to
+do some useful things in the Adobe Creative Cloud programs, it isn’t strictly
+a how-to book either. In fact, there’s quite a bit of how-not-to.
+
+Are there any prerequisites for using this book? Only two, really. First, you
+should have basic proficiency with your computer and operating system, as
+well  as the basics of InDesign, Illustrator, and Photoshop. The other require-
+ment is arguably more important: You should have a healthy curiosity about
+the printing process and a desire to build problem-free files.
+
+About the Author
+
+I was a chemistry major. Really. But I had a knack for illustration, and
+I took some college art classes for extra credit. One of my instructors
+
+(Michael Parkes, who has since become a well-known fine artist in Europe)
+suggested that I change my career path from chemistry to commercial
+
+art. I thought, “Well, I’ll try it for a while,” and took a job at a printing
+plant that summer. A funny thing happened: I fell in love with printing
+and never went back to the lab. (Thanks, Michael.) Printing turned out to
+be the perfect environment for someone who held the dual titles of Class
+Clown and Science Student of the Year.
+
+NOTE You know you’ve
+been in printing a long
+
+time if:
+
+• Your grocery list has hang-
+ing indents.
+
+• Your driver’s license
+lists your eye color as
+PANTONE 5757.
+
+•  Your shoe size is 61⁄2 plus
+
+1⁄8-inch bleed.
+
+•  You refer to painting your
+house as a two-color job.
+
+•  You decide to write a book
+called Real World Print
+Production with Adobe
+Creative Cloud.
+
+
+viii  INTRODUCTION
+
+As a prepress production person, I always enjoyed troubleshooting, discovering new techniques,
+and sharing those discoveries with coworkers. I started in conventional paste-up and then moved
+into film stripping. (It’s not what you think. See the glossary in Chapter 1, “Life Cycle of a 
+Print Job.”)
+And I was extremely fortunate (or cursed) to be one of the very early operators of color electronic
+prepress systems in the United States, so I’ve been pushing pixels around for a long time. Then,
+because    it could perform the same magic as a Scitex or Crosfield system (minus the million-dollar
+price tag), Adobe Photoshop lured me to desktop computers.
+
+I always believed in educating customers so they wouldn’t be intimidated by the mysteries of print-
+ing. Not surprisingly, that led to my second career as a trainer, consultant, writer, and presenter 
+at
+industry conferences.
+
+Acknowledgments
+
+I’m passing on to you some of the Basic Printing Truths imparted to me by a number of fine old
+printing curmudgeons. Count yourself truly lucky if you’re befriended by a craftsman like Rick
+Duncan, who came up through the ranks, learned how to do everything the old-fashioned way,
+and was always patient with a kid asking too many questions.
+
+I’m part of an informal fraternity of graphic arts aficionados. While we each have our special-
+ties, our common bond is the love of learning and sharing new tricks. David Blatner, Scott
+Citron, Sandee “Vector Babe” Cohen, Anne-Marie Concepción, Bob Levine, and Mike Rankin
+are   my InDesign brethren (and sistren), going back to the days when we were considered page-
+layout rebels. Mordy Golding’s passion for Illustrator is contagious, and he shares my devotion
+to enlightening designers in the mysteries of print.
+
+It’s priceless to have friends on the inside at Adobe Systems: Dov Isaacs and Lonn Lorenz have been
+generous with their dry humor and no-nonsense advice on PostScript and PDF for years. And Noha
+Edell  has long provided inspirational support and encouragement. PDF Sage Leonard Rosenthol has
+frequently enlightened me on arcane Acrobat mysteries.
+
+I’m pleased to have the opportunity to update this book for Creative Cloud; it’s sort of like 
+reincar-
+nation. It’s truly gratifying that the first two editions have been used as textbooks in some 
+schools.
+Thanks to Kelly Kordes Anton for policing my commas and technical editor Chad Chelius for ensur-
+ing that I wasn’t spreading any myths. Thanks to Suki Gear, Craig Woods, and Maureen Forys for
+their proofreading, composition, and production work, and James Minkin for crafting the index.
+
+Now go out there and make me proud!
+
+
+This page intentionally left blank
+
+
+Preparing Raster
+Images
+
+Whether you acquire an image from a scanner, a digital camera, a royalty-
+free CD with 1,000,000 images, or a stock photography vendor, it’s made out
+of pixels. Pixel is shorthand for picture element, the smallest unit of informa-
+tion in a digitized image. Even though pictures on your monitor look like
+smooth transitions of color, zoom in sufficiently and you’ll see all the little
+square pixels that actually make up the image (Figure 4.1). While pixels
+make   it possible to do much of what we do in the graphic arts, they’re also
+the cause of some important limitations.
+
+Figure 4.1 Images are
+made of pixels. Think of
+them as tiny mosaic tiles.
+
+
+100  CHAPTER 4: PREPARING RASTER IMAGES
+
+Ancient Times: B.P. (Before Pixels)
+
+In the olden days of graphic arts, enormous cameras were used to photo-
+graph artwork such as drawings, reflective photographic prints, transpar-
+encies, and painted illustrations. Highly skilled specialists commandeered
+these monstrosities, some of which occupied entire rooms (the cameras, not
+the specialists). The use of colored filters, masking, and exposure methods to
+produce color separations (a separate piece of film for each printing ink) was
+rather arcane and required years of apprenticeship and study to perfect. And
+since every step required the use of specialized film, there were a lot of trips
+to   a darkroom to develop the results in chemical baths. It all seemed very
+high-tech at the time (well, compared to cave paintings), but the process was
+quite time-consuming.
+
+All About Pixels
+
+Film has given way to pixels, and we have gone from dog-eared color photo-
+graphic prints and moldy 35mm slides to storing our family photos on piles
+of  CDs, and now into the nebulous world of cloud storage. What was once
+the province of the darkroom became a daylight venture, and the tools of
+the craftsmen became available to anyone brave enough to wade in.
+
+Scanners
+
+While early scanners still required highly skilled graphic arts professionals to
+operate them, they greatly sped up the process of capturing artwork for color
+separations. Early analog models used photomultiplier tubes and a daunting
+array of knobs and buttons to perform the same job that had been done by
+the huge cameras. The first scanners were petite only by comparison to their
+gigantic camera ancestors: Many could easily dwarf a Volkswagen. It was nec-
+essary to mount artwork on a heavy, clear plastic drum and then painstak-
+ingly ensure that there was no dust or a trapped air bubble to mar the scan.
+Scanner operators came from the ranks of color-separation cameramen, and
+their years of finely honed instincts for camera separations translated well to
+the newer methods. Thus began the move to digital capture and storage of
+image information, resulting in our devotion to the pixel and the advent
+
+of digital retouching.
+
+
+ALL ABOUT PIXELS  101
+
+
+In the mid-1990s, improvements in the capabilities and simplicity of flatbed
+scanners, coupled with the widespread usage of Adobe Photoshop, led to a
+major change in the way color separations were performed. It was no longer
+necessary to mount artwork on cylindrical drums, and the numerous knobs
+were replaced with onscreen buttons and dialog boxes. The digital imaging
+revolution was underway. Suddenly, people who weren’t sure what color
+separation meant were making color separations.
+
+As flatbed scanners have become more automated and less expensive,
+
+it’s relatively easy even for novices to make a decent scan. But the more you
+know about what constitutes a good image, the better the chance you can
+create a great image from the pixels generated by your scanner.
+
+Digital Cameras
+
+Today’s scanners capture transparencies, negative film, paintings, and
+illustrations and express them as pixels. High-end digital cameras now
+rival    — or exceed — the ability of film-based cameras to capture photo-
+graphic detail. The image captured by the camera is a digital original, so
+there’s no need to scan a print. Of course, the better the camera and the
+photographer, the better the image. The rapid evolution of digital image
+capture   is such that today’s cellphones take pictures with more inherent
+information than the earliest digital cameras.
+
+While conventional camera film — such as 35mm transparencies — must be
+scanned to be used on your computer, digital camera images can be down-
+loaded directly to the computer and used immediately. Digital photography
+also cuts out the middleman. Unlike film images, digital images don’t have
+any grain, although an image photographed in low lighting conditions
+
+may tax the resolving capabilities of a digital camera’s sensor, resulting in
+unwanted digital noise.
+
+Consumer point-and-shoot cameras deliver captured images as JPEG,
+
+a compressed format. There are degrees of compression, from gentle to
+aggressive, and you may never notice any visible artifacts betraying the
+compression. But higher level “prosumer” cameras and professional digital
+cameras  can deliver images in the Camera Raw format, which is subjected
+to minimal processing by the camera. While you cannot place a Raw file
+directly into Illustrator or InDesign, Raw images can be opened directly
+
+in Photoshop and saved in another format, such as Photoshop PSD.
+
+TIP While you can’t
+place a Camera Raw
+
+file directly into Illustrator or
+InDesign, there is a work-
+around.   In the Camera Raw
+module within Photoshop, hold
+down Shift as you click Open
+(the Open Image button
+changes to an Open Object
+button): this will open the
+image   as a Smart Object in
+Photoshop. Save the image as
+a   PSD, and you can then place
+it in Illustrator or InDesign
+while retaining the secret
+Camera Raw editing ability.
+
+Back in Photoshop, just double-
+click the Smart Object to edit in
+Camera Raw.
+
+
+102  CHAPTER 4: PREPARING RASTER IMAGES
+
+Raw files can be color corrected in the Photoshop Camera Raw environment
+without losing additional information. For example, an image shot under
+daylight conditions but with the camera’s white balance set to fluorescent
+lighting can be corrected with one click in the Camera Raw environment
+without the loss of information that would be incurred by using a Levels or
+Curves correction in Photoshop.
+
+If you are a point-and-shoot photographer who just wants to capture
+moments from a quick vacation, you may consider Raw files to be overkill.
+But   for professional photographers, Camera Raw is a powerful and flexible
+format, often enabling the recovery or enhancement of details and tones
+that would be lost in a JPEG file.
+
+Imaging Software
+
+Once you have captured pixels, it’s likely that you’ll feel compelled to modify
+them. The industry standard imaging application is Adobe Photoshop, and
+for good reason. Photoshop provides controls for color correction that enable
+a knowledgeable user to achieve results equal to those of a knob-twisting
+scanner operator. Its tools surpass the capabilities of the original, million-
+dollar dedicated systems. If you’re just beginning to learn Photoshop, you
+won’t lack for educational resources. You could probably build an addition
+
+to your house from the books devoted to exploring Photoshop. You can add
+Chapter 10, “Photoshop Production Tips,” to the pile.
+
+Photoshop is arguably the most versatile and widely accepted application
+for image manipulation, but there are other applications that perform use-
+ful imaging functions as well.
+
+Adobe Photoshop Elements® (Mac/PC) might be regarded as “Photoshop
+Lite,” but it still packs a hefty arsenal of retouching and color-correction
+tools. The product is geared toward enthusiasts and lacks support for
+CMYK images.
+
+Adobe Lightroom™ (Mac/PC) is engineered for use by photographers and
+provides sophisticated tools for organizing and color correcting images.
+
+Apple iPhoto® (Mac only) is geared toward hobbyists, with organizational
+tools and limited color-correction capabilities. However, it offers no support
+for CMYK images.
+
+
+RESOLUTION AND IMAGE FIDELITY  103
+
+Aperture (Mac only) is targeted to photographers and includes support for
+Camera Raw files. It provides organizational tools as well as color-correction
+controls but provides no support for CMYK images.
+
+These are not the only solutions that exist for manipulating images. There
+are painting programs, such as Painter™ and Paint Shop Pro® (both from
+Corel®), which let you easily make images resemble watercolors or oil paint-
+ings. Imaging tools for consumer and hobbyist photographers increase on a
+daily basis. However, most of these programs don’t offer support for CMYK
+images, so they’re not the best tools if you’re preparing images for print.
+
+Let’s face it—if you’re designing for print, you can’t live without Photoshop.
+When the name of a product becomes a verb — “Please Photoshop that out”—
+it’s  a sure sign that the product has become the industry standard.
+
+Resolution and Image Fidelity
+
+The resolution of an image is generally measured in pixels per inch (ppi)
+unless you speak metric, in which case it’s expressed in pixels per millimeter.
+Determining the proper resolution for Web images is simple: 72 ppi at final
+size.     But there are strongly held (and hotly debated) beliefs regarding the
+appropriate image resolution for printing. Some hold that 150 percent of the
+final  screen ruling value is sufficient, and some believe twice the final ruling
+is preferable, largely because it’s easier to calculate the resolution. For exam-
+ple, an image that will be printed at 150 line screen should have a resolution
+of 300 ppi. In the past, when typical hard drives held 80 MB, networks were
+glacially slow, and RIPs choked on 15 MB PostScript files, it was important to
+trim  off every little bit of fat, so we agonized over resolution. But now, with
+hard drives measured in hundreds of gigabytes, and RIPs with much more
+robust digestive tracts, we can afford the luxury of a few extra pixels. That
+said, there’s rarely an advantage to exceeding 300 ppi, except in some cases
+for higher line screens such as 175 lpi printing. So put away the calculator.
+
+For most circumstances, 300 ppi at final size is adequate and provides a bit of
+elbow room if you have to slightly reduce or enlarge an image.
+
+But you do have some leeway, depending on the nature of the image and
+how it will be used. For example, a gauzy, soft-focus shot of a sunset that
+will be used as a ghosted background accent in a magazine can be used at
+200 ppi with no problem. A highly detailed close-up image of an important
+
+
+104  CHAPTER 4: PREPARING RASTER IMAGES
+
+
+Figure 4.2 You can’t
+truly make something from
+nothing. Notice the loss of
+detail in the scaled-up
+version (D) versus the
+original (A).
+
+piece of antique jewelry in a 175 lpi art book should be at 300–350 ppi. At
+the other end of the spectrum, an image for use in an 85 lpi newspaper can
+
+be 130–170 ppi, because much of the information in a 300 ppi image would be
+lost when printed in the coarse newspaper screen ruling. Consider the deter-
+mination of appropriate resolution to be an equation based on image content
+and  the final printing line screen rather than an absolute number.
+
+Scaling Up
+
+When enlarging or reducing an image, don’t be afraid to slightly reduce or
+enlarge an image. But be aware that when an image is scanned or captured
+by  a digital camera, it contains a fixed number of pixels. When you enlarge
+an image, you’re attempting to generate missing information in a process
+called interpolation; the result is never as good as a proper-sized original
+scan. And the more drastic the transformation, the less satisfying the out-
+come (Figure 4.2).
+
+A                    B
+
+C                    D
+
+
+RESOLUTION AND IMAGE FIDELITY  105
+
+Because of the limitations imposed by resolution, it’s helpful if you can
+anticipate how the image will be used and control photography or scanning
+accordingly. For typical image content, you can probably scale up to 120–125
+percent.  If the image is background content without much detail, such as
+
+a soft-focus landscape, you have more leeway and can probably get away
+with scaling up to 150–200 percent. Conversely, if you need to maintain very
+small details, you may be limited to a maximum of 120 percent.
+
+Photoshop CC introduced a new method that does a better job of scaling up
+images and upsampling them to higher resolutions—Preserve Details. While
+the results won’t be equal to a higher resolution original image, it’s a definite
+improvement over earlier methods (Figure 4.3).
+
+Figure 4.3 If you have
+to scale up an image, or
+
+artificially increase its resolu-
+tion, be sure to choose the
+Preserve Details option in
+
+the Photoshop CC Image Size
+dialog box. Tip: If you select
+“Automatic,” Photoshop CC
+chooses the best method for
+resampling.
+
+Scaling Down
+
+Scaling down an image also involves interpolation. While the loss of data
+may not be quite so obvious when you reduce the size of an image, there can
+be some softening of detail. For best results, choose the Automatic option in
+the Image Size dialog box in Photoshop CC; it applies some sharpening to
+camouflage the reduction in detail. While it’s acceptable to scale images in
+InDesign,  if you find it necessary to scale an image below 75 percent of its
+original size in your page layout, consider scaling it down in Photoshop CC
+instead, because InDesign can’t sharpen image content.
+
+
+106  CHAPTER 4: PREPARING RASTER IMAGES
+
+Scanning Artwork
+
+If you are incorporating flat artwork such as pen-and-ink drawings or paint-
+ings in your design, you have several choices for digitizing the artwork. If
+you have a good flatbed scanner, you may be able to capture the artwork
+without any special handling. To provide some flexibility in later usages of
+the scanned image, consider performing two scans at 100 percent: one at
+300 ppi, and one at 600 ppi if your scanner supports it. Then, you have two
+robust images that can be resized for a wider range of uses.
+
+If your flatbed scanner isn’t up to the task, ask if your print service provider
+performs scanning. Many printers have high-end scanners capable of cap-
+turing and enlarging artwork. If you have transparencies or negative film
+that must be scanned, the printer’s professional scanners can capture detail
+and perform enlargements with higher-quality results than are possible
+with consumer-level scanners.
+
+Some materials, such as textured paper, dimensional paint (such as heavy
+acrylic or oil paint), metal, or transparent substrates, don’t scan well. The
+scanner’s illumination bounces off metallic components and often appears
+black   in the scanned image. Because of the even, frontal lighting of the scan-
+ner, texture is subdued or lost. And you can’t very well pin a statue under
+the  lid of your scanner. If you have to capture a challenging art piece, the
+best solution might be to hire a photographer who specializes in capturing
+fine art pieces and has experience lighting and photographing such projects.
+
+Cropping and Transforming Images
+
+It would be great if you could anticipate the exact size, crop, and angle at
+which you’ll want to use an image in your page layout. But it may be difficult
+to see that far down the line at the moment you’re pressing the button on
+your camera, or slipping a print under the lid of your flatbed scanner. Oh,
+and watch out for that little gust of wind that comes along just as you’re put-
+ting the scanner lid down…
+
+
+CROPPING AND TRANSFORMING IMAGES  107
+
+Cropping
+
+Should you crop your images? Maybe. If you’re certain about future image
+use, feel free to crop. Leave a reasonable rind around the image area you
+intend to use to provide some elbow room when you place the image in the
+final page, so you have room to reposition the image, or to provide bleed
+for the page. However, if you think there’s even a remote chance that you’ll
+want to use more of the image in the near future — maybe you’re not sure
+if  you might want to show a row of four buildings instead of just the one in
+the middle — then it’s worth keeping the whole shebang. While you may be
+reluctant to store an entire image just to keep the part with the 2-inch golf
+
+ball that you’re sure you will silhouette, give yourself a safety net and at least
+keep an uncropped backup copy of the image. Hard drive space is plentiful
+and you can always crop it later. It’s hard to recover that extra person you
+lopped off last week who turns out to be the CEO of the company.
+
+Rotating Images
+
+Almost any transformation, whether resizing or rotating, causes interpo-
+lation of pixel information. The only safe rotations are 90-degree incre-
+ments—anything else will result in softening of detail (see Figure 4.4). Think
+of    those rows and columns of pixels, much like the grid of a needlepoint
+pattern. Imagine what a challenge it would be to redraw that pattern at a
+
+42-degree angle. It should give you a little sympathy for the math Photoshop
+has to do.
+
+Figure 4.4 Repeated rota-
+tions of an image can result in
+cumulative erosion of detail
+(original image on the left,
+rotated image on the right).
+The exaggerated sharpening
+in the image on the right is a
+result of Photoshop’s attempt
+to compensate for softening
+of detail.
+
+
+108  CHAPTER 4: PREPARING RASTER IMAGES
+
+All these cautions about transformations such as scaling and rotating are not
+intended to strike terror in your heart. Don’t be afraid to enlarge, reduce, or
+rotate if you need to. Just be prepared for the slight but unavoidable loss of
+detail and the degradation of the image’s appearance. Try to resize in even
+increments, and beware of oddball rotations such as 1.25 degrees in the
+interest of maintaining as much information as possible.
+
+Successive transformations—scaling and then rotating, for example—are
+particularly destructive. Let your conscience be your guide. How important
+is    the detail in the image? If it’s a key product shot, it’s worth rescanning (if
+possible). If it’s a less important image, such as a ghosted background or a
+decorative bit, you needn’t feel quite so guilty about the transformation.
+
+Where to Transform: Image Editor vs. Page-Layout Application
+
+If you are going to transform images, does it matter where the transforma-
+tion takes place? If you use Photoshop to scale an image, is the result superior
+to the outcome of scaling within your page-layout application?
+
+The answer is an unqualified, “It depends.”
+
+If you perform your scaling and rotation in Photoshop or another image-
+editing application, and then place the resulting image in a page layout at
+100 percent with no rotation, you do have a pretty good idea of how the
+image will look when it’s printed.
+
+If, however, you induce the scaling or rotation in a page layout, you’ve only
+requested those transformations—you haven’t actually performed the transfor-
+mations. They don’t really take place until the job is processed by a RIP. This
+puts you at the mercy of that RIP’s implementation of scaling and rotation
+algorithms. If you generate and submit PDFs, the rotations or distortions
+within  that PDF are still pending, and they are implemented only when the
+PDF is processed by a RIP. In other words, the original image information is
+contained in the PDF, unchanged, but earmarked for its ultimate transfor-
+mation  in the RIP.
+
+Be comforted by the fact that late-model RIPs can chew a lot more infor-
+mation in a shorter time than they used to. Rotating a few images here
+and  there won’t prevent the processing of your job. However, despite the
+improvements in RIP technology, it is still possible (although rare) to build
+a      job that can’t be processed by a RIP. (Please don’t take that remark as a
+personal challenge.)
+
+
+APPROPRIATE IMAGE FORMATS FOR PRINT  109
+
+Keep in mind, too, that if you’ve rotated an image in Photoshop and then
+subsequently applied additional scaling or rotation in a page layout, you’ve
+transformed it twice. It’s not the end of the world, but you may see some
+slight softening of detail in the finished piece.
+
+
+Appropriate Image Formats for Print
+
+How you should save your raster images is governed largely by how you
+intend to use them. Often, you will be placing images into InDesign or
+Illustrator, so you’re limited to the formats supported by those applications.
+The application may be willing to let you place a wide variety of file formats,
+but that doesn’t necessarily serve as an endorsement of file format wonder-
+fulness. In the olden days, the most commonly used image formats were
+TIFF   and EPS. However, native Photoshop files (PSD) and Photoshop PDF files
+are much more flexible, and both formats are supported by InDesign and
+Illustrator. So, there’s not much reason to use other formats unless you’re
+handing   off your images to users of other applications, such as Microsoft
+PowerPoint or Word.
+
+TIFF
+
+If you need to blindly send an image out into the world, TIFF (tagged image
+file format) is one of the most widely supported image file formats. It’s happy
+being imported into Illustrator, InDesign, Microsoft Word, and even some
+text editors—almost any application that accepts images. The TIFF image
+format supports multiple layers as well as RGB and CMYK color spaces, and
+even allows an image to contain spot-color channels (although some applica-
+tions, such as Word, do not support such nontraditional contents in a TIFF).
+
+Photoshop EPS
+
+Some equate the acronym EPS (Encapsulated PostScript) with vector artwork,
+but the encapsulated part of the format’s name gives a hint about the flexibil-
+ity of the format. It’s a container for artwork, and it can transport vector art,
+raster images, or a combination of raster and vector content. EPS is, as the
+name implies, PostScript in a bag (see the sidebar, “EPS: Raster or Vector?”).
+The historic reasons for saving an image as a Photoshop EPS were to preserve
+
+NOTE When you
+receive a JPEG image,
+
+it’s a good idea to immediately
+resave it as a PSD or TIFF to
+avoid further erosion to image
+content. Repeatedly opening,
+modifying, and resaving a JPEG
+can result in compromised
+quality if aggressive compres-
+sion  is used.
+
+
+110  CHAPTER 4: PREPARING RASTER IMAGES
+
+the special function of a PostScript-based vector clipping path used to silhou-
+ette an image or to preserve an image set up to image as a duotone. If you’re
+using InDesign and Illustrator, that’s no longer necessary.
+
+EPS: Raster or Vector?
+
+It may be a bit confusing that there are raster-based EPSs (saved from an
+image-editing program such as Photoshop) and vector-based EPSs (saved
+from a vector drawing program such as Adobe Illustrator or Adobe [formerly
+Macromedia] FreeHand). The uninitiated sometimes think that saving an
+image as an EPS magically vectorizes it. Not so. Think of the EPS format as a
+type of container. The pixels within an EPS are no different from those in their
+TIFF brethren. They’re just contained and presented in a different way.
+
+
+TRANSPARENCY TIP:
+
+Although Illustrator and
+InDesign accept and correctly
+handle opacity settings in a
+placed native Photoshop file,
+they do not correctly handle
+blending modes in a Photo-
+shop file. There are some work-
+arounds for InDesign, detailed
+in Chapter 12, “InDesign
+Production Tips.”
+
+As applications and RIPs have progressed, you’re no longer required to save
+such images as Photoshop EPS. Pixel for pixel, a Photoshop native PSD is a
+smaller file than an equivalent EPS and offers support for clipping paths as
+well  as duotone definitions.
+
+This doesn’t mean you need to hunt down your legacy Photoshop EPS files
+and resave them as PSD (unless you’re terribly bored). Just know that unless
+you need to accommodate someone else’s requirements, there’s no advantage
+to saving as Photoshop EPS now.
+
+Photoshop Native (PSD)
+
+In ancient times, the native PSD (Photoshop document) format was used
+solely for working files in Photoshop. Copies of those working files were
+flattened and saved in TIFF or EPS formats for placement in a page-layout
+program. While PageMaker allowed placement of native Photoshop files (yes,
+really  — although it did not honor transparency), QuarkXPress required TIFF
+or EPS instead. Old habits die hard, and TIFF and EPS have long been the
+standard of the industry. Not that there’s anything truly wrong with that.
+
+However, Illustrator and InDesign can take advantage of the layers and trans-
+parency in Photoshop native files, eliminating the need to go back through
+two generations of an image to make corrections to an original file. Today,
+
+
+APPROPRIATE IMAGE FORMATS FOR PRINT  111
+
+there’s no need to maintain two separate images: the working image and the
+finished file are now the same file.
+
+Photoshop PDF
+
+A Photoshop PDF (Portable Document Format) contains the same pixels as
+a garden-variety PSD, but those pixels are encased in a PDF wrapper—it’s
+
+like the chocolate-covered cherry of file formats. A Photoshop PDF comes in
+handy on special occasions, because it can contain vector and type elements
+without rasterizing the vector content, and it allows nondestructive round-
+trip editing in Photoshop.
+
+A Photoshop EPS can contain vectors and text, but the vector content will
+be converted to pixels if the file is reopened in Photoshop, losing the crisp
+vector edge—so you lose the ability to edit text or vector content. A native
+Photoshop PSD can contain vector components, but page-layout programs
+rasterize the content. However, Photoshop PDFs preserve vector content
+when placed in other applications (see Table 4.1 for a feature comparison
+of common image formats).
+
+Table 4.1 Image format features
+
+Supported Feature       TIFF     EPS     PSD     JPEG     PDF
+RGB color space        X      X      X      X      X
+CMYK color space       X      X      X      X      X
+Grayscale           X      X      X      X      X
+
+ICC profiles          X      X      X      X      X
+
+Clipping paths         X      X      X      X      X
+
+Layers             X      —      X      —      X
+
+Alpha channels         X      —      X      —      X
+Spot color channels       X      1      X      —      X
+Duotones            —      X      X      —      X
+Bitmap (bi-level content)     X      X      X      —      X
+Vector data           —      2      3      —      X
+
+Transparency          X      —      X      —      X
+
+1 If saved as DCS 2.0 (a variant of the EPS format)
+
+2 EPSs cannot be reopened in Photoshop with vector content intact
+
+3 Page-layout applications rasterize vector content in PSDs
+
+
+112  CHAPTER 4: PREPARING RASTER IMAGES
+
+
+Figure 4.5 This 1200 ppi
+bitmap scan prints nearly
+as sharply as vector art. It
+weighs in at less than 1 MB;
+a grayscale image of this
+
+size and resolution would be
+nearly 10 MB. Magnified to
+300 percent, it may look a bit
+rough, but at 100 percent it’s
+crisp and clean.
+
+Moving to Native PSD and PDF
+
+Is there any compelling reason to continue using old-fashioned TIFFs and
+EPSs? It may seem adventurous to use such new-fangled files, but workflow
+is changing. The demarcation between photo-compositing and page layout
+is blurring, and designers demand more power and flexibility from soft-
+ware. RIPs are more robust than ever, networks are faster, and hard drives
+are huge. It’s still important to know the imaging challenges posed by using
+native files (such as transparency), and it’s wise to communicate with your
+printer before you embark on the all-native path. You’re still at the mercy of
+the equipment and processes used by the printer, and if they’re lagging a bit
+behind the latest software and hardware developments, you may be limited
+by their capabilities.
+
+Bitmap Images
+
+Also called “line art images,” bitmap images contain only black and white
+pixels, with no intermediate shades of gray. If you need to scan a signature
+to add to an editorial page or scan a pen and ink sketch, a bitmap scan can
+provide a sharp, clean image. Because of the compact nature of bitmap
+scans, they can be very high resolution (usually 600–1200 ppi) but still pro-
+duce small file sizes (Figure 4.5).
+
+Special Case: Screen Captures
+
+If you’re creating software documentation for print, or you want to show
+an image of a Web page in your project, you may need to include screen
+captures of software interface components such as menus or panels in your
+
+page layouts. Screen captures are easy to make using a system utility or dedi-
+cated screen-capture software, but they require some special handling to
+print clearly. When they’re part of software documentation or instructional
+materials, it’s important that the details are as sharply rendered as possible.
+
+
+APPROPRIATE IMAGE FORMATS FOR PRINT  113
+
+
+You should understand this about screen captures: Whether you take them
+by using your system’s built-in screen-capture functionality or a third-party
+screen-capture application, you are merely intercepting information that
+eventually becomes pixels on your monitor. Regardless of your current
+monitor resolution, there is a one-to-one relationship between the fixed
+number  of pixels that an application (and your system) uses to render panels
+and menus and the number of pixels you see on your screen, even if you use
+a zoom utility. Of course, the size of the overall image you see is a function
+of your current monitor resolution, but the pixel dimensions of panels, menus,
+and tools will be identical, regardless of resolution. (Figure 4.6)
+
+An application panel that measures 244 pixels by 117 pixels appears larger
+when your screen resolution is set to 800 by 600, and it’s almost unreadably
+small when your monitor is set to 1920 by 1200. However, the panel is made
+of exactly the same number of pixels in both instances. So it doesn’t matter
+what resolution your monitor is using, or how large the panels may appear
+onscreen, or whether you use a utility to zoom in. The captured image of a
+panel   or menu will be the same in terms of pixel dimensions, regardless of
+the monitor resolution setting, and the resulting image will be 72 ppi.
+
+TIP Do an experiment:
+
+In the software of your
+choice, open a panel and posi-
+tion  it in the middle of the
+screen. Take screen shots at
+two different resolutions. Make
+a loose selection of the panel in
+one image, copy it, and place it
+into the other image. You’ll see
+that they’re identical in pixel
+count. The overall images will
+be different sizes because of the
+different monitor resolutions,
+but   the number of pixels used
+by interface components such
+as panels, menus, and tools will
+be identical.
+
+Monitor Resolution
+
+1920x1200
+
+244 x 117 pixels, 72 ppi
+
+Monitor Resolution
+
+1360x768
+
+244 x 117 pixels, 72 ppi
+
+
+Monitor Resolution
+
+800x600
+
+244 x 117 pixels, 72 ppi
+
+Monitor Resolution
+1920x1200, zoomed using OS X
+Accessibility Zoom feature
+
+244 x 117 pixels, 72 ppi
+
+Figure 4.6 The resolution
+setting of your monitor has
+no effect on the number of
+pixels used by panels and
+menus. Although this panel
+was captured at three differ-
+ent monitor resolutions, the
+three captures are identical,
+each consisting of exactly the
+same number of pixels.
+
+
+114  CHAPTER 4: PREPARING RASTER IMAGES
+
+Since it’s been drilled into you that 300 ppi is the Holy Grail of image reso-
+lution, it’s tempting to try to improve screen captures by increasing the
+resolution. Unfortunately, this usually makes them look worse by softening
+small details during interpolation.
+
+If you plan to use a screen capture at 100 percent enlargement, just leave it
+at 72 ppi (go ahead and freak out). Yes, the print service provider’s prepress
+department will raise a flag, but the examples below show why screen cap-
+tures   are not improved by increasing their resolution.
+
+As you can see in Figure 4.7, the original 72 ppi screen capture seems a bit
+coarse, but it’s readable. Increasing the resolution to 300 ppi in Photoshop may
+sound like a good idea, but the interpolation will soften detail in the image.
+
+A              B              C
+
+Figure 4.7 Image A is the original 72
+ppi screen shot. Image B is the result of
+increasing the resolution to 300 ppi,
+using   the default Bicubic method: Note
+blurry text and softened edges. Image C
+is the result of increasing the resolution
+to 288 ppi, using Nearest Neighbor.
+
+
+APPROPRIATE IMAGE FORMATS FOR PRINT  115
+
+If you do feel compelled to increase the resolution of a screen capture,
+choose Image > Image Size in Photoshop, and then set the resolution to an
+even multiple of the original resolution; for example, resample a 72 ppi
+screen shot to 288 ppi. In that same dialog box, set the Resample Image
+option to Nearest Neighbor. This avoids interpolation by simply repeat-
+ing pixels rather than attempting to create pixels. It’s not an appropriate
+approach when scaling images of a photographic nature, but it’s a helpful
+solution for screen captures, because of their special nature.
+
+Converting Screen Captures to CMYK
+
+Because screen captures are generated as RGB images, they must usually be
+converted to CMYK for print. When performing that conversion, a special
+approach is recommended to maintain the best rendering of black type. The
+default conversion of RGB to CMYK in Photoshop will render black as a four-
+color mix (Figure 4.8), with the possibility that slight misregistration on
+press will turn tiny details to mush.
+
+
+CYAN
+
+MAGENTA
+
+Figure 4.8 A conventional
+conversion from RGB to
+CMYK produces four-color
+equivalents of the gray and
+black  parts of a screen cap-
+ture. Press misregistration will
+turn text and other black or
+gray elements to an out-of-
+focus rainbow. Festive, but
+hard to read.
+
+YELLOW                  BLACK
+
+To simplify printing of screen captures, use a color-separation recipe that
+ensures that all neutral black or gray areas of the image will print only in
+black ink during the RGB-to-CMYK conversion. Neutral areas in an RGB
+image are those areas in which the RGB values are equal; for example,
+R128–G128–B128 would constitute a midtone gray.
+
+
+116  CHAPTER 4: PREPARING RASTER IMAGES
+
+To create this custom screen-capture conversion recipe in Photoshop, choose
+Edit > Color Settings to access the color-separation controls. Under Working
+Spaces, choose Custom for the CMYK setting (Figure 4.9).
+
+Figure 4.9 In the
+Color Settings dialog
+box, select Custom
+CMYK from the
+CMYK menu.
+
+In the Custom CMYK dialog box, select Maximum Black Generation
+(Figure 4.10). The curve you see may seem odd, but it merely indicates
+that   all equivalent RGB values are being replaced with black. The appear-
+ance of color elements won’t be compromised.
+
+Figure 4.10 In
+the Custom CMYK
+dialog box, select
+the Maximum
+Black Genera-
+tion setting. This
+consolidates all
+gray-equivalent
+values      to the black
+channel, minimiz-
+ing issues with
+registration.
+
+
+APPROPRIATE IMAGE FORMATS FOR PRINT  117
+
+Color elements will be composed of four colors in the final CMYK image.
+But black and gray elements will be rendered only in black (Figure 4.11).
+
+While this may look odd, it results in cleaner printing of the screen capture,
+because there aren’t four colors piling up in most of the image.
+
+
+CYAN
+
+MAGENTA
+
+Figure 4.11 All the color
+components appear on the
+cyan, magenta, and yellow
+plates. Black and gray areas
+appear only on the black
+plate. This special treatment
+ensures that screen shots
+print cleanly.
+
+YELLOW                  BLACK
+
+RGB vs. CMYK
+
+Since the dawn of desktop publishing, it’s been unquestioned that Thou
+Shalt Convert to CMYK. Those who submitted RGB files were considered
+uninformed, even uncivilized.
+
+The rules are changing, though, because of the increased use of digital print-
+ing. Although these devices may use inks or toners named cyan, magenta, yel-
+low, and black, those inks and toners have a different pigment makeup than
+the namesake inks used on offset presses, and they have a wider color gamut
+than offset inks. Inkjet devices such as large-format printers utilize additional
+inks such as light cyan, pink, light yellow, orange, and green, further extend-
+ing the range of colors that they can print.
+
+This seems like a good time to open a can of multicolored worms. After
+you’ve been told by printers for years that you should convert your images
+to CMYK before submitting, I’m now going to tell you that you might not
+have to do so. That’s because many digital devices happily digest RGB and
+can provide more vibrant output by rendering RGB content.
+
+
+118  CHAPTER 4: PREPARING RASTER IMAGES
+
+When you convert to CMYK, ranges of colors outside the CMYK gamut are
+remapped to fall within the CMYK printable gamut, and some of your most
+vibrant colors are lost forever.
+
+If you happen to have some very colorful RGB images (tropical birds would
+do the trick), try this little experiment:
+
+1.  Open the RGB image in Photoshop, and maybe make it even more
+vibrant by using Hue/Saturation or Vibrance. Get carried away; this
+is  for science, after all, not for art.
+
+2. Choose Edit > Color Settings. At the top of the dialog box, choose North
+America Prepress 2 from the menu and click OK.
+
+3.  Choose View > Proof Colors. The difference in appearance may not be
+huge, but try toggling Proof Colors on and off quickly by using the key-
+board shortcut (PC: Ctrl-Y; Mac: Cmd-Y) and watch for differences in
+bright blues and greens. Neon greens provide a particularly noticeable
+difference.
+
+4. Choose View > Gamut Warning. The gray areas are areas whose current
+RGB color will be remapped (and probably become duller) when con-
+verted to CMYK, because of the smaller color gamut of CMYK.
+
+This gives you an idea of the color range that you’ll lose when you convert
+to CMYK—and much of that color range can be imaged on many digital
+devices. Of course, ask the print service provider before you submit your
+work  to ensure that you’re sending what they want. Just don’t be surprised
+if they say “RGB is OK.”
+
+RGB as a Working Format
+
+Because the RGB gamut is larger than that of CMYK, it’s often preferable to
+perform color corrections and compositing with RGB files, converting to
+CMYK (if necessary) as late in the process as possible. If you are participat-
+ing in a fully color-managed workflow, you will keep your images as RGB
+with ICC profiles. The International Color Consortium (ICC) was formed
+by a group of graphic arts industry vendors, with the goal of promoting the
+use and standardization of color management tools. ICC profiles are meth-
+ods of describing the characteristics of devices such as scanners, presses,
+
+and printers for optimal results. Conversion will not take place until the job
+is imaged. Much of today’s software offers sophisticated support of color
+
+
+INAPPROPRIATE IMAGE FORMATS FOR PRINT  119
+
+management. For example, when exporting a PDF or printing, InDesign
+will perform the same conversion of RGB to CMYK that Photoshop would
+(assuming you’ve synchronized your color settings across all your Creative
+Cloud applications).
+
+What if the Printer Demands CMYK Images?
+
+Some print service providers and their customers have fully adopted color-
+managed workflows as part of their regular operation. But many print ser-
+vice providers (especially in North America) expect CMYK when you submit
+your job, believing that it’s what Nature intended, especially when the job
+will  be printed on an offset press (as opposed to a digital printer). Consult
+with your printer to see what they prefer. If you’re using digital photography
+or scanning your own artwork, they should be able to provide you with their
+preferred settings, so you can make appropriate conversions to CMYK.
+
+Inappropriate Image
+Formats for Print
+
+Some image formats are intended primarily for onscreen and Web use.
+Portable Network Graphics (PNG) images can contain RGB and indexed
+color  as well as transparency. While PNG can be high resolution, it has no
+support for the CMYK color space.
+
+The Windows format BMP (an abbreviation for bitmap) supports color depths
+from one-bit (black and white, with no shades of gray) to 32-bit (millions
+
+of colors) but lacks support for CMYK. BMP is not appropriate in projects
+intended for print.
+
+Graphics Interchange Format (GIF) is appropriate only for Web use because
+of its inherently low resolution and an indexed color palette limited to a
+maximum of 256 colors. Don’t use GIF for print.
+
+JPEG (Joint Photographic Experts Group), named after the committee that
+created it, has an unsavory reputation in graphic arts. Just whisper “jay-peg”
+and watch prepress operators cringe. It is a lossy compression scheme, mean-
+ing that it discards information to make a smaller digital file. But some of the
+fear of JPEGs is out of proportion to the amount of damage that takes place
+
+
+120  CHAPTER 4: PREPARING RASTER IMAGES
+
+when a JPEG is created. Assuming an image has adequate resolution, a very
+slight amount of initial JPEG compression doesn’t noticeably impair image
+quality, but aggressive compression introduces ugly rectangular artifacts,
+especially in detailed areas (Figure 4.12).
+
+Figure 4.12 There’s good
+JPEG, and there’s bad JPEG:
+
+A. Original PSD
+
+B. JPEG saved with Maximum
+Quality setting
+
+C. JPEG saved with lowest
+quality setting
+
+A             B              C
+
+Each time you open an image, make a change, then resave the image as a
+JPEG, you recompress it. Prepress paranoids will shriek that you’re ruin-
+ing your image, and there’s a little bit of truth to that. While it’s true that
+repeatedly resaving an image with low-quality compression settings would
+eventually visibly erode detail, the mere fact that an image has been saved
+as     a JPEG does not render it unusable, especially if you use a minimal level
+of compression. Despite the reputation, JPEGs aren’t inherently evil. They
+can be decent graphic citizens, even capable of containing high-resolution
+CMYK image data.
+
+That said, when you acquire a JPEG image from your digital camera or a
+stock photo service, it’s still advisable to immediately resave the image as
+
+a TIFF or PSD file to prevent further compression. However, JPEGs intended
+for Web use are low-resolution RGB files, inappropriate for print. If your
+client provides a low-resolution or aggressively compressed JPEG, there’s not
+much you can do to improve it. Even with the refined Intelligent Upsampling
+in Photoshop CC, you can only go so far. They’ll find that hard to believe,
+though, because they know there’s a tool in Photoshop called the Magic
+Wand.  Good luck explaining it to them.
+
+
+Index
+
+
+1C (one-color) jobs, 21
+
+2/1 (two-over-one) jobs, 21
+2C (two-color) jobs, 21
+
+3D effects in Illustrator, 231–233
+4/1 (four-over-one) jobs, 21
+
+4C (four-color) jobs, 21
+
+A
+
+AAs (artist alterations), 15, 21
+
+Acrobat, 317–354
+
+collaborating with, 334–336
+collecting comments in, 336–337
+
+comment and markup features, 331–334
+Compare Documents function, 173
+Distiller feature, 315, 318, 323
+
+editing PDF files in, 327–330, 354
+enabling Reader features from, 334
+font embedding in, 327
+
+forensic tools, 340–346
+
+handling image content in, 324–326
+Overprint Preview option, 304
+
+PDF compatibility with, 323
+preflighting files in, 343–346
+previewing output in, 341–342
+Print Production tools, 339–354
+product line for, 318–319
+Professional version, 10, 318
+
+repair tools, 346–354
+
+Simulate Overprint option, 306
+summarizing comments in, 337–338
+unclumping text in, 255
+
+activating fonts, 132, 139, 140–141
+
+Add Printer Marks tool, Acrobat, 348–349
+adjustment layers, 191–192, 238
+Adjustments  panel, Photoshop, 191
+Adobe  Acrobat. See Acrobat
+
+Adobe Bridge, 188, 281
+
+Adobe FreeHand, 123
+
+Adobe Illustrator. See Illustrator
+Adobe InDesign. See InDesign
+Adobe Lightroom, 102
+
+Adobe PDF Print Engine, 13
+Adobe Photoshop. See Photoshop
+
+Adobe Photoshop Elements, 102
+Adobe PostScript. See PostScript
+Adobe Reader, 318, 333–334
+
+AI files, 255–256, 278
+
+Aldus PageMaker, 4
+
+alpha channels, 204, 211
+
+alternate layouts, 285–289
+
+Aperture program, 103
+
+Appearance panel, Illustrator, 227–231
+Apple desktop computers, 4
+
+See also Macintosh computers
+Apple iPhoto, 102
+
+Apple LaserWriter, 4
+application files
+
+submitting to printers, 167–170
+
+version and platform issues with, 169–170
+aqueous coatings, 21, 56, 58
+
+area type, 246
+
+Arrow tool, Acrobat, 333
+Artboard Options dialog box, 216
+Artboard tool, 216, 217
+
+artboards (Illustrator), 215–219
+
+bleed settings, 219
+
+creating, 216–217
+
+deleting, 217, 218
+
+hiding, 217
+
+modifying, 218
+
+page layout and, 219
+
+saving files with multiple, 256–258
+trim size and, 70, 73
+
+artist alterations (AAs), 15, 21
+artwork
+
+InDesign files as, 278–279
+PDF files as, 279–280
+scanning, 11, 106
+
+Automatic (JPEG) compression, 326
+Automatic Recovery, InDesign, 290
+
+B
+
+backsaving
+
+Illustrator files, 179, 181, 254
+
+InDesign files, 179, 182, 291
+
+Photoshop files, 179, 182
+
+
+356  INDEX
+
+
+baseline, 21
+
+Bézier shapes, 128
+
+bindery, 21
+
+binding, 19, 85–90
+
+case, 86
+
+coil, 23, 89
+
+comb, 24, 88–89
+
+custom, 90
+
+perfect, 19, 32, 86–87
+
+post, 90
+
+saddle stitched, 19, 35, 85–86
+
+wire, 38, 89
+
+bitmap images, 112
+black
+
+duotone, 205
+
+rich, 55–56, 173
+
+black-and-white printing, 39–42
+
+blanket, 21
+bleed
+
+checking on proofs, 172
+die cutting and, 94–95
+
+Illustrator settings for, 219, 258
+
+importance of providing, 72–73, 161
+
+imposition related to, 77, 78
+InDesign settings for, 292–293
+printer marks indicating, 348–349
+vector artwork and, 164
+
+Blend tool, Illustrator, 239
+blended objects, 239
+
+blending modes, 110, 195, 196, 234
+
+blind embossing, 26, 96
+
+bluelines, 14, 15, 22, 173–174
+BMP file format, 119
+Bridge, Adobe, 188, 281
+
+bump plates, 22, 207
+
+C
+
+C1s paper, 22
+
+C2s paper, 22
+
+calibrating monitors, 65
+Callout tool, Acrobat, 332
+Camera Raw, 101–102
+
+cameramen, 22
+
+camera-ready art, 22
+
+case binding, 22, 86
+cast shadow effect, 274
+
+CDs
+
+distributing PDF files on, 320
+submitting jobs on, 170
+
+CEPS (color electronic prepress system), 3, 22
+channel masks, 203–204
+
+channels, Photoshop, 203–204
+
+characters, 135
+
+chase, 22
+
+choking, 53
+
+CID (Character ID) font encoding, 315
+Clean Up dialog box, Illustrator, 222
+clipping masks, 194–195
+
+clipping paths, 198–199, 200
+closed path type, 248
+
+Cloud tool, Acrobat, 333
+CMYK color
+
+adding spot color to, 207–208
+color printing and, 42–48
+explanation of acronym for, 48
+
+Illustrator options for, 214, 240–241
+
+limitations of, 47–48, 118
+
+RGB conversions to, 119, 187–188
+screen captures converted to, 115–117
+specifying screen values for, 46
+
+spot color conversions to, 50–51, 240–241
+
+coated paper, 50
+
+coatings, 17, 58–59, 159
+
+coil binding, 23, 89
+
+cold foil, 97
+
+collaborating over PDF files, 334–336
+email-based reviews, 334
+
+shared reviews, 335–336
+color
+
+checking, 171
+
+CMYK, 42–48
+
+naming, 163
+
+spot, 48–51
+
+stroke, 228–229
+
+viewing, 66–67
+
+color break, 23
+
+color cast, 23
+color corrections
+
+layers for making, 190–192
+performing in RGB color space, 185
+
+color electronic prepress system (CEPS), 3, 22
+Color Formula Guides, 48
+
+Color Key proofs, 2
+
+color management, 23, 63–64
+
+
+color modes, 214–215
+Color panel, InDesign, 280
+color printing, 42–51
+
+CMYK inks for, 42–48
+spot colors for, 48–51
+
+color proofs, 14
+
+color separations, 23, 100
+color settings files, 187–188
+color space, 162, 186–187
+
+color temperature, 14, 23–24
+
+colorimeters, 65
+
+colorizing images, 285
+
+comb binding, 24, 88–89
+
+commenting tools, 331–333
+comments
+
+adding to PDFs, 334
+
+collecting and summarizing, 336–338
+deleting from PDFs, 333
+
+Committee for Graphics Arts Technologies
+Standards (CGATS), 322
+
+Compare Documents function, 173
+compatibility, PDF file, 323
+
+Component Information dialog box, 309–310
+compressed files, 155, 167, 169–170
+
+compression settings, 325–326
+
+comps, 24
+
+computer-to-plate (CTP), 10, 16, 25
+
+Content Grabber, 273
+
+continuous tone, 24
+
+contract proofs, 14–15, 17, 24, 68
+conversions
+
+Illustrator text, 252
+Postscript to PDF, 315
+
+RGB to CMYK color, 119, 187–188
+
+screen capture to CMYK, 115–117
+spot color to CMYK, 50–51, 240–241
+
+text to outline, 126–127, 145
+Convert Colors tool, Acrobat, 348
+converter, 25
+
+corrections, 15, 173
+
+Creative Cloud, 177–182
+Adobe Bridge for, 281
+
+backsaving files from, 179, 181–182
+fonts installed by, 138–139
+hosting information for, 179
+persistent myths about, 178–179
+Typekit desktop fonts, 141–142
+version determination, 180
+
+INDEX
+
+creep, 25
+
+Cromalin proofs, 2, 25
+
+cropping images, 107
+
+crossover art, 173, 174
+
+cross-platform issues, 147–155
+
+file compression, 155
+
+file naming, 148–151
+
+fonts, 152–153
+
+graphics formats, 155
+
+Mac-to-Windows, 153–154
+progress made in, 147–148
+Windows-to-Mac, 154
+
+CTP (computer-to-plate), 10, 16, 25
+
+curing process, 25
+
+Curve Precision setting, 222–223
+custom binding, 90
+
+customer alterations, 15
+
+customer service representative (CSR), 8, 159
+
+custom-mixed inks, 25, 57, 159
+
+cutting die, 25, 93–95
+
+D
+
+DCS files, 207
+
+debossing, 26, 96
+deleting
+
+artboards, 217, 218
+
+channels, 211
+
+comments, 333
+
+layers, 191, 211
+
+paths, 211
+
+desktop printers, 65
+
+desktop publishing, 4–5
+
+dfonts, 136
+
+die, 25, 91
+
+die cutting, 19, 25, 93–95
+
+die lines, 91, 92, 94
+
+digital cameras, 26, 101–102
+
+Digital Distribution of Advertising for Publications
+(DDAP), 322
+
+digital photography, 11
+
+digital press, 26
+
+digital printing, 17, 59–63
+
+advantages of, 59–60
+
+limitations of, 60–63
+
+dingbats, 133
+
+Direct Selection tool
+Illustrator, 248
+
+InDesign, 272, 273
+
+357
+
+
+358  INDEX
+
+
+disclosure triangle, 268
+
+Distiller, Acrobat, 315, 318, 323
+
+document profiles, 213–214, 227
+Document Raster Effects settings, 225–226
+dot etchers, 26
+
+dot gain, 26, 41
+
+double spaces, 165
+
+downsampling, 325
+dpi (dots per inch), 42
+
+drag-and-drop into InDesign, 263–265
+drop shadows
+
+InDesign handling of, 274–275, 276, 278, 301,
+
+306–307
+
+Photoshop creation of, 196
+Droplet, Preflight, 346
+
+drying agents, 56
+
+duotones, 26, 205–206, 285
+DVDs
+
+distributing PDF files on, 320
+submitting jobs on, 170
+
+E
+
+edge detection, 201–202
+
+Edit Original button, InDesign, 270
+
+Edit Text & Images tool (Acrobat), 328–330
+editing graphics using, 329–330
+
+editing text using, 328–329
+editing
+
+graphics in Acrobat, 329–330
+graphics in InDesign, 270
+
+PDF files in Acrobat, 327–330, 354
+text in Acrobat, 328–329
+
+text in Illustrator, 253–254
+effects
+
+Illustrator, 221, 224–226
+
+Photoshop, 224
+
+emailing PDF files, 320, 334
+
+embedded fonts, 125–126, 144–145, 167, 249–250, 327
+
+embedding
+
+graphics in InDesign, 265–266
+images in Illustrator, 127, 237–238
+
+embossing, 26, 95–96
+
+embossing die, 25, 95, 96
+EMF file format, 124–125
+
+Encapsulated PostScript. See EPS
+Enfocus PitStop, 10, 317, 339
+
+environment controls, 64–65
+
+EPS (Encapsulated PostScript), 109–110
+drop shadows and, 278
+
+raster vs. vector, 110
+
+saving in Illustrator, 256, 258
+vector graphics and, 122–123
+
+Eraser tool, Acrobat, 333
+estimators, 9, 27
+
+EULAs (End User License Agreements), 143–144
+exporting
+
+comments from PDF files, 336–337
+InDesign files to PDF, 314
+
+PDF files from applications, 323–324
+preflight profiles, 313
+
+F
+
+fake duotones, 27, 285
+
+feathering effects, 301
+
+file extensions, 148, 151
+
+File Handing & Clipboard preferences, Illustrator,
+264–265
+
+File Transfer Protocol (FTP), 169
+files
+
+backsaving, 179, 181–182, 254, 291
+
+compressing, 167, 169–170
+
+flattening, 195
+
+naming, 148–151, 163, 212
+
+reducing size of, 291
+fills, 229–230
+
+film strippers, 27
+
+finishing processes, 18–20, 27
+
+binding, 85–90
+
+building files for, 69–74, 90–93
+
+custom, 160
+
+die cutting, 93–95
+
+embossing, 95–96
+
+foil stamping, 97
+
+folding, 74–76
+
+imposition, 76–85
+
+print specifications for, 74
+trimming, 69–74
+
+Fix Hairlines tool, Acrobat, 352
+flatbed scanners, 101, 106
+
+flatness settings, 199–200
+
+flats, 15, 27
+
+Flattener Preview option, InDesign, 308–309
+
+
+INDEX
+
+359
+
+
+flattening
+
+layers, 195
+
+transparency, 235–237, 296–307
+
+flexography, 16, 27
+
+FlightCheck software, 10, 165, 166, 168
+
+fluorescent inks, 57
+
+FM screening, 45–46
+
+foil stamping, 27–28, 56–57, 97
+
+folding, 18
+
+configuring jobs for, 74–76
+templates for, 76
+
+folding dummy, 28, 82
+
+folio, 28
+
+Font Book utility, 135, 139
+Font Explorer X Pro, 140
+FontAgent Pro, 132, 140
+
+FontDoctor, 141
+
+FontLab, 143
+
+fonts, 131–146
+
+activating, 132, 139, 140–141
+
+conflicts between, 141
+
+converting to outline, 126–127, 145
+
+cross-platform issues, 152–153
+
+embedding, 125–126, 144–145, 167, 249–250, 327
+
+identifiers for, 137
+
+Illustrator handling of, 249–250
+installed by Creative Cloud, 138–139
+licensing issues for, 143–146
+Macintosh  OS X system, 136
+management programs for, 140–141
+multilingual, 134
+
+Multiple Master, 137
+
+OpenType, 133–135
+
+PostScript, 131–132
+
+screen, 131–132
+
+sending to service providers, 145–146
+substituting, 138
+
+TrueType, 132–133
+
+Typekit desktop, 141–142
+vector artwork and, 163
+Windows system, 137
+See   also text
+
+Fonts control panel, 135
+forensic tools, Acrobat, 340–346
+FPO images, 28
+
+frames, scaling, 272
+
+Free Transform tool, InDesign, 272
+Freehand program, 123
+
+FTP (File Transfer Protocol), 169
+fulfillment, 20
+
+G
+
+ganged content, 18, 28, 78
+GIF file format, 119
+
+glazed embossing, 96
+
+global swatches, 242–245
+glossary of printing terms, 21–38
+glue flap, 93
+
+gluing, 20
+
+glyphs, 133, 134, 135
+
+GRACoL color settings files, 187–188
+grain of paper, 28
+
+graphic arts tasks
+
+desktop publishing’s redistribution of, 4–5
+historical division of, 2–3
+
+graphics
+
+Acrobat editing of, 329–330
+dragging and dropping, 263–265
+embedding/unembedding, 265–266
+extracting     from PDF files, 330
+finding missing, 269
+
+InDesign editing of, 270
+placing in InDesign, 261–263
+replacing existing, 270
+
+scaling, 273
+
+updating modified, 269
+
+See also images; vector graphics
+graphics formats. See image formats
+gravure printing, 16, 28
+
+gripper edge, 28
+
+H
+
+hairline fix, 352
+
+halftone dots, 40, 43
+
+halftones, 28
+
+black-and-white, 40–42
+
+color, 43–46
+
+hiding artboards, 217
+
+High Quality Print option, 316
+Highlight Text tool, Acrobat, 332
+hinting, 126, 163, 250
+
+hot type, 28–29
+
+
+360 INDEX
+
+
+I
+
+ICC profiles, 118
+
+IDLK files, 290
+
+IDML files, 182, 291
+
+Illustrator, 213–260
+
+3D artwork in, 231–233
+
+AI files in InDesign, 255, 278
+
+Appearance panel, 227–231
+
+artboards in, 215–219
+
+backsaving from, 122, 179, 181, 254
+
+bleed options in, 219, 258
+blended objects in, 239
+capabilities of, 129–130
+
+CMYK conversions in, 240–241
+color modes in, 214–215
+document profiles, 213–214, 227
+
+drag-and-drop into InDesign from, 264–265
+editing PDF files in, 354
+
+embedding fonts in, 249–250
+EPS files in, 123, 256, 258
+
+linked and embedded images in, 237–238
+live effects in, 221, 224–226
+
+native AI format, 122
+opening PDF files in, 260
+OpenType font support, 135
+
+Overprint Preview option, 232–233, 234, 235, 241
+
+Package function, 167–168, 258
+PDF file creation, 259–260
+PSD files used in, 110
+
+saving files from, 255–258, 259–260
+
+Scoop plug-in, 125, 258
+Separations Preview panel, 242
+
+simplifying complex artwork in, 222–223
+spot color options, 240–245
+
+symbols used in, 219–221
+templates, 227
+
+text conversion in, 252
+transparency effects in, 233–237
+trim  size in, 70, 73
+
+type features in, 245–251
+version issues, 251–255, 257–258
+
+image formats
+
+appropriate for print, 109–112, 122–124
+cross-platform compatibility of, 155
+features comparison chart, 111
+inappropriate for print, 119–120, 124–125
+
+image proofs, 170–171
+
+image work, 12
+
+images
+
+bitmap, 112
+
+colorizing, 285
+
+cropping, 107
+
+downsampling, 325
+
+editing, 270
+
+embedding, 237–238
+
+finding missing, 269
+
+linking, 237
+
+retouching, 162
+
+rotating, 107–108, 162
+
+scaling, 104–105, 162, 273
+
+unembedding, 238
+
+See also graphics; raster images
+imagesetters, 29, 63
+
+imaging software, 102–103
+importing
+
+comments from PDF files, 337
+Illustrator symbols, 221
+
+preflight profiles, 313
+
+imposition, 14, 29, 76–85
+
+multipage, 80–85
+
+nested, 78–79
+
+simple, 77–78
+
+InDesign, 261–316
+
+alternate layouts in, 285–289
+Automatic Recovery, 290
+
+backsaving from, 179, 182, 291
+bleed settings in, 292–293
+Color panel, 280
+
+colorizing images in, 285
+
+Component Information dialog box, 309–310
+drag-and-drop into, 263–265
+
+editing graphics used in, 270
+embedding/unembedding graphics in, 265–266
+files        as artwork in, 278–279
+
+finding and fixing problems in, 307–314
+Flattener Preview option, 308–309
+IDLK  files, 290
+
+Illustrator files in, 255, 264–265, 278
+
+Ink Manager, 283–284
+libraries used in, 293
+Links panel, 266–270
+
+Liquid Layout tools, 286–287
+locating missing graphics in, 269
+managing linked stories in, 288–289
+
+Object Layer Options dialog box, 275–277
+OpenType font support, 135
+
+
+INDEX
+
+361
+
+
+Overprint Preview option, 308
+Package function, 167–168, 314
+page size setup, 70
+
+paths used in, 200–201
+PDF creation in, 314–316
+
+PDF files as artwork in, 279–280
+Photoshop files in, 263–264
+placing graphics in, 261–263
+Preflight feature, 165
+
+Preview mode, 307–308
+
+PSD files used in, 110, 273–277
+reducing file size in, 291
+scaling graphics in, 273
+
+Separations Preview panel, 282–283
+Smart Guides, 294–296
+
+Smart Text Reflow, 296
+Snippets, 265
+
+Swatches panel, 280–281
+tips for using, 289–296
+transforming frames in, 272
+
+transparency effects in, 296–307
+Units & Increments setting, 75
+updating graphics in, 269–270
+
+InDesign Markup (IDML) format, 182, 291
+
+Ink Aliasing, 283
+Ink Manager
+
+Acrobat, 347–348
+
+InDesign, 283–284
+inks
+
+custom-mixed, 57, 159
+
+fluorescent, 57
+
+large color areas for, 54
+metallic, 56–57
+
+problem, 56
+
+process color, 42, 47, 50–51
+
+rich black, 55–56
+
+spot color, 48–50
+
+interpolation, 104, 105
+
+iPhoto program, 102
+
+J
+
+JDF job ticketing, 13
+job flow diagram, 7
+job jacket, 8, 29
+
+job submission, 6, 157–176
+application files for, 167–170
+page-layout file check, 164–166
+
+PDF files for, 166–167
+planning process, 160–166
+preflighting your job, 165
+preparing designs for, 158
+press  check following, 174–176
+
+proofing cycles following, 170–174
+providing printouts in, 165
+
+raster image check, 161–163
+sending job files, 166–170
+
+talking with printers about, 158–160
+vector artwork check, 163–164
+
+job ticket, 8–9, 29
+
+JPEG compression, 326
+
+JPEG file format, 101, 109, 119–120
+
+K
+
+Kelvin temperature scale, 24
+kiss plates, 207
+
+knock out, 29, 304
+
+L
+
+Lab color, 186
+
+laminate, 29
+
+layer masks, 189–190
+
+layers, 188–195
+
+adjustment, 191–192
+clipping masks and, 194–195
+
+color corrections with, 190–192
+deleting, 191, 211
+
+flattening, 195
+
+InDesign handling of, 275–277
+job submission with, 168
+layer masks and, 189–190
+merging, 195
+
+Smart Objects and, 192–194
+LCD monitors, 65
+
+leading, 28, 29
+
+letterpress printing, 16–17, 29–30
+
+libraries, InDesign, 293
+
+licensing issues for fonts, 143–146
+lighting considerations, 64, 66–67
+lighting indicator patches, 67
+Lightroom program, 102
+
+line shots, 30
+
+Line tool, Acrobat, 333
+linen tester, 30
+
+
+362  INDEX
+
+
+linked stories, 288–289
+
+linking images, 237
+
+Links panel, InDesign, 266–270
+
+Liquid Layout tools, InDesign, 286–287
+lithography, 30
+
+live effects, 221, 224–226
+
+loaded-graphics cursor, 262
+
+loupe, 30
+
+lowercase, 30
+
+lpi (lines per inch), 35–36, 40, 42
+
+M
+
+Macintosh computers
+
+cross-platform issues, 147–155
+file associations fix, 271
+filenaming conventions, 148–151
+
+font activation, 135, 139
+OS X system fonts, 136
+Save As PDF option, 315
+
+Magic Wand tool, Photoshop, 197, 198
+
+makeready, 17, 30
+
+markup tools, 331–333
+masks
+
+channel, 203–204
+
+clipping, 194–195
+
+layer, 189–190
+
+Matchprint proofs, 2, 30
+
+mechanical, 2, 30
+
+mechanical color, 31
+
+merging layers, 195
+
+metallic inks, 56–57
+
+metamerism, 66
+
+Microsoft Powerpoint, 125
+
+Mini Bridge, 263
+
+missing graphics, 269
+
+mockups, 24
+
+modified graphics, 269
+
+moiré pattern, 31, 41, 43–44, 171, 173
+
+monitor considerations, 63–68
+
+calibration, 65
+
+color management, 63–64
+
+environment controls, 64–65
+
+viewing environment, 66–67
+white point setting, 68
+
+multilingual fonts, 134
+
+multipage imposition, 80–85
+Multiple Master fonts, 137
+
+N
+
+naming files, 148–151, 163, 212
+native file formats
+
+Illustrator, 122
+
+Photoshop, 110–111
+
+nested impositions, 78–79
+
+New Document Profiles folder, 227
+
+O
+
+Object Inspector, Acrobat, 342–343
+
+Object Layer Options dialog box, InDesign, 275–277
+objects
+
+blended, 239
+
+silhouetted, 197–204
+
+Smart Objects, 192–194
+
+offset printing, 16, 17, 31
+
+on-press imaging, 16
+
+opacity, 110, 195
+
+open path type, 246–247
+OpenType fonts, 133–135, 152, 153
+OPI (Open Prepress Interface), 31
+optimizing PDFs, 353–354
+
+OttLite lamps, 67
+
+Outline view, Illustrator, 221
+outlining text, 126–127, 145, 250
+
+Output Preview tool, Acrobat, 340, 341–342
+Oval tool, Acrobat, 333
+
+overprint, 31, 172, 303–304
+Overprint Preview option
+
+Acrobat, 304
+
+Illustrator, 232–233, 234, 235, 241
+
+InDesign, 308
+
+P
+
+Package function
+
+Illustrator, 127, 167–168, 238, 251, 258
+
+InDesign, 167–168, 314
+
+Typekit desktop fonts and, 251
+page creep, 84
+
+page proofs, 2, 31
+
+page size, 70
+page-layout files
+
+checking for job submission, 164–166
+packaging elements of, 167–168
+
+page-layout programs, 4
+
+
+pagination, 32, 174
+
+PANTONE Color Bridge, 49, 51
+
+PANTONE Color Formula Guides, 48, 49, 51
+PANTONE lighting indicators, 67
+
+PANTONE PLUS libraries, 49, 240
+paper
+
+digital presses and, 62
+
+press check and behavior of, 175
+special orders for, 159
+
+path designation, 149
+paths
+
+clipping, 198–199, 200
+
+creating, 197–199
+
+deleting, 211
+
+flatness settings, 199–200
+
+simplifying, 128–129
+
+type on open/closed, 246–248
+PDF Enhancer, 353
+
+PDF files, 32
+
+adding comments to, 334
+artwork from, 279–280
+
+collaboration using, 334–336
+collecting comments on, 336–337
+
+comment and markup features for, 331–334
+compression settings, 325–326
+
+creation of, 319–327
+early conception of, 317
+editing, 327–330, 354
+
+emailing, 320, 334
+
+embedding fonts in, 144–145, 327
+exporting from applications, 323–324
+external editors for, 354
+
+extracting graphics from, 330
+forensic tools, 340–346
+
+Illustrator files saved as, 215, 259–260, 354
+image content and, 324–326
+
+InDesign files saved as, 314–316
+opening in Illustrator, 260
+origin  of, 319
+
+Photoshop PDF, 111, 210–211
+Postscript conversion to, 315
+preflight process, 10, 166
+proofs sent as, 173
+
+repair tools, 346–354
+
+resolution settings, 323–324, 325
+RIP conversion of, 12–13
+
+security of, 123
+
+settings for, 315–316, 321, 322–323
+
+INDEX
+
+submitting to printers, 166–167, 320
+summarizing comments on, 337–338
+transformations made in, 108
+
+types of, 320
+
+vector art saved as, 123–124
+PDF Optimizer, Acrobat, 353–354
+PDF Print Engine, 13
+
+PDF Reference, 319
+
+PDF Shrink, 353
+
+PDF/X-1a format, 259, 316, 322, 323
+
+PDF/X-3 format, 316, 323
+
+PDF/X-4 format, 299, 316, 323
+
+Pen tool, Photoshop, 197, 198
+Pencil tool, Acrobat, 333
+perfect binding, 19, 32, 86–87
+
+personalization, 17, 32
+
+Photoshop, 4, 102, 183–212
+
+adjustment layers, 191–192
+
+backsaving from, 179, 182
+
+channel masks, 203–204
+color space issues, 186–187
+
+drag-and-drop into InDesign from, 263–264
+duotone creation, 205–206
+
+effects in Illustrator, 224
+EPS file format, 109–110
+
+image use considerations, 184–185
+layers used in, 188–195
+
+native PSD format, 110–111, 112
+OpenType font support, 135
+PDF file format, 111, 210–211
+PSD files in InDesign, 273–277
+Refine Edge feature, 201–202
+resampling options, 186
+
+resolution issues, 185
+
+RGB to CMYK conversions, 115, 187–188
+saving files in, 210–212
+
+screen capture conversions, 115–117
+silhouetting objects in, 197–204
+spot colors added in, 207–208
+
+spot varnish plate creation, 208–209
+transparency effects in, 195–196
+vector  elements in, 209–211
+
+Photoshop Elements, 102
+
+picas, 32, 75
+
+pixels, 99, 225
+
+PlaceMultipagePDF script, 280
+
+planners, 9, 32
+
+363
+
+
+364  INDEX
+
+
+plates
+
+bump, 22, 207
+
+computer-to-plate method, 10, 16, 25
+created by printers, 15–16
+
+spot varnish, 208–209
+
+platesetters, 32, 62–63
+
+platform issues, 169
+
+PNG file format, 119, 125
+
+pocket folder, 90–93
+
+point type, 245
+
+points, 32
+
+post binding, 90
+
+PostScript, 32–33
+conversion to PDF, 315
+
+desktop publishing and, 4
+encapsulated, 109–110, 122–123
+RIP processing of, 12–13
+
+See also EPS
+
+PostScript Printer Definition (PPD) files, 315
+PostScript (Type 1) fonts, 131–132, 152
+
+potential pixels, 225
+
+Powerpoint program, 125
+
+PPD files, 315
+
+ppi (pixels per inch), 42
+preflight, 10, 33
+
+Acrobat tool for, 343–346
+
+creating custom profiles for, 311–313
+importing/sharing profiles for, 313
+InDesign feature for, 310–313
+
+prior to job submission, 165, 166
+
+Preflight Droplet, 346
+Preflight panel, InDesign, 311
+
+Preflight tool, Acrobat, 340, 343–346
+
+prepress, 10–15, 33
+
+Preserve Details option, Photoshop, 105
+Preserve Spot Colors option, Illustrator, 232
+press check, 17, 33, 174–176
+
+press issues, 51–59
+
+coatings, 58–59
+
+ink coverage, 54–57
+
+registration, 51–52
+
+trapping, 52–54
+
+press proof, 33
+
+Press Quality option, 316
+pressroom, 16–17
+
+Preview mode, InDesign, 307–308
+previewing documents
+
+in Acrobat, 341–342
+
+in InDesign, 307–309
+
+Print Production tools (Acrobat), 339–354
+Add Printer Marks tool, 348–349
+Convert Colors tool, 348
+
+Fix Hairlines tool, 352
+forensic tools, 340–346
+
+Ink Manager, 347–348
+
+Object Inspector, 342–343
+
+Output Preview tool, 340, 341–342
+
+PDF Optimizer, 353–354
+
+Preflight tool, 340, 343–346
+
+repair tools, 346–354
+
+Set Page Boxes dialog box, 350–352
+Transparency Flattening options, 353
+Trap Presets feature, 354
+
+print service providers
+
+application file submission to, 167–170
+discussing print jobs with, 158–160
+fonts  sent with jobs to, 145–146
+
+PDF file submission to, 166–167, 320
+press check with, 174–176
+
+proofing cycles with, 170–174
+sending job files to, 166–170
+
+Print to Adobe PDF option, 315
+printer alterations, 15, 33
+
+printer marks, 348–349
+
+printer profiles, 65
+
+printer’s spreads, 33–34, 80, 81, 166
+
+printing, 16–17
+
+black-and-white, 39–42
+coatings used in, 58–59
+color, 42–51
+
+digital, 17, 59–63
+
+glossary of terms for, 21–38
+
+image formats for, 109–112, 122–124
+ink coverage and, 54–57
+
+press check during, 174–176
+registration issues, 51–52
+slang  terms in, 70
+
+trapping issues, 52–54
+
+Printing Industries of America, 67
+printing plants
+
+job flow diagram for, 7
+
+overview of departments in, 6–20
+printouts of job, 165
+
+problem inks, 56
+
+process colors, 34, 42
+
+production, 10–11
+profiles
+
+document, 213–214, 227
+
+
+monitor, 65
+
+preflight, 343–346
+
+printer, 65
+
+Project Camelot, 317
+Proof Colors feature, 166
+
+proofing process, 14–15, 170–174
+
+correction check, 173
+image proof check, 170–171
+
+imposed blueline check, 173–174
+page proof check, 172–173
+signing off on proofs, 174
+
+proofs, 34
+
+contract, 14–15, 17, 24, 68
+
+image, 170–171
+
+page, 31, 172–173
+
+press, 33
+
+scatter, 35
+
+PSD files, 110–111, 211, 238, 273–277
+
+Q
+
+quadtones, 205
+
+QuarkXPress, 110, 135
+
+R
+
+random proofs, 14, 170
+
+raster image processors (RIPs), 12–13, 34
+halftone dots and, 41
+
+PDF Print Engine in, 13
+rasterization process by, 300–301
+transformations performed by, 108
+
+raster images, 99–120
+
+cropping, 107
+
+digital cameras and, 101–102
+
+file formats for printing, 109–112
+imaging software and, 102–103
+
+inappropriate formats for printing, 119–120
+placing into vector graphics, 127
+
+pre-job submission check of, 161–163
+programs for transforming, 108–109
+raster effects and, 225–226
+resolution of, 103–104, 162
+retouching work on, 162
+
+RGB vs. CMYK, 117–119
+
+rotating, 107–108, 162
+
+scaling, 104–105, 162
+
+scanners and, 100–101, 106
+
+INDEX
+
+screen captures as, 112–117
+Smart Objects as, 192, 193
+vector graphics vs., 121
+
+Raw images, 101–102
+
+Reader, Adobe, 318, 333–334
+
+reader’s spreads, 80, 81, 166
+Ready, Set, Go! program, 4
+
+Real World Color Management (Fraser, Murphy, and
+Bunting), 64
+
+Rectangle Frame tool, InDesign, 261
+Rectangle tool
+
+Acrobat, 333
+
+InDesign, 261
+
+Refine Edge feature, Photoshop, 201–202
+Reflex Blue ink, 56
+
+registered embossing, 96
+
+registration, 34
+
+digital printing and, 61
+printing inks and, 51–52
+
+Relink button
+Illustrator, 237
+
+InDesign, 269, 270
+remapping spot colors, 283–284
+repair tools, Acrobat, 346–354
+resampling images, 105, 186
+resizing.  See sizing/resizing
+resolution, 34
+
+determining for images, 103–104, 162
+digital presses and, 63
+
+PDF settings for, 323–324, 325
+
+Photoshop considerations, 185
+scaled images and, 105
+
+screen captures and, 113–115
+retouching images, 162, 171
+RGB color
+
+color correction with, 185
+converting to CMYK, 119, 187–188
+
+digital output of, 11, 118–119
+
+screen captures converted from, 115–117
+working with, 118–119
+
+RHEM lighting indicators, 67
+rich black, 55–56, 173
+
+RIPs. See raster image processors
+ROOM (RIP once, output many), 34
+rosette pattern, 44
+
+rotation
+
+checking layout files for, 165
+
+of raster images, 107–108, 162, 184–185
+
+365
+
+
+366  INDEX
+
+
+S
+
+saddle stitching, 18, 19, 35, 85–86
+
+salesperson, 6, 8, 158–159
+Save As command, 291
+Save As PDF option, 315
+saving
+
+back to older versions, 179, 181–182
+files with multiple artboards, 256–258
+Illustrator files, 255–258, 259–260
+
+Photoshop files, 210–212
+symbols in Illustrator, 221
+vector art as PDFs, 123–124
+
+scaling
+
+checking layout files for, 165
+frames and graphics, 272–273
+raster images, 104–105, 162
+
+resampling and, 184
+
+vector graphics, 121
+
+scanners, 35, 100–101, 106
+
+scanning artwork, 11, 106
+
+scatter proofs, 35, 170
+
+schedulers, 9, 35
+
+Scoop plug-in, 125, 258
+
+scoring, 35, 93
+
+screen angle, 35, 44
+
+screen captures, 112–117
+converting to CMYK, 115–117
+resolution of, 113–115
+
+screen fonts, 131–132
+
+screen printing, 17, 35
+
+screen ruling, 35–36, 40–41, 63
+
+screen values, 46
+
+Selection tool, InDesign, 272, 273
+sending job files, 166–170
+
+application files, 167–170
+
+PDF files, 166–167
+
+See also job submission
+Separations Preview panel
+
+Illustrator, 242
+
+InDesign, 282–283
+service bureau licenses, 144
+
+Set Page Boxes dialog box, Acrobat, 350–352
+shadow effects, 274–275, 276, 278
+
+See also drop shadows
+
+Shared Review wizard, Acrobat, 335
+sharing
+
+PDF files, 335–336
+
+preflight profiles, 313
+
+sheetfed presses, 36
+
+shingling, 84–85
+
+shipping, 20
+
+short print runs, 59
+signatures, 36, 80
+signing    off on proofs, 174
+silhouettes, 36, 197–204
+
+channel masks for, 203–204
+checking on proofs, 171
+edge detection for, 201–202
+path creation for, 197–200
+
+soft-edged subjects and, 201–204
+simple imposition, 77–78
+
+Simplify dialog box, Illustrator, 222–223
+Simulate Overprint option, 305, 306
+size considerations
+
+for file size, 291
+
+for print planning, 160–161
+for trim size, 70–72
+
+sizing/resizing
+artboards, 218
+
+raster images, 104–105
+Smallest File Size option, 315–316
+Smart Guides (InDesign), 294–296
+
+setting preferences for, 295–296
+Smart Spacing indicators, 295
+
+Smart Objects, 101, 192–194
+Smart Text Reflow, 296
+Snippets, InDesign, 265
+
+soft proofs, 14
+
+special effects, 172
+
+specialty inks, 56–57
+
+spiral binding, 23, 89
+
+spot colors, 36, 48–51
+
+3D artwork and, 231–233
+acronyms used for, 50
+
+adding to CMYK images, 207–208
+advantages of using, 49
+
+checking on proofs, 173
+choosing for duotones, 206
+
+converting to CMYK, 50–51, 240–241
+digital presses and, 61–62
+
+guides for choosing, 48, 49
+
+Illustrator options for, 231–232, 240–245
+InDesign options for, 280–284
+remapping  with Ink Manager, 283–284
+transparency and, 233, 303–304
+
+spot varnishes, 58, 59, 208–209
+
+
+INDEX
+
+367
+
+
+spreading, 53
+
+Stamps tool, Acrobat, 332
+stat camera, 36
+
+Sticky Notes, 331–332
+
+stitching, 18
+
+stochastic screening, 36, 45–46
+
+stories, linked, 288–289
+
+strokes, 228–231
+
+subsetting fonts, 327
+
+substituting fonts, 138
+
+Suitcase Fusion, 132, 140
+
+summarizing comments on PDFs, 337–338
+SVG filters, Illustrator, 224
+
+Swatch Options dialog box, Illustrator, 243
+swatches
+
+global, 242–245
+
+Illustrator, 242–245
+
+InDesign, 280–283
+Swatches panel
+
+Illustrator, 245
+
+InDesign, 280–281
+Symbol tools, Illustrator, 220
+symbols, Illustrator, 219–221
+system fonts
+
+Macintosh OS X, 136
+Windows OS, 137
+
+T
+
+TAC (total area coverage), 36
+templates
+
+folding project, 76
+
+Illustrator, 227
+text
+
+checking on proofs, 172
+converting to outlines, 126–127, 145
+editing in Acrobat, 328–329
+Illustrator features for, 245–251
+rasterization of, 300–301
+transparency flattening and, 298
+unclumping in Acrobat Pro, 255
+
+vector graphics and, 125–127, 163–164
+version issues related to, 252–255
+See  also fonts
+
+Text Box tool, Acrobat, 332
+Text Edit tools, Acrobat, 332
+TIFF files, 109, 211, 238
+
+toner-based printing. See digital printing
+touch plates, 207
+
+TouchUp tool, Acrobat, 330
+Toyo Color Finder, 48
+trade shops, 37
+
+transforming frames, 272
+
+transparencies, 37
+
+Transparency Blend Space, 298–299
+transparency effects
+
+Illustrator, 233–237
+
+InDesign, 296–307
+
+Photoshop, 195–196
+
+Transparency Flattener Presets, 300, 301–303
+transparency flattening
+
+Acrobat and, 353
+
+drop shadows and, 306–307
+Illustrator and, 235–237
+
+InDesign and, 296–307
+
+layer stacking order and, 298
+spot colors and, 303–304
+
+Trap Presets feature, Acrobat, 354
+trapping, 13, 37, 52–54, 172, 354
+
+trimming, 18, 69–74
+
+bleed provided for, 72–73
+margin added for, 73
+printer marks for, 348–349
+trim size and, 70–72
+
+tritones, 205
+
+TrueType fonts, 132–133, 152
+
+TRUMATCH Colorfinder, 51
+
+two-color jobs, 39–40
+
+type features (Illustrator), 245–251
+embedded fonts, 249–250
+
+open/closed paths, 246–248
+
+outlined type, 250
+
+point and area type, 245–246
+Typekit desktop fonts and, 251
+version issues and, 252–255
+See  also fonts; text
+
+Type on a Path Tool, 246
+Type tool, Illustrator, 245
+
+Typekit desktop fonts, 141–142, 180, 251
+
+typesetters, 37
+
+U
+
+uncoated paper, 50
+
+unembedding images, 238
+
+Unicode, 133
+
+UPC (universal product code), 37
+Update Link button, 269
+
+
+368  INDEX
+
+
+updating graphics, 269–270
+
+uppercase, 37
+
+UV coatings, 37, 58
+
+V
+
+variable data printing (VDP), 13, 38, 60, 160
+
+varnishes, 17, 38, 58–59, 159, 208–209
+
+vector graphics, 121–130
+color naming for, 163
+
+file formats for printing, 122–124
+inappropriate formats for printing, 124–125
+incorporating images into, 127
+
+Photoshop images and, 209–211
+
+pre-job submission check of, 163–164
+programs for creating, 129
+
+raster images vs., 121
+rasterization of, 125, 300–301
+
+simplifying, 128–129
+
+Smart Objects as, 192, 193–194
+
+text handling in, 125–127, 163–164
+
+version issues, 180–181
+
+Illustrator files and, 251–255, 257–258
+job submission and, 168–169
+
+viewing booth, 38, 66
+
+W
+
+Warnock, John, 317
+
+web presses, 38
+
+Web-based PDF files, 320
+white point setting, 68
+Windows computers
+
+cross-platform issues, 147–155
+
+filenaming conventions, 148–151
+
+font activation, 140
+
+system fonts, 137
+
+wire binding, 38, 89
+WMF file format, 124
+work paths, 200
+
+Y
+
+Yucky Discolored Box Syndrome (YDBS), 304–306
+
+Z
+
+ZIP compression, 155, 326
+
