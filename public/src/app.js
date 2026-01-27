@@ -24,6 +24,9 @@ export function render(path = '/') {
   window.scrollTo(0, 0);
   initThemeControls();
   initNavControls();
+  if (window.updateHeaderAuthState) {
+    window.updateHeaderAuthState(window.currentUser || null);
+  }
   if (route.mount) {
     route.mount();
   }

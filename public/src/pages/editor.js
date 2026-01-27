@@ -120,6 +120,7 @@ export function mountEditor() {
   let selectedToolId = null;
   let currentStoragePath = null;
   let currentDownloadUrl = null;
+  let authReady = false;
 
   const INTERNAL_EMAILS = ['hdmila@icloud.com'];
   const TOOL_GROUPS = [
@@ -298,6 +299,7 @@ export function mountEditor() {
 
   import('../firebase.js').then(({ auth, onAuthStateChanged }) => {
     onAuthStateChanged(auth, (user) => {
+      authReady = true;
       currentUser = user;
       isInternalUser = !!user && INTERNAL_EMAILS.includes(user.email?.toLowerCase());
       renderToolBadges();
@@ -309,7 +311,9 @@ export function mountEditor() {
         authBlock.style.display = 'block';
         dropzone.style.display = 'none';
         exportButton.disabled = true;
-        setState('empty', 'Sign in to upload a PDF. Tools are ready.');
+        setState('empty', 'Sign in to upload a PDF.');
+        window.history.replaceState(null, '', '/login');
+        window.dispatchEvent(new PopStateEvent('popstate'));
         return;
       }
       authBlock.style.display = 'none';
@@ -347,6 +351,12 @@ export function mountEditor() {
 
   async function refreshPreview(storagePath, label) {
     const { url } = await fetchPdfBytes(storagePath);
+    previewFrame.src = url;
+    currentDownloadUrl = url;
+    setPreviewMeta(label);
+  }
+
+  function refreshPreviewWithUrl(url, label) {
     previewFrame.src = url;
     currentDownloadUrl = url;
     setPreviewMeta(label);
@@ -533,6 +543,10 @@ export function mountEditor() {
   }
 
   function handleFiles(files) {
+    if (!authReady) {
+      setState('empty', 'Waiting for authentication...');
+      return;
+    }
     if (!currentUser) {
       setState('empty', 'Sign in to upload a PDF.');
       return;
@@ -549,7 +563,15 @@ export function mountEditor() {
       import('../engine/documents.js'),
       import('../operations.js')
     ]).then(async ([firebase, documents, operations]) => {
-      const path = `uploads/users/${currentUser.uid}/original/${docId}/${file.name}`;
+      const authedUser = firebase.auth.currentUser;
+      if (!authedUser) {
+        console.error('Upload blocked: auth.currentUser is null');
+        setState('empty', 'Sign in to upload a PDF.');
+        return;
+      }
+      currentUser = authedUser;
+      const sanitizedName = file.name.toLowerCase().endsWith('.pdf') ? file.name : `${file.name}.pdf`;
+      const path = `uploads/users/${authedUser.uid}/original/${docId}/${sanitizedName}`;
       const storageRef = firebase.ref(firebase.storage, path);
       const uploadTask = firebase.uploadBytesResumable(storageRef, file);
 
@@ -557,29 +579,33 @@ export function mountEditor() {
         const percent = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
         progressFill.style.width = `${percent}%`;
       }, (error) => {
+        console.error('Upload failed:', error);
         setState('empty', error.message || 'Upload failed.');
       }, async () => {
         const { PDFDocument } = await getPdfLib();
         const buffer = await file.arrayBuffer();
         const doc = await PDFDocument.load(buffer);
         const pageCount = doc.getPageCount();
+        const downloadUrl = await firebase.getDownloadURL(storageRef);
         await documents.createDocumentRecord({
           id: docId,
           ownerType: 'user',
-          ownerId: currentUser.uid,
-          filename: file.name,
+          ownerId: authedUser.uid,
+          filename: sanitizedName,
           storagePathOriginal: path,
           availableOperations: operations.OPERATIONS.map((op) => op.id)
         });
         await documents.updateDocumentRecord(docId, {
           storagePathWorking: path,
+          storageUrlOriginal: downloadUrl,
+          storageUrlWorking: downloadUrl,
           status: 'ready',
           pageCount
         });
         filename.textContent = `Document: ${file.name}`;
         docStatus.textContent = 'ready';
         currentStoragePath = path;
-        await refreshPreview(path, `${pageCount} page${pageCount === 1 ? '' : 's'}`);
+        refreshPreviewWithUrl(downloadUrl, `${pageCount} page${pageCount === 1 ? '' : 's'}`);
         exportButton.disabled = false;
         setState('ready', 'Document ready.');
       });

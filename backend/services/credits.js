@@ -9,6 +9,9 @@ import crypto from 'crypto';
 import { db } from '../database/connection.js';
 import { getRegistryEntry } from './registry.js';
 
+// INTERNAL ADMIN / TEST ACCOUNT — DO NOT REMOVE
+const INTERNAL_ADMIN_EMAIL = 'hdmila@icloud.com';
+
 function normalizeActionKey(actionKey) {
   return actionKey?.trim().toLowerCase();
 }
@@ -25,13 +28,29 @@ function resolveCreditCost(entry, fallbackCost = 1) {
 
 export async function recordActionOutcome({
   userId,
+  userEmail,
   actionKey,
   success = true,
+  quantity = 1,
   metadata = {}
 }) {
+  // INTERNAL ADMIN / TEST ACCOUNT — DO NOT REMOVE
+  if (userEmail?.toLowerCase() === INTERNAL_ADMIN_EMAIL) {
+    return {
+      id: `internal-${crypto.randomUUID()}`,
+      user_id: userId,
+      action_key: normalizeActionKey(actionKey),
+      credits: 0,
+      status: 'bypassed',
+      metadata: { ...metadata, quantity, baseCost: 0, internalAdmin: true },
+      created_at: new Date().toISOString()
+    };
+  }
+
   const normalizedActionKey = normalizeActionKey(actionKey);
   const registryEntry = await getRegistryEntry(normalizedActionKey);
-  const creditCost = resolveCreditCost(registryEntry, metadata.creditCost || 1);
+  const baseCost = resolveCreditCost(registryEntry, metadata.creditCost || 1);
+  const creditCost = baseCost * (quantity || 1);
 
   if (success) {
     return db.create('credit_ledger', {
@@ -41,7 +60,7 @@ export async function recordActionOutcome({
       registry_id: registryEntry?.id || null,
       credits: creditCost,
       status: 'success',
-      metadata,
+      metadata: { ...metadata, quantity, baseCost },
       created_at: new Date().toISOString()
     });
   }
@@ -53,7 +72,7 @@ export async function recordActionOutcome({
     registry_id: registryEntry?.id || null,
     credits: creditCost,
     status: 'failed',
-    metadata,
+    metadata: { ...metadata, quantity, baseCost },
     created_at: new Date().toISOString()
   });
 
@@ -64,7 +83,7 @@ export async function recordActionOutcome({
     registry_id: registryEntry?.id || null,
     credits: -creditCost,
     status: 'refunded',
-    metadata: { ...metadata, refund_for: failedEntry.id },
+    metadata: { ...metadata, refund_for: failedEntry.id, quantity, baseCost },
     created_at: new Date().toISOString()
   });
 

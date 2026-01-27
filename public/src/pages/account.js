@@ -53,9 +53,13 @@ export function mountAccount() {
     onAuth(activeAuth, async (user) => {
       if (!user) {
         status.textContent = 'Sign in required to access the editor.';
+        signInBtn.hidden = false;
+        signOutBtn.hidden = true;
         return;
       }
       status.textContent = `Signed in as ${user.email}`;
+      signInBtn.hidden = true;
+      signOutBtn.hidden = false;
       const { listUserDocuments } = await import('../engine/documents.js');
       const items = await listUserDocuments(user.uid);
       if (!items.length) {

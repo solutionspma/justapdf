@@ -7,7 +7,7 @@ export async function apiFetch(path, options = {}) {
     ...(options.headers || {})
   };
 
-  const token = getToken();
+  const token = await getToken();
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }

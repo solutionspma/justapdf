@@ -14,8 +14,9 @@ export default function Header() {
       <div class="nav-actions">
         <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">☰</button>
         <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">🌓</button>
-        <a class="ghost" href="/login" data-link>Sign In</a>
-        <a class="primary" href="/register" data-link>Get Started</a>
+        <a class="ghost" href="/login" data-link data-auth="signin">Sign In</a>
+        <a class="primary" href="/register" data-link data-auth="signup">Get Started</a>
+        <button class="ghost" id="header-signout" type="button" data-auth="signout" hidden>Sign Out</button>
       </div>
       <div class="mobile-nav" id="mobile-nav">
         <a href="/" data-link>Home</a>

@@ -8,40 +8,13 @@ import express from 'express';
 import crypto from 'crypto';
 import { db } from '../database/connection.js';
 import { recordActionOutcome } from '../services/credits.js';
+import { OPERATION_CATALOG } from '../config/operations.js';
+import { CREDIT_PACKS, SUBSCRIPTIONS, PROFESSIONAL_PACKS } from '../config/pricing.js';
 
 const router = express.Router();
 
-// Pricing configuration
-const PRICING = {
-  starter: {
-    name: 'Starter',
-    monthlyPrice: 19,
-    yearlyPrice: 190,
-    seats: 2,
-    features: ['Basic PDF Tools', '5 E-Signatures/month', 'Email Support']
-  },
-  pro: {
-    name: 'Pro',
-    monthlyPrice: 49,
-    yearlyPrice: 490,
-    seats: 5,
-    features: ['All PDF Tools', 'Unlimited E-Signatures', 'AI Contract Assistant', 'CRM Integration', 'Priority Support']
-  },
-  business: {
-    name: 'Business',
-    monthlyPrice: 129,
-    yearlyPrice: 1290,
-    seats: -1, // Unlimited
-    features: ['Everything in Pro', 'Blockchain Signatures', 'Password Override', 'API Access', 'Web3 Smart Contracts', 'Design Studio', 'Dedicated Support']
-  },
-  enterprise: {
-    name: 'Enterprise',
-    monthlyPrice: null, // Custom
-    yearlyPrice: null,
-    seats: -1,
-    features: ['Everything in Business', 'White-label', 'SSO', 'Custom Integrations', 'Dedicated Server', 'SLA Guarantee', '24/7 Support']
-  }
-};
+// Pricing configuration (legacy placeholder, keep for now)
+const PRICING = {};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PRICING & PLANS
@@ -56,6 +29,26 @@ router.get('/plans', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch plans' });
   }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// OPERATION CATALOG
+// ═══════════════════════════════════════════════════════════════════════════════
+
+router.get('/operations', async (req, res) => {
+  res.json({ success: true, operations: OPERATION_CATALOG });
+});
+
+router.get('/credit-packs', async (req, res) => {
+  res.json({ success: true, packs: CREDIT_PACKS });
+});
+
+router.get('/subscriptions', async (req, res) => {
+  res.json({ success: true, subscriptions: SUBSCRIPTIONS });
+});
+
+router.get('/professional-packs', async (req, res) => {
+  res.json({ success: true, packs: PROFESSIONAL_PACKS });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -281,7 +274,7 @@ router.get('/portal-session', async (req, res) => {
 
 router.post('/credits/consume', async (req, res) => {
   try {
-    const { actionKey, success = true, metadata = {} } = req.body;
+    const { actionKey, success = true, metadata = {}, quantity = 1 } = req.body;
 
     if (!actionKey) {
       return res.status(400).json({ success: false, error: 'actionKey is required' });
@@ -289,14 +282,49 @@ router.post('/credits/consume', async (req, res) => {
 
     const entry = await recordActionOutcome({
       userId: req.user.userId,
+      userEmail: req.user.email,
       actionKey,
       success,
+      quantity,
       metadata
     });
 
     res.status(201).json({ success: true, entry });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to record credit usage' });
+  }
+});
+
+router.post('/credits/estimate', async (req, res) => {
+  try {
+    const { actionKey, quantity = 1 } = req.body;
+    const operation = OPERATION_CATALOG.find((op) => op.id === actionKey);
+    if (!operation) {
+      return res.status(404).json({ success: false, error: 'Unknown operation' });
+    }
+
+    const estimate = operation.creditCost * (quantity || 1);
+    res.json({ success: true, actionKey, quantity, credits: estimate });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to estimate credits' });
+  }
+});
+
+router.get('/credits/balance', async (req, res) => {
+  try {
+    // INTERNAL ADMIN / TEST ACCOUNT — DO NOT REMOVE
+    if (req.user?.email?.toLowerCase() === 'hdmila@icloud.com') {
+      return res.json({ success: true, balance: Number.MAX_SAFE_INTEGER });
+    }
+    const entries = await db.findMany(
+      'credit_ledger',
+      { user_id: req.user.userId },
+      { limit: 1000, offset: 0 }
+    );
+    const balance = entries.reduce((sum, entry) => sum + (entry.credits || 0), 0);
+    res.json({ success: true, balance });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to fetch credit balance' });
   }
 });
 
