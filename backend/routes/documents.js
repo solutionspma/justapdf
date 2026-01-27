@@ -8,6 +8,9 @@
 import express from 'express';
 import crypto from 'crypto';
 import multer from 'multer';
+import { db } from '../database/connection.js';
+import { getOperationById } from '../services/operationRegistry.js';
+import { consumeCredits } from '../services/credits.js';
 
 const router = express.Router();
 
@@ -185,6 +188,71 @@ router.delete('/:id', async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // PDF OPERATIONS
 // ═══════════════════════════════════════════════════════════════════════════════
+
+router.post('/:id/execute', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { operationId, storagePath, secondaryStoragePath, metadata = {} } = req.body;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (!operationId) {
+      return res.status(400).json({ error: 'operationId is required' });
+    }
+
+    const operation = getOperationById(operationId);
+    if (!operation) {
+      return res.status(400).json({ error: 'Invalid operationId' });
+    }
+
+    if (operation.requiresUpload && !storagePath) {
+      return res.status(400).json({ error: 'storagePath is required' });
+    }
+
+    if (operation.requiresSecondFile && !secondaryStoragePath) {
+      return res.status(400).json({ error: 'secondaryStoragePath is required' });
+    }
+
+    const ownedPrefix = `uploads/users/${userId}/`;
+    if (storagePath && !storagePath.startsWith(ownedPrefix)) {
+      return res.status(403).json({ error: 'storagePath does not belong to user' });
+    }
+
+    if (secondaryStoragePath && !secondaryStoragePath.startsWith(ownedPrefix)) {
+      return res.status(403).json({ error: 'secondaryStoragePath does not belong to user' });
+    }
+
+    await consumeCredits({
+      userId,
+      userEmail: req.user?.email,
+      operationId,
+      quantity: 1,
+      metadata
+    });
+
+    const jobId = crypto.randomUUID();
+    await db.create('operation_jobs', {
+      id: jobId,
+      user_id: userId,
+      document_id: id,
+      operation_id: operationId,
+      storage_path: storagePath || null,
+      secondary_storage_path: secondaryStoragePath || null,
+      status: 'queued',
+      created_at: new Date().toISOString()
+    });
+
+    res.status(202).json({ success: true, jobId, status: 'queued' });
+  } catch (error) {
+    if (error.code === 'INSUFFICIENT_CREDITS') {
+      return res.status(402).json({ error: 'Insufficient credits' });
+    }
+    res.status(500).json({ error: 'Failed to queue operation' });
+  }
+});
 
 router.post('/:id/merge', async (req, res) => {
   try {

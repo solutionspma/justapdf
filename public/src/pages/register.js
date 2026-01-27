@@ -43,7 +43,7 @@ export function mountRegister() {
         createdAt: serverTimestamp()
       });
       status.textContent = 'Account created. Redirecting...';
-      window.history.pushState(null, '', '/account');
+      window.history.pushState(null, '', '/editor');
       window.dispatchEvent(new PopStateEvent('popstate'));
     } catch (error) {
       status.textContent = error.message || 'Registration failed.';

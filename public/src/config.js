@@ -16,5 +16,5 @@ export const supabaseConfig = {
 };
 
 export const apiConfig = {
-  baseUrl: '/.netlify/functions/api'
+  baseUrl: '/api'
 };

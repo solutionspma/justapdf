@@ -38,7 +38,7 @@ export function mountLogin() {
     try {
       await signInWithEmailAndPassword(auth, email.value, password.value);
       status.textContent = 'Signed in. Redirecting...';
-      window.history.pushState(null, '', '/account');
+      window.history.pushState(null, '', '/editor');
       window.dispatchEvent(new PopStateEvent('popstate'));
     } catch (error) {
       status.textContent = error.message || 'Sign in failed.';

@@ -31,6 +31,15 @@
   gap: 10px;
 }
 
+.nav-account {
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-alt);
+}
+
 .nav-toggle {
   display: none;
   border: 1px solid var(--border);
@@ -387,8 +396,26 @@
   border-bottom: 1px solid var(--border);
 }
 
+button.doc-row {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+button.doc-row:hover {
+  border-color: var(--accent);
+}
+
 .doc-row:last-child {
   border-bottom: none;
+}
+
+.doc-list {
+  display: grid;
+  gap: 10px;
 }
 
 .editor-shell {
@@ -544,6 +571,14 @@
   text-align: left;
   cursor: pointer;
   transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tool-button.is-disabled,
+.tool-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+  box-shadow: none;
 }
 
 .tool-button:hover {
@@ -744,6 +779,24 @@
   }
 
   .editor-tool-panel {
-    position: static;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    border-radius: 18px 18px 0 0;
+    max-height: 60vh;
+    overflow: auto;
+    transform: translateY(65%);
+    transition: transform 0.2s ease;
+    z-index: 12;
+  }
+
+  .editor-tool-panel.is-open {
+    transform: translateY(0);
+  }
+
+  .editor-shell {
+    padding-bottom: 220px;
   }
 }

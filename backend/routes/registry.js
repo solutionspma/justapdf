@@ -8,6 +8,7 @@
 import express from 'express';
 import { requireRole } from '../middleware/auth.js';
 import { registerEntity, getRegistryEntry, listRegistryEntries } from '../services/registry.js';
+import { getAllOperations } from '../services/operationRegistry.js';
 
 const router = express.Router();
 
@@ -25,6 +26,14 @@ router.get('/', async (req, res) => {
     res.json({ success: true, entries });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch registry entries' });
+  }
+});
+
+router.get('/operations', async (req, res) => {
+  try {
+    res.json({ success: true, operations: getAllOperations() });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to fetch operations' });
   }
 });
 

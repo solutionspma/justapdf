@@ -7,9 +7,9 @@
 import express from 'express';
 import crypto from 'crypto';
 import { db } from '../database/connection.js';
-import { recordActionOutcome } from '../services/credits.js';
-import { OPERATION_CATALOG } from '../config/operations.js';
+import { getCreditBalance, recordActionOutcome } from '../services/credits.js';
 import { CREDIT_PACKS, SUBSCRIPTIONS, PROFESSIONAL_PACKS } from '../config/pricing.js';
+import { calculateCredits, getAllOperations } from '../services/operationRegistry.js';
 
 const router = express.Router();
 
@@ -36,7 +36,7 @@ router.get('/plans', async (req, res) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 router.get('/operations', async (req, res) => {
-  res.json({ success: true, operations: OPERATION_CATALOG });
+  res.json({ success: true, operations: getAllOperations() });
 });
 
 router.get('/credit-packs', async (req, res) => {
@@ -298,12 +298,11 @@ router.post('/credits/consume', async (req, res) => {
 router.post('/credits/estimate', async (req, res) => {
   try {
     const { actionKey, quantity = 1 } = req.body;
-    const operation = OPERATION_CATALOG.find((op) => op.id === actionKey);
-    if (!operation) {
+    const estimate = calculateCredits(actionKey, quantity);
+    if (estimate === null) {
       return res.status(404).json({ success: false, error: 'Unknown operation' });
     }
 
-    const estimate = operation.creditCost * (quantity || 1);
     res.json({ success: true, actionKey, quantity, credits: estimate });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to estimate credits' });
@@ -312,16 +311,7 @@ router.post('/credits/estimate', async (req, res) => {
 
 router.get('/credits/balance', async (req, res) => {
   try {
-    // INTERNAL ADMIN / TEST ACCOUNT — DO NOT REMOVE
-    if (req.user?.email?.toLowerCase() === 'hdmila@icloud.com') {
-      return res.json({ success: true, balance: Number.MAX_SAFE_INTEGER });
-    }
-    const entries = await db.findMany(
-      'credit_ledger',
-      { user_id: req.user.userId },
-      { limit: 1000, offset: 0 }
-    );
-    const balance = entries.reduce((sum, entry) => sum + (entry.credits || 0), 0);
+    const balance = await getCreditBalance(req.user.userId);
     res.json({ success: true, balance });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch credit balance' });

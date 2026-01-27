@@ -1,5 +1,6 @@
 import Header from '../components/Header.js';
 import Footer from '../components/Footer.js';
+import { apiFetch } from '../api.js';
 
 export default function Editor() {
   return `
@@ -75,7 +76,7 @@ export default function Editor() {
         </div>
 
         <div class="card editor-history" id="editor-history">
-          <p>No operations yet.</p>
+          <p>Recent documents will appear here.</p>
         </div>
       </div>
     </main>
@@ -112,7 +113,7 @@ export function mountEditor() {
   const mergeInput = document.createElement('input');
   mergeInput.type = 'file';
   mergeInput.accept = 'application/pdf';
-  mergeInput.multiple = true;
+  mergeInput.multiple = false;
 
   let currentUser = null;
   let currentDocId = null;
@@ -122,54 +123,79 @@ export function mountEditor() {
   let currentDownloadUrl = null;
   let authReady = false;
 
-  const INTERNAL_EMAILS = ['hdmila@icloud.com'];
-  const TOOL_GROUPS = [
+  const INTERNAL_ADMIN_UID = window.__ENV__?.INTERNAL_ADMIN_UID || '';
+  const GROUP_CONFIG = [
     {
       id: 'core',
       label: 'Core',
       description: 'Everyday PDF fundamentals.',
-      tools: [
-        { id: 'upload_pdf', label: 'Upload PDF', description: 'Bring in a PDF to start working.', creditCost: 0, status: 'available' },
-        { id: 'merge_documents', label: 'Merge PDFs', description: 'Combine multiple PDFs into one file.', creditCost: 1, unit: 'document', status: 'available' },
-        { id: 'split_pages', label: 'Split PDF', description: 'Extract selected pages into a new PDF.', creditCost: 1, unit: 'page', status: 'available' },
-        { id: 'export_pdf', label: 'Export PDF', description: 'Download the latest version instantly.', creditCost: 0, status: 'available' }
-      ]
+      toolIds: ['upload_pdf', 'merge_documents', 'split_pages', 'export_pdf']
     },
     {
       id: 'edit',
       label: 'Edit',
       description: 'Precision edits that keep layout intact.',
-      tools: [
-        { id: 'rotate_pages', label: 'Rotate pages', description: 'Rotate selected pages by 90°.', creditCost: 1, unit: 'page', status: 'available' },
-        { id: 'delete_pages', label: 'Delete pages', description: 'Remove pages from the document.', creditCost: 1, unit: 'page', status: 'available' }
-      ]
+      toolIds: ['rotate_pages', 'delete_pages']
     },
     {
       id: 'sign',
       label: 'Sign & Secure',
       description: 'Signatures, access, and protections.',
-      tools: [
-        { id: 'watermark', label: 'Add watermark', description: 'Stamp documents with identifiers.', creditCost: 1, unit: 'document', status: 'available' }
-      ]
+      toolIds: ['watermark']
     },
     {
       id: 'advanced',
       label: 'Advanced',
       description: 'High-end automation and cleanup.',
-      tools: [
-        { id: 'normalize_pdf', label: 'Normalize PDF', description: 'Rebuild the PDF for consistent structure.', creditCost: 1, unit: 'document', status: 'available' }
-      ]
+      toolIds: ['normalize_pdf']
     }
   ];
-  const TOOL_INDEX = new Map(
-    TOOL_GROUPS.flatMap((group) =>
-      group.tools.map((tool) => [tool.id, { ...tool, groupId: group.id, groupLabel: group.label }])
-    )
-  );
+  let toolGroups = [];
+  let toolIndex = new Map();
+  let operationCatalog = [];
 
   function setState(state, message) {
     shell.dataset.state = state;
     if (message) status.textContent = message;
+  }
+
+  function buildToolGroups(operations) {
+    const operationsById = new Map(operations.map((operation) => [operation.id, operation]));
+    const groups = [];
+    const used = new Set();
+
+    GROUP_CONFIG.forEach((group) => {
+      const tools = group.toolIds
+        .map((id) => operationsById.get(id))
+        .filter(Boolean)
+        .map((tool) => ({ ...tool, groupId: group.id, groupLabel: group.label }));
+      tools.forEach((tool) => used.add(tool.id));
+      if (tools.length) {
+        groups.push({ ...group, tools });
+      }
+    });
+
+    const remaining = operations
+      .filter((tool) => !used.has(tool.id))
+      .map((tool) => ({ ...tool, groupId: 'other', groupLabel: 'Other' }));
+    if (remaining.length) {
+      groups.push({
+        id: 'other',
+        label: 'Other',
+        description: 'Additional operations.',
+        tools: remaining
+      });
+    }
+
+    return groups;
+  }
+
+  function refreshToolIndex() {
+    toolIndex = new Map(
+      toolGroups.flatMap((group) =>
+        group.tools.map((tool) => [tool.id, { ...tool, groupId: group.id, groupLabel: group.label }])
+      )
+    );
   }
 
   function renderToolBadges() {
@@ -181,12 +207,12 @@ export function mountEditor() {
       `;
       return;
     }
-    toolsBadges.innerHTML = `<span class="tool-badge">All tools visible</span>`;
+    toolsBadges.innerHTML = `<span class="tool-badge">${toolIndex.size} tools loaded</span>`;
   }
 
   function renderTools() {
     if (!toolsGrid) return;
-    toolsGrid.innerHTML = TOOL_GROUPS.map((group) => `
+    toolsGrid.innerHTML = toolGroups.map((group) => `
       <section class="tool-group" data-group="${group.id}">
         <div class="tool-group-header">
           <div>
@@ -196,9 +222,9 @@ export function mountEditor() {
         </div>
         <div class="tool-group-grid">
           ${group.tools.map((tool) => `
-            <button class="tool-button" type="button" data-tool-id="${tool.id}">
-              <span class="tool-button-label">${tool.label}</span>
-              <span class="tool-button-meta">Ready</span>
+            <button class="tool-button" type="button" data-tool-id="${tool.id}" data-requires-upload="${tool.requiresUpload}">
+              <span class="tool-button-label">${tool.name}</span>
+              <span class="tool-button-meta">${tool.requiresUpload ? 'Requires PDF' : 'Ready'}</span>
             </button>
           `).join('')}
         </div>
@@ -208,7 +234,7 @@ export function mountEditor() {
     toolsGrid.querySelectorAll('[data-tool-id]').forEach((button) => {
       button.addEventListener('click', () => {
         const toolId = button.dataset.toolId;
-        const tool = TOOL_INDEX.get(toolId);
+        const tool = toolIndex.get(toolId);
         if (!tool) return;
         selectedToolId = toolId;
         toolsGrid.querySelectorAll('.tool-button').forEach((btn) => btn.classList.remove('is-selected'));
@@ -216,19 +242,39 @@ export function mountEditor() {
         openToolPanel(tool);
       });
     });
+
+    syncToolAvailability();
+  }
+
+  function syncToolAvailability() {
+    if (!toolsGrid) return;
+    toolsGrid.querySelectorAll('[data-tool-id]').forEach((button) => {
+      const toolId = button.dataset.toolId;
+      const tool = toolIndex.get(toolId);
+      if (!tool) return;
+      const disabled = tool.requiresUpload && !currentDocId;
+      button.disabled = disabled;
+      button.classList.toggle('is-disabled', disabled);
+      const meta = button.querySelector('.tool-button-meta');
+      if (meta) {
+        meta.textContent = disabled ? 'Upload required' : 'Ready';
+      }
+    });
   }
 
   function openToolPanel(tool) {
-    toolPanelTitle.textContent = tool.label;
+    const requiresUpload = tool.requiresUpload && !currentDocId && tool.id !== 'upload_pdf';
+    toolPanelTitle.textContent = tool.name;
     toolPanelDesc.textContent = tool.description;
     toolPanelGroup.textContent = tool.groupLabel;
-    toolPanelStatus.textContent = 'Ready';
-    toolPanelStatus.classList.add('is-ready');
-    toolPanelStatus.classList.remove('is-coming');
+    toolPanelStatus.textContent = requiresUpload ? 'Waiting for PDF' : 'Ready';
+    toolPanelStatus.classList.toggle('is-ready', !requiresUpload);
+    toolPanelStatus.classList.toggle('is-coming', requiresUpload);
+    toolPanel.classList.add('is-open');
     if (isInternalUser) {
       toolPanelCredits.textContent = 'Credits: Unlimited';
     } else if (tool.creditCost > 0) {
-      toolPanelCredits.textContent = `Credits: ${tool.creditCost}${tool.unit ? ` / ${tool.unit}` : ''}`;
+      toolPanelCredits.textContent = `Credits: ${tool.creditCost}`;
     } else {
       toolPanelCredits.textContent = 'Credits: Free';
     }
@@ -245,7 +291,7 @@ export function mountEditor() {
       stateMessage = currentDocId ? 'Ready to download the latest PDF.' : 'Upload a PDF to export.';
       actionLabel = 'Export PDF';
       actionEnabled = !!currentDocId;
-    } else if (!currentDocId) {
+    } else if (tool.requiresUpload && !currentDocId) {
       stateMessage = 'Upload a PDF to run this tool.';
       actionLabel = 'Upload required';
     } else {
@@ -262,6 +308,7 @@ export function mountEditor() {
   toolPanelClose.addEventListener('click', () => {
     selectedToolId = null;
     toolsGrid.querySelectorAll('.tool-button').forEach((btn) => btn.classList.remove('is-selected'));
+    toolPanel.classList.remove('is-open');
     toolPanelTitle.textContent = 'Select a tool';
     toolPanelDesc.textContent = 'Click any tool to see what it does.';
     toolPanelGroup.textContent = 'Core';
@@ -275,7 +322,7 @@ export function mountEditor() {
 
   toolPanelAction.addEventListener('click', async () => {
     const toolId = selectedToolId;
-    const tool = TOOL_INDEX.get(toolId);
+    const tool = toolIndex.get(toolId);
     if (!tool) return;
     if (tool.id === 'upload_pdf') {
       if (!currentUser) {
@@ -297,14 +344,84 @@ export function mountEditor() {
     await runToolOperation(tool);
   });
 
+  async function loadOperations() {
+    try {
+      const response = await apiFetch('/registry/operations');
+      operationCatalog = response.operations || [];
+      toolGroups = buildToolGroups(operationCatalog);
+      refreshToolIndex();
+      renderTools();
+      renderToolBadges();
+    } catch (error) {
+      if (toolsGrid) {
+        toolsGrid.innerHTML = '<p class="muted">Unable to load tools right now.</p>';
+      }
+      setState('empty', 'Unable to load tools.');
+    }
+  }
+
+  async function loadUserDocuments(userId) {
+    if (!history) return;
+    const { listUserDocuments } = await import('../engine/documents.js');
+    const documents = await listUserDocuments(userId);
+    if (!documents.length) {
+      history.innerHTML = '<p>No documents yet. Upload a PDF to get started.</p>';
+      return;
+    }
+
+    history.innerHTML = `
+      <div class="doc-list">
+        ${documents.map((doc) => `
+          <button class="doc-row" type="button" data-doc-id="${doc.id}">
+            <span>${doc.filename || doc.name || 'Untitled PDF'}</span>
+            <span>${doc.status || 'ready'}</span>
+          </button>
+        `).join('')}
+      </div>
+    `;
+
+    history.querySelectorAll('[data-doc-id]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const doc = documents.find((item) => item.id === button.dataset.docId);
+        if (doc) {
+          selectDocument(doc);
+        }
+      });
+    });
+  }
+
+  async function selectDocument(doc) {
+    currentDocId = doc.id;
+    currentStoragePath = doc.storagePathWorking || doc.storagePathOriginal || null;
+    const docLabel = doc.filename || doc.name || 'Document';
+    filename.textContent = `Document: ${docLabel}`;
+    docStatus.textContent = doc.status || 'ready';
+
+    if (doc.storageUrlWorking || doc.storageUrlOriginal) {
+      refreshPreviewWithUrl(
+        doc.storageUrlWorking || doc.storageUrlOriginal,
+        doc.pageCount ? `${doc.pageCount} page${doc.pageCount === 1 ? '' : 's'}` : 'PDF loaded'
+      );
+    } else if (currentStoragePath) {
+      await refreshPreview(
+        currentStoragePath,
+        doc.pageCount ? `${doc.pageCount} page${doc.pageCount === 1 ? '' : 's'}` : 'PDF loaded'
+      );
+    }
+
+    exportButton.disabled = !currentStoragePath;
+    syncToolAvailability();
+    setState('ready', 'Document loaded.');
+  }
+
   import('../firebase.js').then(({ auth, onAuthStateChanged }) => {
     onAuthStateChanged(auth, (user) => {
       authReady = true;
       currentUser = user;
-      isInternalUser = !!user && INTERNAL_EMAILS.includes(user.email?.toLowerCase());
+      isInternalUser = !!user && INTERNAL_ADMIN_UID && user.uid === INTERNAL_ADMIN_UID;
       renderToolBadges();
       if (selectedToolId) {
-        const tool = TOOL_INDEX.get(selectedToolId);
+        const tool = toolIndex.get(selectedToolId);
         if (tool) openToolPanel(tool);
       }
       if (!user) {
@@ -319,7 +436,9 @@ export function mountEditor() {
       authBlock.style.display = 'none';
       dropzone.style.display = 'block';
       exportButton.disabled = !currentDocId;
-      setState('empty', 'Drop a PDF to begin. Tools are ready.');
+      setState('empty', 'Drop a PDF to begin. Tools are loading.');
+      loadOperations().then(() => syncToolAvailability());
+      loadUserDocuments(user.uid);
     });
   });
 
@@ -339,16 +458,6 @@ export function mountEditor() {
     return { url, bytes: new Uint8Array(await response.arrayBuffer()) };
   }
 
-  async function uploadPdfBytes(bytes, path) {
-    const firebase = await import('../firebase.js');
-    const storageRef = firebase.ref(firebase.storage, path);
-    const uploadTask = firebase.uploadBytesResumable(storageRef, bytes, { contentType: 'application/pdf' });
-    await new Promise((resolve, reject) => {
-      uploadTask.on('state_changed', () => {}, reject, resolve);
-    });
-    return path;
-  }
-
   async function refreshPreview(storagePath, label) {
     const { url } = await fetchPdfBytes(storagePath);
     previewFrame.src = url;
@@ -362,167 +471,73 @@ export function mountEditor() {
     setPreviewMeta(label);
   }
 
-  function parsePageSelection(input, totalPages) {
-    if (!input || !input.trim()) {
-      return Array.from({ length: totalPages }, (_, index) => index);
-    }
-    const pages = new Set();
-    input.split(',').forEach((part) => {
-      const trimmed = part.trim();
-      if (!trimmed) return;
-      if (trimmed.includes('-')) {
-        const [start, end] = trimmed.split('-').map((value) => parseInt(value.trim(), 10));
-        if (Number.isNaN(start) || Number.isNaN(end)) return;
-        const safeStart = Math.max(1, Math.min(start, totalPages));
-        const safeEnd = Math.max(1, Math.min(end, totalPages));
-        for (let page = Math.min(safeStart, safeEnd); page <= Math.max(safeStart, safeEnd); page += 1) {
-          pages.add(page - 1);
-        }
-      } else {
-        const page = parseInt(trimmed, 10);
-        if (!Number.isNaN(page) && page >= 1 && page <= totalPages) {
-          pages.add(page - 1);
-        }
-      }
-    });
-    return Array.from(pages).sort((a, b) => a - b);
-  }
-
-  async function updateDocumentWorking(path, pageCount) {
+  async function markDocumentQueued(operationId) {
     const { updateDocumentRecord, logOperation } = await import('../engine/documents.js');
     await updateDocumentRecord(currentDocId, {
-      storagePathWorking: path,
-      pageCount,
-      status: 'ready'
+      status: 'queued',
+      lastOperation: operationId
     });
-    await logOperation(currentDocId, selectedToolId || 'operation');
+    await logOperation(currentDocId, operationId);
+  }
+
+  async function selectSecondaryFile() {
+    mergeInput.value = '';
+    return await new Promise((resolve) => {
+      mergeInput.onchange = () => {
+        const file = (mergeInput.files || [])[0] || null;
+        resolve(file);
+      };
+      mergeInput.click();
+    });
+  }
+
+  async function uploadSecondaryFile(file) {
+    const firebase = await import('../firebase.js');
+    const safeName = file.name.toLowerCase().endsWith('.pdf') ? file.name : `${file.name}.pdf`;
+    const path = `uploads/users/${currentUser.uid}/secondary/${currentDocId}/${Date.now()}-${safeName}`;
+    const storageRef = firebase.ref(firebase.storage, path);
+    const uploadTask = firebase.uploadBytesResumable(storageRef, file);
+    await new Promise((resolve, reject) => {
+      uploadTask.on('state_changed', () => {}, reject, resolve);
+    });
+    return path;
   }
 
   async function runToolOperation(tool) {
-    setState('running_operation', 'Running operation...');
-    const { PDFDocument, degrees, rgb } = await getPdfLib();
-    const { bytes } = await fetchPdfBytes(currentStoragePath);
-    const pdfDoc = await PDFDocument.load(bytes);
-    let resultDoc = pdfDoc;
-    let operationCancelled = false;
+    if (tool.requiresUpload && !currentDocId) {
+      setState('empty', 'Upload a PDF to run this tool.');
+      return;
+    }
 
-    if (tool.id === 'merge_documents') {
-      mergeInput.click();
-      await new Promise((resolve) => {
-        mergeInput.onchange = async () => {
-          const files = Array.from(mergeInput.files || []).filter((file) => file.type === 'application/pdf');
-          mergeInput.value = '';
-          if (!files.length) {
-            setState('ready', 'Merge cancelled.');
-            operationCancelled = true;
-            resolve();
-            return;
-          }
-          const mergedDoc = await PDFDocument.create();
-          const basePages = await mergedDoc.copyPages(pdfDoc, pdfDoc.getPageIndices());
-          basePages.forEach((page) => mergedDoc.addPage(page));
-          for (const file of files) {
-            const buffer = await file.arrayBuffer();
-            const incomingDoc = await PDFDocument.load(buffer);
-            const incomingPages = await mergedDoc.copyPages(incomingDoc, incomingDoc.getPageIndices());
-            incomingPages.forEach((page) => mergedDoc.addPage(page));
-          }
-          resultDoc = mergedDoc;
-          resolve();
-        };
+    setState('running_operation', 'Queuing operation...');
+    let secondaryStoragePath = null;
+
+    if (tool.requiresSecondFile) {
+      const file = await selectSecondaryFile();
+      if (!file) {
+        setState('ready', 'Operation cancelled.');
+        return;
+      }
+      secondaryStoragePath = await uploadSecondaryFile(file);
+    }
+
+    try {
+      const response = await apiFetch(`/documents/${currentDocId}/execute`, {
+        method: 'POST',
+        body: JSON.stringify({
+          operationId: tool.id,
+          storagePath: currentStoragePath,
+          secondaryStoragePath
+        })
       });
-      if (operationCancelled) {
-        return;
-      }
-    }
 
-    if (tool.id === 'split_pages') {
-      const pageCount = pdfDoc.getPageCount();
-      const selection = prompt(`Pages to extract (1-${pageCount}, ex: 1-2,4):`, '1');
-      if (!selection) {
-        setState('ready', 'Split cancelled.');
-        return;
-      }
-      const indices = parsePageSelection(selection, pageCount);
-      const newDoc = await PDFDocument.create();
-      const pages = await newDoc.copyPages(pdfDoc, indices);
-      pages.forEach((page) => newDoc.addPage(page));
-      resultDoc = newDoc;
+      docStatus.textContent = response.status || 'queued';
+      history.innerHTML = `<p>Queued: ${tool.name}</p>`;
+      await markDocumentQueued(tool.id);
+      setState('ready', `${tool.name} queued.`);
+    } catch (error) {
+      setState('ready', error.message || 'Failed to queue operation.');
     }
-
-    if (tool.id === 'rotate_pages') {
-      const pageCount = pdfDoc.getPageCount();
-      const degreesInput = prompt('Rotate by degrees (90, 180, 270):', '90');
-      if (!degreesInput) {
-        setState('ready', 'Rotate cancelled.');
-        return;
-      }
-      const rotation = parseInt(degreesInput, 10);
-      if (![90, 180, 270].includes(rotation)) {
-        setState('ready', 'Rotate cancelled: invalid degrees.');
-        return;
-      }
-      const selection = prompt(`Pages to rotate (1-${pageCount}, blank for all):`, '');
-      const indices = parsePageSelection(selection, pageCount);
-      indices.forEach((index) => {
-        const page = pdfDoc.getPage(index);
-        page.setRotation(degrees(rotation));
-      });
-    }
-
-    if (tool.id === 'delete_pages') {
-      const pageCount = pdfDoc.getPageCount();
-      const selection = prompt(`Pages to delete (1-${pageCount}, ex: 2,4-5):`, '');
-      if (!selection) {
-        setState('ready', 'Delete cancelled.');
-        return;
-      }
-      const indices = parsePageSelection(selection, pageCount);
-      if (!indices.length) {
-        setState('ready', 'Delete cancelled.');
-        return;
-      }
-      if (indices.length >= pageCount) {
-        setState('ready', 'Delete cancelled: cannot remove all pages.');
-        return;
-      }
-      indices.reverse().forEach((index) => {
-        pdfDoc.removePage(index);
-      });
-    }
-
-    if (tool.id === 'watermark') {
-      const text = prompt('Watermark text:', 'CONFIDENTIAL');
-      if (!text) {
-        setState('ready', 'Watermark cancelled.');
-        return;
-      }
-      pdfDoc.getPages().forEach((page) => {
-        const { width, height } = page.getSize();
-        page.drawText(text, {
-          x: width * 0.2,
-          y: height * 0.5,
-          size: Math.min(width, height) / 12,
-          color: rgb(0.8, 0.1, 0.1),
-          opacity: 0.3,
-          rotate: degrees(-30)
-        });
-      });
-    }
-
-    if (tool.id === 'normalize_pdf') {
-      resultDoc = pdfDoc;
-    }
-
-    const outputBytes = await resultDoc.save();
-    const outputPath = `uploads/users/${currentUser.uid}/working/${currentDocId}/${tool.id}/${Date.now()}.pdf`;
-    await uploadPdfBytes(outputBytes, outputPath);
-    currentStoragePath = outputPath;
-    const pageCount = resultDoc.getPageCount();
-    await updateDocumentWorking(outputPath, pageCount);
-    await refreshPreview(outputPath, `${pageCount} page${pageCount === 1 ? '' : 's'}`);
-    history.innerHTML = `<p>Last operation: ${tool.label}</p>`;
-    setState('ready', 'Operation complete.');
   }
 
   async function handleExport() {
@@ -560,9 +575,8 @@ export function mountEditor() {
 
     Promise.all([
       import('../firebase.js'),
-      import('../engine/documents.js'),
-      import('../operations.js')
-    ]).then(async ([firebase, documents, operations]) => {
+      import('../engine/documents.js')
+    ]).then(async ([firebase, documents]) => {
       const authedUser = firebase.auth.currentUser;
       if (!authedUser) {
         console.error('Upload blocked: auth.currentUser is null');
@@ -570,6 +584,9 @@ export function mountEditor() {
         return;
       }
       currentUser = authedUser;
+      if (!operationCatalog.length) {
+        await loadOperations();
+      }
       const sanitizedName = file.name.toLowerCase().endsWith('.pdf') ? file.name : `${file.name}.pdf`;
       const path = `uploads/users/${authedUser.uid}/original/${docId}/${sanitizedName}`;
       const storageRef = firebase.ref(firebase.storage, path);
@@ -593,7 +610,7 @@ export function mountEditor() {
           ownerId: authedUser.uid,
           filename: sanitizedName,
           storagePathOriginal: path,
-          availableOperations: operations.OPERATIONS.map((op) => op.id)
+          availableOperations: operationCatalog.map((op) => op.id)
         });
         await documents.updateDocumentRecord(docId, {
           storagePathWorking: path,
@@ -608,12 +625,16 @@ export function mountEditor() {
         refreshPreviewWithUrl(downloadUrl, `${pageCount} page${pageCount === 1 ? '' : 's'}`);
         exportButton.disabled = false;
         setState('ready', 'Document ready.');
+        syncToolAvailability();
+        loadUserDocuments(authedUser.uid);
       });
     });
   }
 
+  if (toolsGrid) {
+    toolsGrid.innerHTML = '<p class="muted">Loading tools...</p>';
+  }
   renderToolBadges();
-  renderTools();
 
   dropzone.addEventListener('click', () => fileInput.click());
   fileInput.addEventListener('change', (event) => handleFiles(event.target.files));

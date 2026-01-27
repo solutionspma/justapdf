@@ -6,11 +6,11 @@
  */
 
 import jwt from 'jsonwebtoken';
+import admin from 'firebase-admin';
 import { SUPRA_ADMIN_EMAIL, SUPRA_ADMIN_ROLE, isSupraAdminEmail } from '../config/security.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'mod-pdf-jwt-secret-change-in-production';
-// INTERNAL ADMIN / TEST ACCOUNT — DO NOT REMOVE
-const INTERNAL_ADMIN_EMAIL = 'hdmila@icloud.com';
+const INTERNAL_ADMIN_UID = process.env.INTERNAL_ADMIN_UID;
 // Role hierarchy
 const ROLE_HIERARCHY = {
   supra_admin: 110,
@@ -158,24 +158,25 @@ export const authenticate = async (req, res, next) => {
       return handleApiKeyAuth(token, req, res, next);
     }
     
-    // JWT authentication
-    const decoded = jwt.verify(token, JWT_SECRET);
-    
-    // Check if Genesis account
-    const isSupraAdmin = isSupraAdminEmail(decoded.email);
-    // INTERNAL ADMIN / TEST ACCOUNT — DO NOT REMOVE
-    const isInternalAdmin = decoded.email?.toLowerCase() === INTERNAL_ADMIN_EMAIL;
-    
+    const { decoded, source } = await resolveAuthToken(token);
+    const email = decoded.email || null;
+    const userId = decoded.userId || decoded.uid;
+    const role = decoded.role || 'user';
+
+    const isSupraAdmin = isSupraAdminEmail(email);
+    const isInternalAdmin = INTERNAL_ADMIN_UID ? userId === INTERNAL_ADMIN_UID : false;
+
     req.user = {
-      userId: decoded.userId,
-      email: decoded.email,
-      role: isSupraAdmin ? SUPRA_ADMIN_ROLE : decoded.role,
-      orgId: decoded.orgId,
-      plan: decoded.plan,
-      permissions: isSupraAdmin ? PERMISSIONS.supra_admin : PERMISSIONS[decoded.role] || [],
+      userId,
+      email,
+      role: isSupraAdmin ? SUPRA_ADMIN_ROLE : role,
+      orgId: decoded.orgId || null,
+      plan: decoded.plan || null,
+      permissions: isSupraAdmin ? PERMISSIONS.supra_admin : PERMISSIONS[role] || [],
       isSupraAdmin,
       isGenesis: isSupraAdmin,
-      isInternalAdmin
+      isInternalAdmin,
+      authSource: source
     };
     
     next();
@@ -250,21 +251,24 @@ export const optionalAuth = async (req, res, next) => {
       return next();
     }
     
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const isSupraAdmin = isSupraAdminEmail(decoded.email);
-    // INTERNAL ADMIN / TEST ACCOUNT — DO NOT REMOVE
-    const isInternalAdmin = decoded.email?.toLowerCase() === INTERNAL_ADMIN_EMAIL;
-    
+    const { decoded, source } = await resolveAuthToken(token);
+    const email = decoded.email || null;
+    const userId = decoded.userId || decoded.uid;
+    const role = decoded.role || 'user';
+    const isSupraAdmin = isSupraAdminEmail(email);
+    const isInternalAdmin = INTERNAL_ADMIN_UID ? userId === INTERNAL_ADMIN_UID : false;
+
     req.user = {
-      userId: decoded.userId,
-      email: decoded.email,
-      role: isSupraAdmin ? SUPRA_ADMIN_ROLE : decoded.role,
-      orgId: decoded.orgId,
-      plan: decoded.plan,
-      permissions: isSupraAdmin ? PERMISSIONS.supra_admin : PERMISSIONS[decoded.role] || [],
+      userId,
+      email,
+      role: isSupraAdmin ? SUPRA_ADMIN_ROLE : role,
+      orgId: decoded.orgId || null,
+      plan: decoded.plan || null,
+      permissions: isSupraAdmin ? PERMISSIONS.supra_admin : PERMISSIONS[role] || [],
       isSupraAdmin,
       isGenesis: isSupraAdmin,
-      isInternalAdmin
+      isInternalAdmin,
+      authSource: source
     };
     
     next();
@@ -273,6 +277,20 @@ export const optionalAuth = async (req, res, next) => {
     next();
   }
 };
+
+async function resolveAuthToken(token) {
+  if (admin.apps?.length) {
+    try {
+      const decoded = await admin.auth().verifyIdToken(token);
+      return { decoded, source: 'firebase' };
+    } catch (error) {
+      // Fall through to JWT if Firebase verification fails
+    }
+  }
+
+  const decoded = jwt.verify(token, JWT_SECRET);
+  return { decoded, source: 'jwt' };
+}
 
 /**
  * Require specific role(s)

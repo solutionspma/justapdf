@@ -8,15 +8,21 @@ function updateHeaderAuthState(user) {
   const signIn = document.querySelector('[data-auth="signin"]');
   const signUp = document.querySelector('[data-auth="signup"]');
   const signOut = document.querySelector('[data-auth="signout"]');
+  const account = document.querySelector('[data-auth="account"]');
 
   if (signIn) signIn.hidden = !!user;
   if (signUp) signUp.hidden = !!user;
   if (signOut) signOut.hidden = !user;
+  if (account) {
+    account.hidden = !user;
+    account.textContent = user?.email ? `Signed in: ${user.email}` : 'Signed in';
+  }
 
   if (signOut) {
     signOut.onclick = async () => {
       await import('./firebase.js').then(({ signOut }) => signOut(auth));
-      window.location.reload();
+      window.history.pushState(null, '', '/login');
+      window.dispatchEvent(new PopStateEvent('popstate'));
     };
   }
 }
@@ -49,6 +55,15 @@ document.addEventListener('DOMContentLoaded', () => {
       if (userDoc.exists() && userDoc.data().theme) {
         applyTheme(userDoc.data().theme);
       }
+      if (['/login', '/register'].includes(window.location.pathname)) {
+        window.history.replaceState(null, '', '/editor');
+        render('/editor');
+      }
+      return;
+    }
+    if (!['/login', '/register'].includes(window.location.pathname)) {
+      window.history.replaceState(null, '', '/login');
+      render('/login');
     }
   });
 
