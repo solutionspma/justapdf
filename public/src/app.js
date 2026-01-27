@@ -5,6 +5,7 @@ import Account, { mountAccount } from './pages/account.js';
 import Login, { mountLogin } from './pages/login.js';
 import Register, { mountRegister } from './pages/register.js';
 import { initThemeControls } from './ui/themeControls.js';
+import { initNavControls } from './ui/navControls.js';
 
 const routes = {
   '/': { render: Home },
@@ -22,6 +23,7 @@ export function render(path = '/') {
   app.innerHTML = route.render();
   window.scrollTo(0, 0);
   initThemeControls();
+  initNavControls();
   if (route.mount) {
     route.mount();
   }

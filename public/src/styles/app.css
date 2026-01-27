@@ -31,6 +31,34 @@
   gap: 10px;
 }
 
+.nav-toggle {
+  display: none;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  border-radius: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.mobile-nav {
+  display: none;
+  position: absolute;
+  right: 24px;
+  top: 70px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 12px;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mobile-nav.is-open {
+  display: flex;
+}
+
 #app {
   min-height: 100vh;
   display: flex;
@@ -482,5 +510,50 @@
 
   .section-inner {
     padding: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    padding: 16px 20px;
+  }
+
+  .nav-links {
+    display: none;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .brand-logo {
+    height: 36px;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .hero-visual img {
+    width: min(320px, 85%);
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .card-grid,
+  .step-flow,
+  .pro-grid,
+  .section-media {
+    grid-template-columns: 1fr;
+  }
+
+  .page {
+    padding: 32px 18px;
   }
 }
