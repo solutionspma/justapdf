@@ -108,11 +108,11 @@ export default function Home() {
 
       <section class="section contrast">
         <div class="section-inner">
-          <h2>Why not just use Acrobat?</h2>
-          <p>Adobe built PDF. They also turned it into a subscription.</p>
-          <p>If you use PDFs all day and your company pays for it, Acrobat makes sense.</p>
-          <p>If you just need to fix a PDF and move on, it doesn’t.</p>
-          <p>JustaPDF exists for the other 98%.</p>
+          <h2>Why JustaPDF exists</h2>
+          <p>PDFs power contracts, forms, and everyday paperwork.</p>
+          <p>Most people only need quick fixes, not a heavyweight suite.</p>
+          <p>JustaPDF keeps the basics fast, transparent, and easy to access.</p>
+          <p>Pay only when real work runs—keep control the rest of the time.</p>
         </div>
       </section>
 

@@ -37,6 +37,11 @@ export async function updateDocumentStatus(id, status) {
   await updateDoc(ref, { status });
 }
 
+export async function updateDocumentRecord(id, updates) {
+  const ref = doc(db, 'documents', id);
+  await updateDoc(ref, updates);
+}
+
 export async function logOperation(id, operation) {
   const ref = doc(db, 'documents', id);
   await updateDoc(ref, {
