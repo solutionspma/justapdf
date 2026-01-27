@@ -4,6 +4,7 @@ import Pricing from './pages/pricing.js';
 import Account, { mountAccount } from './pages/account.js';
 import Login, { mountLogin } from './pages/login.js';
 import Register, { mountRegister } from './pages/register.js';
+import { initThemeControls } from './ui/themeControls.js';
 
 const routes = {
   '/': { render: Home },
@@ -20,6 +21,7 @@ export function render(path = '/') {
   if (!app) return;
   app.innerHTML = route.render();
   window.scrollTo(0, 0);
+  initThemeControls();
   if (route.mount) {
     route.mount();
   }

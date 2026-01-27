@@ -86,7 +86,7 @@
 }
 
 .contrast {
-  background: var(--surface);
+  background: var(--surface-alt);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
@@ -109,7 +109,7 @@
   content: '•';
   position: absolute;
   left: 0;
-  color: var(--brand-red);
+  color: var(--accent);
 }
 
 .card-grid {
@@ -183,7 +183,7 @@
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 20px;
-  color: var(--muted);
+  color: var(--text-muted);
 }
 
 .trust-strip span {
@@ -219,14 +219,14 @@
 }
 
 .primary {
-  background: var(--brand-red);
+  background: var(--accent);
   color: #fff;
   box-shadow: var(--shadow);
 }
 
 .ghost {
   border-color: var(--border);
-  color: var(--text);
+  color: var(--text-primary);
   background: transparent;
 }
 
@@ -253,12 +253,16 @@
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--surface);
-  color: var(--text);
+  color: var(--text-primary);
 }
 
 .ghost-link {
-  color: var(--muted);
+  color: var(--text-muted);
   font-size: 14px;
+}
+
+.muted {
+  color: var(--text-muted);
 }
 
 .pricing-grid {
@@ -301,7 +305,7 @@
 
 .empty-state {
   text-align: center;
-  color: var(--muted);
+  color: var(--text-muted);
 }
 
 .empty-state img {
@@ -316,7 +320,7 @@
 }
 
 .hero p {
-  color: var(--muted);
+  color: var(--text-secondary);
   max-width: 520px;
 }
 
@@ -330,21 +334,21 @@
 }
 
 .hero .ghost {
-  border-color: var(--brand-red);
-  color: var(--brand-red);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .toolbar .ghost {
   border-color: var(--border);
-  color: var(--text);
+  color: var(--text-primary);
 }
 
 .app-header .nav-links a:hover {
-  color: var(--brand-red);
+  color: var(--accent);
 }
 
 .auth-status {
-  color: var(--muted);
+  color: var(--text-muted);
   font-size: 14px;
 }
 
@@ -405,7 +409,7 @@
 }
 
 .editor-dropzone.is-dragging {
-  border-color: var(--brand-red);
+  border-color: var(--accent);
   background: rgba(229, 57, 53, 0.06);
 }
 
@@ -429,8 +433,41 @@
 
 .progress-fill {
   height: 100%;
-  background: var(--brand-red);
+  background: var(--accent);
   width: 0%;
+}
+
+.theme-toggle {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  border-radius: 999px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.theme-selector {
+  display: grid;
+  gap: 8px;
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.theme-option button {
+  border: 1px solid var(--border);
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  border-radius: 999px;
+  padding: 4px 10px;
+  cursor: pointer;
 }
 
 @media (max-width: 720px) {

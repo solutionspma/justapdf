@@ -12,6 +12,7 @@ export default function Header() {
         <a href="/account" data-link>Account</a>
       </nav>
       <div class="nav-actions">
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">🌓</button>
         <a class="ghost" href="/login" data-link>Sign In</a>
         <a class="primary" href="/register" data-link>Get Started</a>
       </div>

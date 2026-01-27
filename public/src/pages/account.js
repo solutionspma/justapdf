@@ -24,6 +24,10 @@ export default function Account() {
           <p>No usage yet. Run an operation and it will appear here.</p>
         </div>
       </section>
+      <section class="section">
+        <h2>Theme</h2>
+        <div class="card theme-selector" id="theme-selector"></div>
+      </section>
     </main>
     ${Footer()}
   `;
