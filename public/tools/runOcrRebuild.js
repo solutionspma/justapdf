@@ -46,9 +46,9 @@ async function runOcrWorker(imageBytes, width, height) {
 export async function runOcrRebuild(payload) {
   const bytes =
     payload?.bytes instanceof Uint8Array
-      ? payload.bytes
+      ? payload.bytes.slice()
       : payload?.bytes instanceof ArrayBuffer
-        ? new Uint8Array(payload.bytes)
+        ? new Uint8Array(payload.bytes.slice(0))
         : null;
   if (!bytes) {
     return { ok: false, reason: "Missing PDF bytes." };

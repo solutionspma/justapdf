@@ -484,7 +484,10 @@ export function mountEditor() {
 
   async function setPdfBytes(bytes, { pushHistory = true } = {}) {
     if (!bytes) return;
-    currentPdfBytes = new Uint8Array(bytes);
+    const nextBytes = bytes instanceof Uint8Array
+      ? bytes.slice()
+      : new Uint8Array(bytes).slice();
+    currentPdfBytes = nextBytes;
     if (pushHistory) {
       historyStack = historyStack.slice(0, historyIndex + 1);
       historyStack.push(currentPdfBytes);
@@ -1130,7 +1133,10 @@ export function mountEditor() {
     syncToolAvailability();
 
     const pdfjs = await getPdfJs();
-    const doc = await pdfjs.getDocument({ data: bytes }).promise;
+    const renderBytes = bytes instanceof Uint8Array
+      ? bytes.slice()
+      : new Uint8Array(bytes);
+    const doc = await pdfjs.getDocument({ data: renderBytes }).promise;
     pdfDocInstance = doc;
     updatePreviewControls();
     const containerWidth = previewFrame.clientWidth || 800;
