@@ -11,14 +11,27 @@
 <body>
   <div id="app"></div>
   <script type="module">
+    async function loadEnv(path) {
+      const response = await fetch(path);
+      if (!response.ok) {
+        throw new Error(`Env fetch failed: ${response.status}`);
+      }
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error('Env response was not JSON');
+      }
+      return response.json();
+    }
+
     async function bootstrap() {
       try {
-        const response = await fetch('/api/env');
-        if (response.ok) {
-          window.__ENV__ = await response.json();
-        }
+        window.__ENV__ = await loadEnv('/api/env');
       } catch (error) {
-        console.warn('Env load failed', error);
+        try {
+          window.__ENV__ = await loadEnv('/.netlify/functions/api/env');
+        } catch (fallbackError) {
+          console.warn('Env load failed', fallbackError);
+        }
       }
       await import('/src/main.js');
     }
