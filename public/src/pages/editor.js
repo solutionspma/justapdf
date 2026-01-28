@@ -62,7 +62,9 @@ export default function Editor() {
               </div>
               <button class="ghost" id="editor-export" type="button">Export</button>
             </div>
-            <iframe class="editor-preview-frame" id="editor-preview-frame" title="PDF preview"></iframe>
+            <div class="editor-preview-frame" id="editor-preview-frame" aria-label="PDF preview">
+              <div class="pdf-pages" id="pdf-pages"></div>
+            </div>
           </div>
         </div>
 
@@ -93,6 +95,8 @@ export default function Editor() {
           <div class="editor-tool-panel-inputs" id="tool-panel-inputs"></div>
           <div class="editor-tool-panel-state" id="tool-panel-state">Pick a tool to preview its readiness.</div>
           <div class="editor-tool-panel-actions">
+            <button class="ghost" id="tool-panel-undo" type="button" disabled>Undo</button>
+            <button class="ghost" id="tool-panel-redo" type="button" disabled>Redo</button>
             <button class="primary" id="tool-panel-action" type="button" disabled>Run tool</button>
           </div>
         </div>
@@ -117,6 +121,7 @@ export function mountEditor() {
   const history = document.getElementById('editor-history');
   const previewCard = document.getElementById('editor-preview-card');
   const previewFrame = document.getElementById('editor-preview-frame');
+  const pdfPages = document.getElementById('pdf-pages');
   const previewMeta = document.getElementById('editor-preview-meta');
   const exportButton = document.getElementById('editor-export');
   const layout = document.getElementById('editor-shell');
@@ -137,6 +142,8 @@ export function mountEditor() {
   const toolPanelState = document.getElementById('tool-panel-state');
   const toolPanelAction = document.getElementById('tool-panel-action');
   const toolPanelClose = document.getElementById('tool-panel-close');
+  const toolPanelUndo = document.getElementById('tool-panel-undo');
+  const toolPanelRedo = document.getElementById('tool-panel-redo');
   const toolPanelInputs = document.getElementById('tool-panel-inputs');
   const mergeInput = document.createElement('input');
   mergeInput.type = 'file';
@@ -151,9 +158,21 @@ export function mountEditor() {
   let currentDownloadUrl = null;
   let authReady = false;
   let localOutputUrls = [];
+  let currentPdfBytes = null;
+  let historyStack = [];
+  let historyIndex = -1;
+  let activeToolId = null;
+  let activeSelection = null;
+  let pageViewports = [];
 
   const INTERNAL_ADMIN_UID = window.__ENV__?.INTERNAL_ADMIN_UID || '';
   const GROUP_CONFIG = [
+    {
+      id: 'basics',
+      label: 'Basics',
+      description: 'Everyday editing essentials.',
+      toolIds: ['edit_text', 'insert_text', 'insert_image', 'highlight', 'draw', 'comment']
+    },
     {
       id: 'core',
       label: 'Core',
@@ -186,6 +205,56 @@ export function mountEditor() {
       description: 'Upload a PDF to begin working.',
       creditCost: 0,
       requiresUpload: false,
+      requiresSecondFile: false
+    },
+    {
+      id: 'edit_text',
+      name: 'Edit text',
+      description: 'Edit existing text objects in place.',
+      creditCost: 0,
+      requiresUpload: true,
+      requiresSecondFile: false,
+      requiresSelection: true
+    },
+    {
+      id: 'insert_text',
+      name: 'Insert text',
+      description: 'Add a new text box to the page.',
+      creditCost: 0,
+      requiresUpload: true,
+      requiresSecondFile: false
+    },
+    {
+      id: 'insert_image',
+      name: 'Insert image',
+      description: 'Place an image onto the page.',
+      creditCost: 0,
+      requiresUpload: true,
+      requiresSecondFile: false
+    },
+    {
+      id: 'highlight',
+      name: 'Highlight',
+      description: 'Highlight selected text.',
+      creditCost: 0,
+      requiresUpload: true,
+      requiresSecondFile: false,
+      requiresSelection: true
+    },
+    {
+      id: 'draw',
+      name: 'Draw',
+      description: 'Freehand drawing on the page.',
+      creditCost: 0,
+      requiresUpload: true,
+      requiresSecondFile: false
+    },
+    {
+      id: 'comment',
+      name: 'Comment',
+      description: 'Add a comment pin.',
+      creditCost: 0,
+      requiresUpload: true,
       requiresSecondFile: false
     },
     {
@@ -301,6 +370,22 @@ export function mountEditor() {
       requiresSecondFile: false
     }
   ];
+  const CLIENT_ONLY_TOOL_IDS = new Set([
+    'edit_text',
+    'insert_text',
+    'insert_image',
+    'highlight',
+    'draw',
+    'comment'
+  ]);
+  const CLIENT_EDIT_TOOLS = new Set([
+    'edit_text',
+    'insert_text',
+    'insert_image',
+    'highlight',
+    'draw',
+    'comment'
+  ]);
   let toolGroups = [];
   let toolIndex = new Map();
   let operationCatalog = [];
@@ -308,6 +393,49 @@ export function mountEditor() {
   function setState(state, message) {
     shell.dataset.state = state;
     if (message) status.textContent = message;
+  }
+
+  function emitAction(type, payload = {}) {
+    window.dispatchEvent(new CustomEvent('editor_action', { detail: { type, ...payload } }));
+  }
+
+  function updateUndoRedo() {
+    if (toolPanelUndo) {
+      toolPanelUndo.disabled = historyIndex <= 0;
+    }
+    if (toolPanelRedo) {
+      toolPanelRedo.disabled = historyIndex >= historyStack.length - 1;
+    }
+  }
+
+  async function setPdfBytes(bytes, { pushHistory = true } = {}) {
+    if (!bytes) return;
+    currentPdfBytes = new Uint8Array(bytes);
+    if (pushHistory) {
+      historyStack = historyStack.slice(0, historyIndex + 1);
+      historyStack.push(currentPdfBytes);
+      historyIndex = historyStack.length - 1;
+    }
+    await renderPdf(currentPdfBytes);
+    updateUndoRedo();
+  }
+
+  async function undoAction() {
+    if (historyIndex <= 0) return;
+    historyIndex -= 1;
+    currentPdfBytes = historyStack[historyIndex];
+    await renderPdf(currentPdfBytes);
+    emitAction('action_undo', { toolId: activeToolId });
+    updateUndoRedo();
+  }
+
+  async function redoAction() {
+    if (historyIndex >= historyStack.length - 1) return;
+    historyIndex += 1;
+    currentPdfBytes = historyStack[historyIndex];
+    await renderPdf(currentPdfBytes);
+    emitAction('action_commit', { toolId: activeToolId, redo: true });
+    updateUndoRedo();
   }
 
   function updatePanelToggle(button, collapsed, label) {
@@ -393,6 +521,9 @@ export function mountEditor() {
       leftPanel?.classList.remove('active');
       rightPanel?.classList.remove('active');
     }
+    if (currentPdfBytes) {
+      renderPdf(currentPdfBytes);
+    }
   });
 
   function buildToolGroups(operations) {
@@ -463,39 +594,16 @@ export function mountEditor() {
       metadata_strip: '🧼',
       encrypt: '🔒',
       decrypt: '🔓',
-      permissions: '🛡️'
+      permissions: '🛡️',
+      edit_text: '✍️',
+      insert_text: '🔤',
+      insert_image: '🖼️',
+      highlight: '🖍️',
+      draw: '🖊️',
+      comment: '💬'
     };
 
-    const quickTools = [
-      { label: 'Edit text', icon: '✍️' },
-      { label: 'Text box', icon: '🔤' },
-      { label: 'Insert image', icon: '🖼️' },
-      { label: 'Highlight', icon: '🖍️' },
-      { label: 'Draw', icon: '🖊️' },
-      { label: 'Comments', icon: '💬' }
-    ];
-
-    const quickSection = `
-      <section class="tool-group tool-group-quick">
-        <div class="tool-group-header">
-          <div>
-            <h3>Basics</h3>
-            <p class="muted">Common edits (coming soon).</p>
-          </div>
-        </div>
-        <div class="tool-group-grid tool-group-grid-compact">
-          ${quickTools.map((tool) => `
-            <div class="tool-button tool-button-static" aria-disabled="true">
-              <span class="tool-icon">${tool.icon}</span>
-              <span class="tool-button-label">${tool.label}</span>
-              <span class="tool-button-meta">Coming soon</span>
-            </div>
-          `).join('')}
-        </div>
-      </section>
-    `;
-
-    toolsGrid.innerHTML = quickSection + toolGroups.map((group) => `
+    toolsGrid.innerHTML = toolGroups.map((group) => `
       <section class="tool-group" data-group="${group.id}">
         <div class="tool-group-header">
           <div>
@@ -521,6 +629,7 @@ export function mountEditor() {
         const tool = toolIndex.get(toolId);
         if (!tool) return;
         selectedToolId = toolId;
+        activeToolId = toolId;
         toolsGrid.querySelectorAll('.tool-button').forEach((btn) => btn.classList.remove('is-selected'));
         button.classList.add('is-selected');
         openToolPanel(tool);
@@ -536,24 +645,31 @@ export function mountEditor() {
       const toolId = button.dataset.toolId;
       const tool = toolIndex.get(toolId);
       if (!tool) return;
-      const disabled = tool.requiresUpload && !currentDocId;
+      const needsUpload = tool.requiresUpload && !currentDocId;
+      const needsSelection = tool.requiresSelection && !activeSelection;
+      const disabled = needsUpload || needsSelection;
       button.disabled = disabled;
       button.classList.toggle('is-disabled', disabled);
       const meta = button.querySelector('.tool-button-meta');
       if (meta) {
-        meta.textContent = disabled ? 'Upload required' : 'Ready';
+        if (needsSelection) {
+          meta.textContent = 'Select text';
+        } else {
+          meta.textContent = disabled ? 'Upload required' : 'Ready';
+        }
       }
     });
   }
 
   function openToolPanel(tool) {
     const requiresUpload = tool.requiresUpload && !currentDocId && tool.id !== 'upload_pdf';
+    const requiresSelection = tool.requiresSelection && !activeSelection;
     toolPanelTitle.textContent = tool.name;
     toolPanelDesc.textContent = tool.description;
     toolPanelGroup.textContent = tool.groupLabel;
-    toolPanelStatus.textContent = requiresUpload ? 'Waiting for PDF' : 'Ready';
-    toolPanelStatus.classList.toggle('is-ready', !requiresUpload);
-    toolPanelStatus.classList.toggle('is-coming', requiresUpload);
+    toolPanelStatus.textContent = requiresUpload ? 'Waiting for PDF' : requiresSelection ? 'Select text' : 'Ready';
+    toolPanelStatus.classList.toggle('is-ready', !requiresUpload && !requiresSelection);
+    toolPanelStatus.classList.toggle('is-coming', requiresUpload || requiresSelection);
     toolPanel.classList.add('is-open');
     if (isInternalUser) {
       toolPanelCredits.textContent = 'Credits: Unlimited';
@@ -578,6 +694,9 @@ export function mountEditor() {
     } else if (tool.requiresUpload && !currentDocId) {
       stateMessage = 'Upload a PDF to run this tool.';
       actionLabel = 'Upload required';
+    } else if (tool.requiresSelection && !activeSelection) {
+      stateMessage = 'Select text to use this tool.';
+      actionLabel = 'Select text';
     } else {
       stateMessage = 'Ready to run on your current document.';
       actionLabel = 'Run tool';
@@ -592,6 +711,7 @@ export function mountEditor() {
 
   toolPanelClose.addEventListener('click', () => {
     selectedToolId = null;
+    activeToolId = null;
     toolsGrid.querySelectorAll('.tool-button').forEach((btn) => btn.classList.remove('is-selected'));
     toolPanel.classList.remove('is-open');
     toolPanelTitle.textContent = 'Select a tool';
@@ -607,6 +727,14 @@ export function mountEditor() {
       toolPanelInputs.innerHTML = '';
     }
   });
+
+  if (toolPanelUndo) {
+    toolPanelUndo.addEventListener('click', undoAction);
+  }
+
+  if (toolPanelRedo) {
+    toolPanelRedo.addEventListener('click', redoAction);
+  }
 
   toolPanelAction.addEventListener('click', async () => {
     const toolId = selectedToolId;
@@ -636,6 +764,12 @@ export function mountEditor() {
     try {
       const response = await apiFetch('/registry/operations');
       operationCatalog = response.operations || [];
+      const existing = new Set(operationCatalog.map((op) => op.id));
+      LOCAL_OPERATIONS.filter((op) => CLIENT_ONLY_TOOL_IDS.has(op.id)).forEach((op) => {
+        if (!existing.has(op.id)) {
+          operationCatalog.push(op);
+        }
+      });
       toolGroups = buildToolGroups(operationCatalog);
       refreshToolIndex();
       renderTools();
@@ -688,7 +822,7 @@ export function mountEditor() {
     docStatus.textContent = doc.status || 'ready';
 
     if (doc.storageUrlWorking || doc.storageUrlOriginal) {
-      refreshPreviewWithUrl(
+      await refreshPreviewWithUrl(
         doc.storageUrlWorking || doc.storageUrlOriginal,
         doc.pageCount ? `${doc.pageCount} page${doc.pageCount === 1 ? '' : 's'}` : 'PDF loaded'
       );
@@ -740,6 +874,363 @@ export function mountEditor() {
     return await import('https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/+esm');
   }
 
+  let pdfjsLib = null;
+
+  async function getPdfJs() {
+    if (pdfjsLib) return pdfjsLib;
+    pdfjsLib = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.min.mjs');
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.4.168/build/pdf.worker.min.mjs';
+    return pdfjsLib;
+  }
+
+  async function renderPdf(bytes) {
+    if (!pdfPages || !previewFrame) return;
+    pdfPages.innerHTML = '';
+    pageViewports = [];
+    activeSelection = null;
+    syncToolAvailability();
+
+    const pdfjs = await getPdfJs();
+    const doc = await pdfjs.getDocument({ data: bytes }).promise;
+    const containerWidth = previewFrame.clientWidth || 800;
+
+    for (let i = 1; i <= doc.numPages; i += 1) {
+      const page = await doc.getPage(i);
+      const unscaledViewport = page.getViewport({ scale: 1 });
+      const scale = Math.max(0.5, Math.min(2.5, (containerWidth - 24) / unscaledViewport.width));
+      const viewport = page.getViewport({ scale });
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      const pageWrap = document.createElement('div');
+      pageWrap.className = 'pdf-page';
+      pageWrap.dataset.pageIndex = String(i - 1);
+      pageWrap.style.position = 'relative';
+      pageWrap.style.marginBottom = '16px';
+
+      const overlay = document.createElement('div');
+      overlay.className = 'pdf-overlay';
+      overlay.style.position = 'absolute';
+      overlay.style.left = '0';
+      overlay.style.top = '0';
+      overlay.style.right = '0';
+      overlay.style.bottom = '0';
+
+      pageWrap.appendChild(canvas);
+      pageWrap.appendChild(overlay);
+      pdfPages.appendChild(pageWrap);
+
+      pageViewports.push({ pageIndex: i - 1, viewport, scale, page });
+      await page.render({ canvasContext: context, viewport }).promise;
+
+      const textContent = await page.getTextContent();
+      const textItems = textContent.items
+        .filter((item) => item.str && item.transform)
+        .map((item) => {
+          const tx = pdfjs.Util.transform(viewport.transform, item.transform);
+          const x = tx[4];
+          const y = tx[5];
+          const height = Math.hypot(tx[2], tx[3]);
+          const width = item.width * scale;
+          return {
+            text: item.str,
+            x,
+            y: y - height,
+            width,
+            height,
+            pageIndex: i - 1
+          };
+        });
+      pageViewports[i - 1].textItems = textItems;
+
+      overlay.addEventListener('click', (event) => {
+        const rect = overlay.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        handleCanvasClick(i - 1, x, y, overlay);
+      });
+
+      overlay.addEventListener('pointerdown', (event) => {
+        handleCanvasPointerDown(event, i - 1, overlay);
+      });
+    }
+  }
+
+  function handleCanvasClick(pageIndex, x, y, overlay) {
+    if (!activeToolId) return;
+    if (activeToolId === 'comment') {
+      const payload = {
+        pageIndex,
+        x,
+        y,
+        text: toolPanelInputs?.querySelector('#tool-input-comment')?.value || ''
+      };
+      runClientToolAction('comment', payload);
+      return;
+    }
+    if (activeToolId === 'edit_text' || activeToolId === 'highlight') {
+      const selection = findTextItemAt(pageIndex, x, y);
+      if (!selection) {
+        setState('ready', 'No text selected.');
+        return;
+      }
+      activeSelection = selection;
+      renderSelectionOverlay(overlay, selection);
+      syncToolAvailability();
+      if (activeToolId === 'highlight') {
+        setState('ready', 'Text selected. Run tool to highlight.');
+      } else {
+        setState('ready', 'Text selected. Run tool to edit.');
+      }
+    }
+  }
+
+  function findTextItemAt(pageIndex, x, y) {
+    const pageInfo = pageViewports[pageIndex];
+    if (!pageInfo?.textItems) return null;
+    return pageInfo.textItems.find((item) =>
+      x >= item.x && x <= item.x + item.width && y >= item.y && y <= item.y + item.height
+    ) || null;
+  }
+
+  function renderSelectionOverlay(overlay, selection) {
+    const existing = overlay.querySelector('.selection-box');
+    if (existing) existing.remove();
+    if (!selection) return;
+    const box = document.createElement('div');
+    box.className = 'selection-box';
+    box.style.position = 'absolute';
+    box.style.left = `${selection.x}px`;
+    box.style.top = `${selection.y}px`;
+    box.style.width = `${selection.width}px`;
+    box.style.height = `${selection.height}px`;
+    overlay.appendChild(box);
+  }
+
+  function handleCanvasPointerDown(event, pageIndex, overlay) {
+    if (!activeToolId) return;
+    if (activeToolId === 'draw') {
+      startFreehandDraw(event, pageIndex, overlay);
+      return;
+    }
+    if (activeToolId === 'insert_text') {
+      startTextBoxDrag(event, pageIndex, overlay);
+      return;
+    }
+    if (activeToolId === 'insert_image') {
+      startImagePlacement(event, pageIndex, overlay);
+    }
+  }
+
+  function toPdfPoint(pageIndex, x, y) {
+    const info = pageViewports[pageIndex];
+    if (!info) return { x: 0, y: 0 };
+    return {
+      x: x / info.scale,
+      y: info.page.view[3] - y / info.scale
+    };
+  }
+
+  function startTextBoxDrag(event, pageIndex, overlay) {
+    event.preventDefault();
+    const start = { x: event.offsetX, y: event.offsetY };
+    const box = document.createElement('div');
+    box.className = 'text-box-ghost';
+    box.style.position = 'absolute';
+    box.style.left = `${start.x}px`;
+    box.style.top = `${start.y}px`;
+    overlay.appendChild(box);
+
+    const onMove = (moveEvent) => {
+      const x = Math.min(start.x, moveEvent.offsetX);
+      const y = Math.min(start.y, moveEvent.offsetY);
+      const width = Math.abs(start.x - moveEvent.offsetX);
+      const height = Math.abs(start.y - moveEvent.offsetY);
+      box.style.left = `${x}px`;
+      box.style.top = `${y}px`;
+      box.style.width = `${Math.max(60, width)}px`;
+      box.style.height = `${Math.max(24, height)}px`;
+    };
+
+    const onUp = () => {
+      overlay.removeEventListener('pointermove', onMove);
+      overlay.removeEventListener('pointerup', onUp);
+      const rect = box.getBoundingClientRect();
+      const overlayRect = overlay.getBoundingClientRect();
+      const x = rect.left - overlayRect.left;
+      const y = rect.top - overlayRect.top;
+      const width = rect.width;
+      const height = rect.height;
+      box.remove();
+      spawnTextInput(overlay, pageIndex, { x, y, width, height });
+    };
+
+    overlay.addEventListener('pointermove', onMove);
+    overlay.addEventListener('pointerup', onUp, { once: true });
+  }
+
+  function spawnTextInput(overlay, pageIndex, box) {
+    const input = document.createElement('textarea');
+    input.className = 'text-box-input';
+    input.style.position = 'absolute';
+    input.style.left = `${box.x}px`;
+    input.style.top = `${box.y}px`;
+    input.style.width = `${box.width}px`;
+    input.style.height = `${box.height}px`;
+    overlay.appendChild(input);
+    input.focus();
+
+    const commit = async () => {
+      const text = input.value.trim();
+      input.remove();
+      if (!text) return;
+      const pdfBox = toPdfBox(pageIndex, box);
+      const payload = collectToolPayload({ id: 'insert_text' });
+      if (!payload) return;
+      payload.box = pdfBox;
+      payload.text = text;
+      payload.pageIndex = pageIndex;
+      await runClientToolAction('insert_text', payload);
+    };
+
+    input.addEventListener('blur', commit, { once: true });
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+        commit();
+      }
+    });
+  }
+
+  function toPdfBox(pageIndex, box) {
+    const info = pageViewports[pageIndex];
+    const x = box.x / info.scale;
+    const yTop = box.y / info.scale;
+    const width = box.width / info.scale;
+    const height = box.height / info.scale;
+    return {
+      x,
+      y: info.page.view[3] - yTop - height,
+      width,
+      height
+    };
+  }
+
+  function startImagePlacement(event, pageIndex, overlay) {
+    const payload = collectToolPayload({ id: 'insert_image' });
+    if (!payload) return;
+    const imageFile = payload.imageFile;
+    if (!imageFile) return;
+    const ghost = document.createElement('div');
+    ghost.className = 'image-ghost';
+    ghost.style.position = 'absolute';
+    ghost.style.left = `${event.offsetX - 100}px`;
+    ghost.style.top = `${event.offsetY - 100}px`;
+    ghost.style.width = '200px';
+    ghost.style.height = '200px';
+    const handle = document.createElement('div');
+    handle.className = 'image-resize-handle';
+    ghost.appendChild(handle);
+    overlay.appendChild(ghost);
+
+    let resizing = false;
+    let dragStart = null;
+    const aspect = ghost.clientWidth / ghost.clientHeight;
+
+    handle.addEventListener('pointerdown', (resizeEvent) => {
+      resizeEvent.stopPropagation();
+      resizing = true;
+      dragStart = { x: resizeEvent.clientX, y: resizeEvent.clientY };
+    });
+
+    const onMove = (moveEvent) => {
+      if (resizing && dragStart) {
+        const deltaX = moveEvent.clientX - dragStart.x;
+        const newWidth = Math.max(80, ghost.clientWidth + deltaX);
+        ghost.style.width = `${newWidth}px`;
+        ghost.style.height = `${newWidth / aspect}px`;
+        dragStart = { x: moveEvent.clientX, y: moveEvent.clientY };
+        return;
+      }
+      ghost.style.left = `${moveEvent.offsetX - ghost.clientWidth / 2}px`;
+      ghost.style.top = `${moveEvent.offsetY - ghost.clientHeight / 2}px`;
+    };
+
+    const onUp = async () => {
+      overlay.removeEventListener('pointermove', onMove);
+      overlay.removeEventListener('pointerup', onUp);
+      resizing = false;
+      const rect = ghost.getBoundingClientRect();
+      const overlayRect = overlay.getBoundingClientRect();
+      const box = {
+        x: rect.left - overlayRect.left,
+        y: rect.top - overlayRect.top,
+        width: rect.width,
+        height: rect.height
+      };
+      ghost.remove();
+      payload.box = toPdfBox(pageIndex, box);
+      payload.pageIndex = pageIndex;
+      await runClientToolAction('insert_image', payload);
+    };
+
+    overlay.addEventListener('pointermove', onMove);
+    overlay.addEventListener('pointerup', onUp, { once: true });
+  }
+
+  function startFreehandDraw(event, pageIndex, overlay) {
+    const color = toolPanelInputs?.querySelector('#tool-input-draw-color')?.value || '#ff0000';
+    const width = Number(toolPanelInputs?.querySelector('#tool-input-draw-width')?.value || 2);
+    const path = [];
+    const info = pageViewports[pageIndex];
+    if (!info) return;
+
+    const onMove = (moveEvent) => {
+      const x = moveEvent.offsetX;
+      const y = moveEvent.offsetY;
+      path.push({ x, y });
+    };
+
+    const onUp = async () => {
+      overlay.removeEventListener('pointermove', onMove);
+      overlay.removeEventListener('pointerup', onUp);
+      if (!path.length) return;
+      const rect = calculatePathRect(path);
+      const payload = {
+        pageIndex,
+        path: path.map((point) => toPdfPoint(pageIndex, point.x, point.y)),
+        rect: toPdfRectFromPath(rect, info.page.view[3], info.scale),
+        color,
+        width
+      };
+      await runClientToolAction('draw', payload);
+    };
+
+    overlay.addEventListener('pointermove', onMove);
+    overlay.addEventListener('pointerup', onUp, { once: true });
+  }
+
+  function calculatePathRect(path) {
+    const xs = path.map((p) => p.x);
+    const ys = path.map((p) => p.y);
+    return {
+      x: Math.min(...xs),
+      y: Math.min(...ys),
+      width: Math.max(...xs) - Math.min(...xs),
+      height: Math.max(...ys) - Math.min(...ys)
+    };
+  }
+
+  function toPdfRectFromPath(rect, pageHeight, scale) {
+    const x1 = rect.x / scale;
+    const y1 = pageHeight - (rect.y + rect.height) / scale;
+    const x2 = (rect.x + rect.width) / scale;
+    const y2 = pageHeight - rect.y / scale;
+    return [x1, y1, x2, y2];
+  }
+
   async function fetchPdfBytes(storagePath) {
     const firebase = await import('../firebase.js');
     const storageRef = firebase.ref(firebase.storage, storagePath);
@@ -749,15 +1240,15 @@ export function mountEditor() {
   }
 
   async function refreshPreview(storagePath, label) {
-    const { url } = await fetchPdfBytes(storagePath);
-    previewFrame.src = url;
-    setCurrentDownloadUrl(url);
+    const { bytes } = await fetchPdfBytes(storagePath);
+    await setPdfBytes(bytes, { pushHistory: true });
     setPreviewMeta(label);
   }
 
-  function refreshPreviewWithUrl(url, label) {
-    previewFrame.src = url;
-    setCurrentDownloadUrl(url);
+  async function refreshPreviewWithUrl(url, label) {
+    const response = await fetch(url);
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    await setPdfBytes(bytes, { pushHistory: true });
     setPreviewMeta(label);
   }
 
@@ -817,6 +1308,12 @@ export function mountEditor() {
 
     const payload = collectToolPayload(tool);
     if (payload === null) return;
+
+    if (CLIENT_EDIT_TOOLS.has(tool.id)) {
+      await runClientToolAction(tool.id, payload);
+      return;
+    }
+
     const ranLocal = await tryRunLocalPdfcpu(tool, payload);
     if (ranLocal) return;
 
@@ -852,6 +1349,18 @@ export function mountEditor() {
   }
 
   async function handleExport() {
+    if (currentPdfBytes) {
+      const blob = new Blob([currentPdfBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = filename.textContent.replace('Document: ', '') || 'justapdf-export.pdf';
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      return;
+    }
     if (currentDownloadUrl && currentDownloadUrl.startsWith('blob:')) {
       const anchor = document.createElement('a');
       anchor.href = currentDownloadUrl;
@@ -936,13 +1445,7 @@ export function mountEditor() {
 
       if (result.files && result.files.length) {
         const first = result.files[0];
-        const previewFile = new File([first.data], first.name || 'output.pdf', {
-          type: first.type || 'application/pdf'
-        });
-        const previewUrl = URL.createObjectURL(previewFile);
-        localOutputUrls.push(previewUrl);
-        previewFrame.src = previewUrl;
-        setCurrentDownloadUrl(previewUrl);
+        await setPdfBytes(first.data, { pushHistory: true });
         setPreviewMeta(`Local split (${result.files.length} files)`);
         history.innerHTML = `
           <div class="doc-list">
@@ -963,13 +1466,7 @@ export function mountEditor() {
         renderMetadataViewer(text, result.name || 'metadata.txt');
         setPreviewMeta('Metadata loaded');
       } else {
-        const file = new File([result.data], result.name || 'output.pdf', {
-          type: result.type || 'application/pdf'
-        });
-        const url = URL.createObjectURL(file);
-        localOutputUrls.push(url);
-        previewFrame.src = url;
-        setCurrentDownloadUrl(url);
+        await setPdfBytes(result.data, { pushHistory: true });
         setPreviewMeta('Local preview (unsaved)');
         history.innerHTML = `<p>Local ${tool.name} complete.</p>`;
       }
@@ -981,6 +1478,160 @@ export function mountEditor() {
     } catch (error) {
       setState('ready', error.message || 'Local operation failed.');
       return true;
+    }
+  }
+
+  async function runClientToolAction(toolId, payload) {
+    if (!currentPdfBytes) {
+      setState('ready', 'Load a PDF to edit.');
+      return;
+    }
+    emitAction('action_start', { toolId });
+    try {
+      const { PDFDocument, StandardFonts, rgb, PDFName, PDFNumber, PDFArray, PDFString } = await getPdfLib();
+      const pdfDoc = await PDFDocument.load(currentPdfBytes);
+      const page = pdfDoc.getPage(payload.pageIndex ?? 0);
+      const pageSize = page.getSize();
+      const scale = pageViewports[payload.pageIndex ?? 0]?.scale || 1;
+
+      if (toolId === 'edit_text') {
+        setState('ready', 'This text cannot be edited directly.');
+        emitAction('action_commit', { toolId, status: 'blocked' });
+        return;
+      }
+
+      if (toolId === 'insert_text') {
+        const font = pdfDoc.embedStandardFont(StandardFonts[payload.font] || StandardFonts.Helvetica);
+        const color = hexToRgb(payload.color || '#000000', rgb);
+        const box = payload.box;
+        if (!box) {
+          setState('ready', 'Draw a text box on the page.');
+          return;
+        }
+        page.drawText(payload.text || '', {
+          x: box.x,
+          y: box.y,
+          size: payload.size || 12,
+          font,
+          color,
+          maxWidth: box.width,
+          lineHeight: (payload.size || 12) * 1.2
+        });
+      }
+
+      if (toolId === 'insert_image') {
+        const box = payload.box;
+        if (!box || !payload.imageFile) {
+          setState('ready', 'Place the image on the page.');
+          return;
+        }
+        const imageBytes = await payload.imageFile.arrayBuffer();
+        const image =
+          payload.imageFile.type === 'image/png'
+            ? await pdfDoc.embedPng(imageBytes)
+            : await pdfDoc.embedJpg(imageBytes);
+        page.drawImage(image, {
+          x: box.x,
+          y: box.y,
+          width: box.width,
+          height: box.height,
+          opacity: payload.opacity ?? 1
+        });
+      }
+
+      if (toolId === 'highlight') {
+        const selection = payload.selection;
+        if (!selection) return;
+        const rect = toPdfRect(selection, pageSize.height, scale);
+        const annot = pdfDoc.context.obj({
+          Type: 'Annot',
+          Subtype: 'Highlight',
+          Rect: pdfDoc.context.obj(rect),
+          QuadPoints: [
+            rect[0], rect[3],
+            rect[2], rect[3],
+            rect[0], rect[1],
+            rect[2], rect[1]
+          ],
+          C: hexToRgb(payload.color || '#fff59d'),
+          CA: payload.opacity ?? 0.4
+        });
+        attachAnnotation(page, annot, pdfDoc);
+      }
+
+      if (toolId === 'draw') {
+        if (!payload.path || !payload.path.length) {
+          setState('ready', 'Draw on the page to create a stroke.');
+          return;
+        }
+        const points = payload.path.flatMap((point) => [
+          PDFNumber.of(point.x),
+          PDFNumber.of(point.y)
+        ]);
+        const inkList = pdfDoc.context.obj([points]);
+        const annot = pdfDoc.context.obj({
+          Type: 'Annot',
+          Subtype: 'Ink',
+          Rect: pdfDoc.context.obj(payload.rect),
+          InkList: inkList,
+          C: hexToRgb(payload.color || '#ff0000'),
+          BS: pdfDoc.context.obj({ W: PDFNumber.of(payload.width || 2) })
+        });
+        attachAnnotation(page, annot, pdfDoc);
+      }
+
+      if (toolId === 'comment') {
+        const point = toPdfPoint(payload.pageIndex ?? 0, payload.x, payload.y);
+        const rect = [
+          PDFNumber.of(point.x),
+          PDFNumber.of(point.y),
+          PDFNumber.of(point.x + 24),
+          PDFNumber.of(point.y + 24)
+        ];
+        const annot = pdfDoc.context.obj({
+          Type: 'Annot',
+          Subtype: 'Text',
+          Rect: rect,
+          Contents: PDFString.of(payload.text || ''),
+          T: PDFString.of(window.currentUser?.email || 'User'),
+          M: PDFString.of(new Date().toISOString()),
+          C: hexToRgb('#ffd54f')
+        });
+        attachAnnotation(page, annot, pdfDoc);
+      }
+
+      const updatedBytes = await pdfDoc.save();
+      await setPdfBytes(updatedBytes, { pushHistory: true });
+      setState('ready', 'Update ready.');
+      emitAction('action_commit', { toolId });
+    } catch (error) {
+      setState('ready', error.message || 'Edit failed.');
+    }
+  }
+
+  function hexToRgb(hex, rgbFn) {
+    const value = hex.replace('#', '');
+    const r = parseInt(value.slice(0, 2), 16) / 255;
+    const g = parseInt(value.slice(2, 4), 16) / 255;
+    const b = parseInt(value.slice(4, 6), 16) / 255;
+    if (rgbFn) return rgbFn(r, g, b);
+    return [r, g, b];
+  }
+
+  function toPdfRect(selection, pageHeight, scale) {
+    const x1 = selection.x / scale;
+    const y1 = pageHeight - (selection.y + selection.height) / scale;
+    const x2 = (selection.x + selection.width) / scale;
+    const y2 = pageHeight - selection.y / scale;
+    return [x1, y1, x2, y2].map((value) => Math.max(0, value));
+  }
+
+  function attachAnnotation(page, annot, pdfDoc) {
+    const annots = page.node.Annots();
+    if (annots) {
+      annots.push(annot);
+    } else {
+      page.node.set(PDFName.of('Annots'), pdfDoc.context.obj([annot]));
     }
   }
 
@@ -1011,6 +1662,88 @@ export function mountEditor() {
     if (!toolPanelInputs) return;
     const toolId = tool.id;
     let content = '';
+
+    if (toolId === 'edit_text') {
+      content = `
+        <div class="tool-input tool-warning">
+          <strong>Limited</strong>
+          <span>This text cannot be edited directly yet. Use overlay replacement when available.</span>
+        </div>
+        <label class="tool-input">
+          New text
+          <textarea id="tool-input-edit-text" rows="2" placeholder="Edit selected text..."></textarea>
+        </label>
+      `;
+    }
+
+    if (toolId === 'insert_text') {
+      content = `
+        <label class="tool-input">
+          Font
+          <select id="tool-input-font">
+            <option value="Helvetica">Helvetica</option>
+            <option value="TimesRoman">Times</option>
+            <option value="Courier">Courier</option>
+          </select>
+        </label>
+        <label class="tool-input">
+          Size
+          <input type="number" id="tool-input-size" min="6" max="96" value="12" />
+        </label>
+        <label class="tool-input">
+          Color
+          <input type="color" id="tool-input-color" value="#000000" />
+        </label>
+      `;
+    }
+
+    if (toolId === 'insert_image') {
+      content = `
+        <label class="tool-input">
+          Image file
+          <input type="file" id="tool-input-image-file" accept="image/png,image/jpeg" />
+        </label>
+        <label class="tool-input">
+          Opacity
+          <input type="number" id="tool-input-image-opacity" min="0" max="1" step="0.1" value="1" />
+        </label>
+      `;
+    }
+
+    if (toolId === 'highlight') {
+      content = `
+        <label class="tool-input">
+          Color
+          <input type="color" id="tool-input-highlight-color" value="#fff59d" />
+        </label>
+        <label class="tool-input">
+          Opacity
+          <input type="number" id="tool-input-highlight-opacity" min="0" max="1" step="0.1" value="0.4" />
+        </label>
+      `;
+    }
+
+    if (toolId === 'draw') {
+      content = `
+        <label class="tool-input">
+          Color
+          <input type="color" id="tool-input-draw-color" value="#ff0000" />
+        </label>
+        <label class="tool-input">
+          Stroke width
+          <input type="number" id="tool-input-draw-width" min="1" max="20" value="2" />
+        </label>
+      `;
+    }
+
+    if (toolId === 'comment') {
+      content = `
+        <label class="tool-input">
+          Comment
+          <textarea id="tool-input-comment" rows="3" placeholder="Add a note..."></textarea>
+        </label>
+      `;
+    }
 
     if (toolId === 'split_pages') {
       content = `
@@ -1124,6 +1857,58 @@ export function mountEditor() {
     };
 
     if (!toolPanelInputs) return payload;
+
+    if (toolId === 'edit_text') {
+      if (!activeSelection) {
+        setState('ready', 'Select text to edit.');
+        return null;
+      }
+      payload.selection = activeSelection;
+      payload.pageIndex = activeSelection.pageIndex;
+      payload.text = toolPanelInputs.querySelector('#tool-input-edit-text')?.value || '';
+      return payload;
+    }
+
+    if (toolId === 'insert_text') {
+      payload.font = toolPanelInputs.querySelector('#tool-input-font')?.value || 'Helvetica';
+      payload.size = Number(toolPanelInputs.querySelector('#tool-input-size')?.value || 12);
+      payload.color = toolPanelInputs.querySelector('#tool-input-color')?.value || '#000000';
+      return payload;
+    }
+
+    if (toolId === 'insert_image') {
+      const imageFile = toolPanelInputs.querySelector('#tool-input-image-file')?.files?.[0];
+      if (!imageFile) {
+        setState('ready', 'Choose an image file.');
+        return null;
+      }
+      payload.imageFile = imageFile;
+      payload.opacity = Number(toolPanelInputs.querySelector('#tool-input-image-opacity')?.value || 1);
+      return payload;
+    }
+
+    if (toolId === 'highlight') {
+      if (!activeSelection) {
+        setState('ready', 'Select text to highlight.');
+        return null;
+      }
+      payload.selection = activeSelection;
+      payload.pageIndex = activeSelection.pageIndex;
+      payload.color = toolPanelInputs.querySelector('#tool-input-highlight-color')?.value || '#fff59d';
+      payload.opacity = Number(toolPanelInputs.querySelector('#tool-input-highlight-opacity')?.value || 0.4);
+      return payload;
+    }
+
+    if (toolId === 'draw') {
+      payload.color = toolPanelInputs.querySelector('#tool-input-draw-color')?.value || '#ff0000';
+      payload.width = Number(toolPanelInputs.querySelector('#tool-input-draw-width')?.value || 2);
+      return payload;
+    }
+
+    if (toolId === 'comment') {
+      payload.text = toolPanelInputs.querySelector('#tool-input-comment')?.value || '';
+      return payload;
+    }
 
     if (toolId === 'split_pages') {
       const span = toolPanelInputs.querySelector('#tool-input-span')?.value;
@@ -1258,7 +2043,8 @@ export function mountEditor() {
         filename.textContent = `Document: ${file.name}`;
         docStatus.textContent = 'ready';
         currentStoragePath = path;
-        refreshPreviewWithUrl(downloadUrl, `${pageCount} page${pageCount === 1 ? '' : 's'}`);
+        await setPdfBytes(new Uint8Array(buffer), { pushHistory: true });
+        setPreviewMeta(`${pageCount} page${pageCount === 1 ? '' : 's'}`);
         exportButton.disabled = false;
         setState('ready', 'Document ready.');
         syncToolAvailability();

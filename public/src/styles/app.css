@@ -613,6 +613,25 @@ button.doc-row:hover {
   background: var(--surface-alt);
 }
 
+.pdf-pages {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.pdf-overlay {
+  pointer-events: auto;
+}
+
+.pdf-page canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+  background: #fff;
+}
+
 .editor-shell[data-state="ready"] .editor-status,
 .editor-shell[data-state="ready"] .editor-dropzone,
 .editor-shell[data-state="ready"] .editor-document,
@@ -817,6 +836,68 @@ button.doc-row:hover {
   background: var(--surface);
   color: var(--text-primary);
   font-size: 14px;
+}
+
+.tool-input textarea {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 14px;
+  resize: vertical;
+}
+
+.tool-warning {
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border);
+  background: var(--surface-alt);
+  color: var(--text-secondary);
+  font-size: 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.selection-box {
+  border: 2px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  pointer-events: none;
+}
+
+.text-box-ghost {
+  border: 2px dashed var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  pointer-events: none;
+}
+
+.text-box-input {
+  background: rgba(255, 255, 255, 0.9);
+  color: #000;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px;
+  font-size: 14px;
+  resize: none;
+}
+
+.image-ghost {
+  border: 2px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  pointer-events: auto;
+}
+
+.image-resize-handle {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  pointer-events: auto;
+  cursor: nwse-resize;
 }
 
 .meta-viewer {

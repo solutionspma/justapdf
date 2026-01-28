@@ -1,4 +1,10 @@
 export const TOOLS = {
+  edit_text: { cost: 0, op: "editText", cat: "Basics", requiresSelection: true, disabled: true },
+  insert_text: { cost: 0, op: "insertText", cat: "Basics", disabled: true },
+  insert_image: { cost: 0, op: "insertImage", cat: "Basics", disabled: true },
+  highlight: { cost: 0, op: "highlight", cat: "Basics", requiresSelection: true, disabled: true },
+  draw: { cost: 0, op: "draw", cat: "Basics", disabled: true },
+  comment: { cost: 0, op: "comment", cat: "Basics", disabled: true },
   merge: { cost: 2, op: "merge", cat: "File" },
   split_pages: { cost: 3, op: "split", cat: "File" },
   split_range: { cost: 3, op: "splitRange", cat: "File", disabled: true },
