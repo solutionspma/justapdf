@@ -429,7 +429,7 @@ button.doc-row:hover {
 }
 
 #editor-root {
-  min-height: 520px;
+  min-height: min(820px, 92vh);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.08));
   border-radius: var(--radius-sm);
   outline: 1px solid rgba(255, 255, 255, 0.08);
@@ -503,6 +503,7 @@ button.doc-row:hover {
   gap: 20px;
   grid-template-columns: minmax(220px, 320px) minmax(0, 1fr) minmax(260px, 360px);
   align-items: start;
+  min-height: min(760px, 80vh);
 }
 
 .editor-center {
@@ -533,7 +534,7 @@ button.doc-row:hover {
 
 .editor-preview-frame {
   width: 100%;
-  min-height: 520px;
+  min-height: min(640px, 62vh);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface-alt);
