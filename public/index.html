@@ -25,12 +25,16 @@
 
     async function bootstrap() {
       try {
-        window.__ENV__ = await loadEnv('/api/env');
+        window.__ENV__ = await loadEnv('/.netlify/functions/env');
       } catch (error) {
         try {
-          window.__ENV__ = await loadEnv('/.netlify/functions/api/env');
+          window.__ENV__ = await loadEnv('/api/env');
         } catch (fallbackError) {
-          console.warn('Env load failed', fallbackError);
+          try {
+            window.__ENV__ = await loadEnv('/.netlify/functions/api/env');
+          } catch (lastError) {
+            console.warn('Env load failed', lastError);
+          }
         }
       }
       await import('/src/main.js');
