@@ -613,6 +613,17 @@ button.doc-row:hover {
   background: var(--surface-alt);
 }
 
+.editor-shell[data-state="ready"] .editor-status,
+.editor-shell[data-state="ready"] .editor-dropzone,
+.editor-shell[data-state="ready"] .editor-document,
+.editor-shell[data-state="ready"] .editor-history,
+.editor-shell[data-state="running_operation"] .editor-status,
+.editor-shell[data-state="running_operation"] .editor-dropzone,
+.editor-shell[data-state="running_operation"] .editor-document,
+.editor-shell[data-state="running_operation"] .editor-history {
+  display: none;
+}
+
 .editor-dropzone {
   border: 2px dashed var(--border);
   text-align: center;
