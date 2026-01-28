@@ -421,7 +421,7 @@ button.doc-row:hover {
 .editor-shell {
   position: relative;
   margin: 4rem auto;
-  max-width: var(--max-width);
+  max-width: min(1680px, 96vw);
   background: var(--panel);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
@@ -501,21 +501,21 @@ button.doc-row:hover {
 .editor-layout {
   display: grid;
   gap: 20px;
-  grid-template-columns: minmax(220px, 320px) minmax(0, 1fr) minmax(260px, 360px);
+  grid-template-columns: minmax(200px, 260px) minmax(0, 2fr) minmax(220px, 300px);
   align-items: start;
   min-height: calc(100vh - 260px);
 }
 
 .editor-layout.is-left-collapsed {
-  grid-template-columns: 0 minmax(0, 1fr) minmax(260px, 360px);
+  grid-template-columns: 0 minmax(0, 2fr) minmax(220px, 300px);
 }
 
 .editor-layout.is-right-collapsed {
-  grid-template-columns: minmax(220px, 320px) minmax(0, 1fr) 0;
+  grid-template-columns: minmax(200px, 260px) minmax(0, 2fr) 0;
 }
 
 .editor-layout.is-left-collapsed.is-right-collapsed {
-  grid-template-columns: 0 minmax(0, 1fr) 0;
+  grid-template-columns: 0 minmax(0, 2fr) 0;
 }
 
 .editor-center {
@@ -576,7 +576,7 @@ button.doc-row:hover {
 
 .editor-preview-frame {
   width: 100%;
-  min-height: min(740px, 70vh);
+  min-height: min(760px, 70vh);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface-alt);
@@ -1084,7 +1084,7 @@ button.doc-row:hover {
 
 @media (max-width: 1100px) {
   .editor-layout {
-    grid-template-columns: minmax(200px, 1fr) minmax(0, 1.4fr);
+    grid-template-columns: minmax(180px, 1fr) minmax(0, 1.6fr);
   }
 
   .editor-sidebar-right {
@@ -1092,11 +1092,11 @@ button.doc-row:hover {
   }
 
   .editor-layout.is-left-collapsed {
-    grid-template-columns: 0 minmax(0, 1.4fr);
+    grid-template-columns: 0 minmax(0, 1.6fr);
   }
 
   .editor-layout.is-right-collapsed {
-    grid-template-columns: minmax(200px, 1fr) minmax(0, 1.4fr);
+    grid-template-columns: minmax(180px, 1fr) minmax(0, 1.6fr);
   }
 }
 
