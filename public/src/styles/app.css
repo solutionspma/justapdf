@@ -429,7 +429,7 @@ button.doc-row:hover {
 }
 
 #editor-root {
-  min-height: min(820px, 92vh);
+  min-height: calc(100vh - 220px);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.08));
   border-radius: var(--radius-sm);
   outline: 1px solid rgba(255, 255, 255, 0.08);
@@ -503,7 +503,19 @@ button.doc-row:hover {
   gap: 20px;
   grid-template-columns: minmax(220px, 320px) minmax(0, 1fr) minmax(260px, 360px);
   align-items: start;
-  min-height: min(760px, 80vh);
+  min-height: calc(100vh - 260px);
+}
+
+.editor-layout.is-left-collapsed {
+  grid-template-columns: 0 minmax(0, 1fr) minmax(260px, 360px);
+}
+
+.editor-layout.is-right-collapsed {
+  grid-template-columns: minmax(220px, 320px) minmax(0, 1fr) 0;
+}
+
+.editor-layout.is-left-collapsed.is-right-collapsed {
+  grid-template-columns: 0 minmax(0, 1fr) 0;
 }
 
 .editor-center {
@@ -514,6 +526,36 @@ button.doc-row:hover {
 .editor-sidebar {
   display: grid;
   gap: 16px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.editor-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.editor-utility-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.panel-toggle {
+  padding: 8px 12px;
+  border-radius: 999px;
+}
+
+.editor-layout.is-left-collapsed .editor-sidebar-left {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.editor-layout.is-right-collapsed .editor-sidebar-right {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .editor-preview {
@@ -534,7 +576,7 @@ button.doc-row:hover {
 
 .editor-preview-frame {
   width: 100%;
-  min-height: min(720px, 70vh);
+  min-height: min(740px, 70vh);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface-alt);
@@ -1047,6 +1089,14 @@ button.doc-row:hover {
 
   .editor-sidebar-right {
     grid-column: 1 / -1;
+  }
+
+  .editor-layout.is-left-collapsed {
+    grid-template-columns: 0 minmax(0, 1.4fr);
+  }
+
+  .editor-layout.is-right-collapsed {
+    grid-template-columns: minmax(200px, 1fr) minmax(0, 1.4fr);
   }
 }
 

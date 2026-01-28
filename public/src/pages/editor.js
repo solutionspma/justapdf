@@ -12,6 +12,10 @@ export default function Editor() {
         <div id="editor-root">
           <div class="editor-layout">
             <aside class="editor-sidebar editor-sidebar-left">
+              <div class="editor-sidebar-header">
+                <span class="muted">Tools</span>
+                <button class="ghost panel-toggle" id="toggle-left-panel" type="button">Hide</button>
+              </div>
               <div class="editor-tools" id="editor-tools">
                 <div class="editor-tools-header">
                   <div>
@@ -25,6 +29,10 @@ export default function Editor() {
             </aside>
 
             <div class="editor-center">
+              <div class="editor-utility-bar">
+                <button class="ghost panel-toggle" id="toggle-left-panel-alt" type="button">Hide tools</button>
+                <button class="ghost panel-toggle" id="toggle-right-panel-alt" type="button">Hide details</button>
+              </div>
               <div class="editor-status" id="editor-status">Drop a PDF to begin.</div>
 
               <div class="card editor-auth" id="editor-auth">
@@ -66,6 +74,10 @@ export default function Editor() {
             </div>
 
             <aside class="editor-sidebar editor-sidebar-right">
+              <div class="editor-sidebar-header">
+                <span class="muted">Tool detail</span>
+                <button class="ghost panel-toggle" id="toggle-right-panel" type="button">Hide</button>
+              </div>
               <div class="editor-tool-panel" id="editor-tool-panel" aria-live="polite">
                 <div class="editor-tool-panel-header">
                   <div>
@@ -112,6 +124,11 @@ export function mountEditor() {
   const previewFrame = document.getElementById('editor-preview-frame');
   const previewMeta = document.getElementById('editor-preview-meta');
   const exportButton = document.getElementById('editor-export');
+  const layout = document.querySelector('.editor-layout');
+  const toggleLeft = document.getElementById('toggle-left-panel');
+  const toggleRight = document.getElementById('toggle-right-panel');
+  const toggleLeftAlt = document.getElementById('toggle-left-panel-alt');
+  const toggleRightAlt = document.getElementById('toggle-right-panel-alt');
   const toolPanel = document.getElementById('editor-tool-panel');
   const toolPanelTitle = document.getElementById('tool-panel-title');
   const toolPanelDesc = document.getElementById('tool-panel-desc');
@@ -293,6 +310,46 @@ export function mountEditor() {
     shell.dataset.state = state;
     if (message) status.textContent = message;
   }
+
+  function updatePanelToggle(button, collapsed, label) {
+    if (!button) return;
+    button.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
+    button.textContent = collapsed ? `Show ${label}` : `Hide ${label}`;
+  }
+
+  function setPanelCollapsed(side, collapsed) {
+    if (!layout) return;
+    layout.classList.toggle(`is-${side}-collapsed`, collapsed);
+    if (side === 'left') {
+      updatePanelToggle(toggleLeft, collapsed, 'tools');
+      updatePanelToggle(toggleLeftAlt, collapsed, 'tools');
+    }
+    if (side === 'right') {
+      updatePanelToggle(toggleRight, collapsed, 'details');
+      updatePanelToggle(toggleRightAlt, collapsed, 'details');
+    }
+  }
+
+  if (toggleLeft || toggleLeftAlt) {
+    const handler = () => {
+      const collapsed = layout?.classList.contains('is-left-collapsed');
+      setPanelCollapsed('left', !collapsed);
+    };
+    if (toggleLeft) toggleLeft.addEventListener('click', handler);
+    if (toggleLeftAlt) toggleLeftAlt.addEventListener('click', handler);
+  }
+
+  if (toggleRight || toggleRightAlt) {
+    const handler = () => {
+      const collapsed = layout?.classList.contains('is-right-collapsed');
+      setPanelCollapsed('right', !collapsed);
+    };
+    if (toggleRight) toggleRight.addEventListener('click', handler);
+    if (toggleRightAlt) toggleRightAlt.addEventListener('click', handler);
+  }
+
+  setPanelCollapsed('left', false);
+  setPanelCollapsed('right', false);
 
   function buildToolGroups(operations) {
     const operationsById = new Map(operations.map((operation) => [operation.id, operation]));
