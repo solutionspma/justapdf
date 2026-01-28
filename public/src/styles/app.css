@@ -534,7 +534,7 @@ button.doc-row:hover {
 
 .editor-preview-frame {
   width: 100%;
-  min-height: min(640px, 62vh);
+  min-height: min(720px, 70vh);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface-alt);
