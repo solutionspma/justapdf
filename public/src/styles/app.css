@@ -508,8 +508,8 @@ button.doc-row:hover {
 }
 
 .editor-tools-left {
-  width: 280px;
-  min-width: 280px;
+  width: 240px;
+  min-width: 240px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -642,8 +642,8 @@ button.doc-row:hover {
 
 .editor-tools {
   display: grid;
-  gap: 16px;
-  padding: 20px;
+  gap: 12px;
+  padding: 16px;
   border: 2px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
@@ -692,21 +692,42 @@ button.doc-row:hover {
 
 .tool-group-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.tool-group-grid-compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .tool-button {
-  border: 2px solid var(--border);
+  border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text-primary);
-  border-radius: var(--radius-sm);
-  padding: 12px;
+  border-radius: 10px;
+  padding: 10px;
   display: grid;
-  gap: 6px;
+  gap: 4px;
   text-align: left;
   cursor: pointer;
   transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  min-height: 64px;
+}
+
+.tool-button-static {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.tool-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-alt);
+  font-size: 14px;
 }
 
 .tool-button.is-disabled,
@@ -732,10 +753,11 @@ button.doc-row:hover {
 
 .tool-button-label {
   font-weight: 600;
+  font-size: 13px;
 }
 
 .tool-button-meta {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-muted);
 }
 

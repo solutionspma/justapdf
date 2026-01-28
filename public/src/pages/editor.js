@@ -448,7 +448,54 @@ export function mountEditor() {
 
   function renderTools() {
     if (!toolsGrid) return;
-    toolsGrid.innerHTML = toolGroups.map((group) => `
+    const iconMap = {
+      upload_pdf: '⬆️',
+      merge_documents: '🧩',
+      split_pages: '✂️',
+      export_pdf: '⬇️',
+      rotate_pages: '↻',
+      delete_pages: '🗑️',
+      reorder: '⇅',
+      watermark: '💧',
+      normalize_pdf: '🧹',
+      metadata_view: '🔎',
+      metadata_edit: '✏️',
+      metadata_strip: '🧼',
+      encrypt: '🔒',
+      decrypt: '🔓',
+      permissions: '🛡️'
+    };
+
+    const quickTools = [
+      { label: 'Edit text', icon: '✍️' },
+      { label: 'Text box', icon: '🔤' },
+      { label: 'Insert image', icon: '🖼️' },
+      { label: 'Highlight', icon: '🖍️' },
+      { label: 'Draw', icon: '🖊️' },
+      { label: 'Comments', icon: '💬' }
+    ];
+
+    const quickSection = `
+      <section class="tool-group tool-group-quick">
+        <div class="tool-group-header">
+          <div>
+            <h3>Basics</h3>
+            <p class="muted">Common edits (coming soon).</p>
+          </div>
+        </div>
+        <div class="tool-group-grid tool-group-grid-compact">
+          ${quickTools.map((tool) => `
+            <div class="tool-button tool-button-static" aria-disabled="true">
+              <span class="tool-icon">${tool.icon}</span>
+              <span class="tool-button-label">${tool.label}</span>
+              <span class="tool-button-meta">Coming soon</span>
+            </div>
+          `).join('')}
+        </div>
+      </section>
+    `;
+
+    toolsGrid.innerHTML = quickSection + toolGroups.map((group) => `
       <section class="tool-group" data-group="${group.id}">
         <div class="tool-group-header">
           <div>
@@ -456,9 +503,10 @@ export function mountEditor() {
             <p class="muted">${group.description}</p>
           </div>
         </div>
-        <div class="tool-group-grid">
+        <div class="tool-group-grid tool-group-grid-compact">
           ${group.tools.map((tool) => `
             <button class="tool-button" type="button" data-tool-id="${tool.id}" data-requires-upload="${tool.requiresUpload}">
+              <span class="tool-icon">${iconMap[tool.id] || '⚙️'}</span>
               <span class="tool-button-label">${tool.name}</span>
               <span class="tool-button-meta">${tool.requiresUpload ? 'Requires PDF' : 'Ready'}</span>
             </button>
