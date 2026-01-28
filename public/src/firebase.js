@@ -4,7 +4,9 @@ import {
   onAuthStateChanged,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signOut
+  signOut,
+  setPersistence,
+  browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
   getFirestore,
@@ -28,23 +30,11 @@ import {
   uploadBytesResumable,
   getDownloadURL
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-
-const firebaseConfig = {
-  apiKey: import.meta?.env?.VITE_FIREBASE_API_KEY || window.__ENV__?.FIREBASE_API_KEY,
-  authDomain: import.meta?.env?.VITE_FIREBASE_AUTH_DOMAIN || window.__ENV__?.FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta?.env?.VITE_FIREBASE_PROJECT_ID || window.__ENV__?.FIREBASE_PROJECT_ID,
-  storageBucket: import.meta?.env?.VITE_FIREBASE_STORAGE_BUCKET || window.__ENV__?.FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta?.env?.VITE_FIREBASE_MESSAGING_SENDER_ID || window.__ENV__?.FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta?.env?.VITE_FIREBASE_APP_ID || window.__ENV__?.FIREBASE_APP_ID,
-  measurementId: import.meta?.env?.VITE_FIREBASE_MEASUREMENT_ID || window.__ENV__?.FIREBASE_MEASUREMENT_ID,
-};
-
-if (!firebaseConfig.apiKey) {
-  throw new Error("Firebase env vars missing at runtime");
-}
+import { firebaseConfig } from './config.js';
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+setPersistence(auth, browserLocalPersistence);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
