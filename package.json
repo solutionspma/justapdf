@@ -41,6 +41,7 @@
     "multer": "^1.4.5-lts.1",
     "openai": "^4.20.1",
     "pdf-lib": "^1.17.1",
+    "pdfcpu-wasm": "^0.1.0",
     "serverless-http": "^3.2.0",
     "sharp": "^0.33.0",
     "stripe": "^14.7.0",

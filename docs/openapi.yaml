@@ -1,0 +1,305 @@
+openapi: 3.1.0
+info:
+  title: JustaPDF Public API
+  description: >
+    Public API for JustaPDF. Credit-metered PDF processing with batch execution,
+    legal un-redact, audit logging, and enterprise-grade controls.
+  version: "1.0.0"
+servers:
+  - url: https://api.justapdf.com/v1
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+
+    CreditBalance:
+      type: object
+      properties:
+        balance:
+          type: integer
+        plan:
+          type: string
+        addons:
+          type: array
+          items:
+            type: string
+
+    FileUploadResponse:
+      type: object
+      properties:
+        file_id:
+          type: string
+        pages:
+          type: integer
+        hash:
+          type: string
+
+    JobResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+        status:
+          type: string
+        credits_used:
+          type: integer
+
+    JobStatus:
+      type: object
+      properties:
+        status:
+          type: string
+        output_file_id:
+          type: string
+        download_url:
+          type: string
+
+    BatchRequest:
+      type: object
+      properties:
+        files:
+          type: array
+          items:
+            type: string
+        tool:
+          type: string
+        parallel:
+          type: boolean
+        resume:
+          type: boolean
+
+    BatchResponse:
+      type: object
+      properties:
+        batch_id:
+          type: string
+        jobs_created:
+          type: integer
+        credits_reserved:
+          type: integer
+
+    LegalUnredactRequest:
+      type: object
+      required: [file_id, attestation]
+      properties:
+        file_id:
+          type: string
+        attestation:
+          type: boolean
+        reason:
+          type: string
+
+    AuditEntry:
+      type: object
+      properties:
+        tool:
+          type: string
+        file_hash:
+          type: string
+        timestamp:
+          type: integer
+        reason:
+          type: string
+
+paths:
+  /credits:
+    get:
+      summary: Get credit balance
+      responses:
+        "200":
+          description: Credit balance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreditBalance"
+
+  /files:
+    post:
+      summary: Upload a PDF file
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: File uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileUploadResponse"
+
+  /tools/{tool_id}:
+    post:
+      summary: Run a single PDF tool
+      parameters:
+        - name: tool_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file_id:
+                  type: string
+                options:
+                  type: object
+      responses:
+        "200":
+          description: Job queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobResponse"
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /jobs/{job_id}:
+    get:
+      summary: Get job status
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Job status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobStatus"
+
+  /batch:
+    post:
+      summary: Create a batch job (Batch 4)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BatchRequest"
+      responses:
+        "200":
+          description: Batch created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchResponse"
+
+  /batch/templates:
+    post:
+      summary: Save a batch template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                steps:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      tool:
+                        type: string
+      responses:
+        "200":
+          description: Template saved
+
+  /batch/templates/{template_id}/run:
+    post:
+      summary: Run a saved batch template
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Template execution started
+
+  /tools/unredact_legal:
+    post:
+      summary: Legal un-redact (Batch 4, gated)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LegalUnredactRequest"
+      responses:
+        "200":
+          description: Legal un-redact job queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobResponse"
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /audit:
+    get:
+      summary: Query audit logs
+      parameters:
+        - name: tool
+          in: query
+          schema:
+            type: string
+        - name: legal_only
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Audit entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entries:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AuditEntry"

@@ -45,28 +45,37 @@ window.addEventListener('popstate', () => {
 document.addEventListener('click', handleLinkClick);
 document.addEventListener('DOMContentLoaded', () => {
   applyTheme(getTheme());
+  const PUBLIC_ROUTES = new Set(['/', '/pricing', '/login', '/register']);
+
+  render(location.pathname);
+  updateHeaderAuthState(window.currentUser || null);
 
   onAuthStateChanged(auth, async (user) => {
     window.currentUser = user || null;
     updateHeaderAuthState(user);
+    const currentPath = window.location.pathname;
+
     if (user) {
       await seedOperations();
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (userDoc.exists() && userDoc.data().theme) {
         applyTheme(userDoc.data().theme);
       }
-      if (['/login', '/register'].includes(window.location.pathname)) {
+      if (['/login', '/register'].includes(currentPath)) {
         window.history.replaceState(null, '', '/editor');
         render('/editor');
+        return;
       }
+      render(currentPath);
       return;
     }
-    if (!['/login', '/register'].includes(window.location.pathname)) {
+
+    if (!PUBLIC_ROUTES.has(currentPath)) {
       window.history.replaceState(null, '', '/login');
       render('/login');
+      return;
     }
-  });
 
-  render(location.pathname);
-  updateHeaderAuthState(window.currentUser);
+    render(currentPath);
+  });
 });

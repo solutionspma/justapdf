@@ -7,7 +7,9 @@ export default function Editor() {
     ${Header()}
     <main class="page editor-page">
       <h1>Editor</h1>
-      <div class="editor-shell" data-state="empty">
+      <section class="editor-shell" id="editor-shell" data-state="empty">
+        <div id="editor-overlay">Upload a PDF to power the tools.</div>
+        <div id="editor-root">
         <div class="editor-status" id="editor-status">Drop a PDF to begin.</div>
 
         <div class="card editor-auth" id="editor-auth">
@@ -68,6 +70,7 @@ export default function Editor() {
               <span class="tool-chip tool-chip-status" id="tool-panel-status">Standby</span>
               <span class="tool-chip" id="tool-panel-credits">Credits: —</span>
             </div>
+            <div class="editor-tool-panel-inputs" id="tool-panel-inputs"></div>
             <div class="editor-tool-panel-state" id="tool-panel-state">Pick a tool to preview its readiness.</div>
             <div class="editor-tool-panel-actions">
               <button class="primary" id="tool-panel-action" type="button" disabled>Run tool</button>
@@ -78,7 +81,8 @@ export default function Editor() {
         <div class="card editor-history" id="editor-history">
           <p>Recent documents will appear here.</p>
         </div>
-      </div>
+        </div>
+      </section>
     </main>
     ${Footer()}
   `;
@@ -110,6 +114,7 @@ export function mountEditor() {
   const toolPanelState = document.getElementById('tool-panel-state');
   const toolPanelAction = document.getElementById('tool-panel-action');
   const toolPanelClose = document.getElementById('tool-panel-close');
+  const toolPanelInputs = document.getElementById('tool-panel-inputs');
   const mergeInput = document.createElement('input');
   mergeInput.type = 'file';
   mergeInput.accept = 'application/pdf';
@@ -122,6 +127,7 @@ export function mountEditor() {
   let currentStoragePath = null;
   let currentDownloadUrl = null;
   let authReady = false;
+  let localOutputUrls = [];
 
   const INTERNAL_ADMIN_UID = window.__ENV__?.INTERNAL_ADMIN_UID || '';
   const GROUP_CONFIG = [
@@ -148,6 +154,128 @@ export function mountEditor() {
       label: 'Advanced',
       description: 'High-end automation and cleanup.',
       toolIds: ['normalize_pdf']
+    }
+  ];
+  const LOCAL_OPERATIONS = [
+    {
+      id: 'upload_pdf',
+      name: 'Upload PDF',
+      description: 'Upload a PDF to begin working.',
+      creditCost: 0,
+      requiresUpload: false,
+      requiresSecondFile: false
+    },
+    {
+      id: 'merge_documents',
+      name: 'Merge PDFs',
+      description: 'Combine multiple PDFs into a single file.',
+      creditCost: 2,
+      requiresUpload: true,
+      requiresSecondFile: true
+    },
+    {
+      id: 'split_pages',
+      name: 'Split PDF',
+      description: 'Split into smaller PDFs or page ranges.',
+      creditCost: 3,
+      requiresUpload: true,
+      requiresSecondFile: false
+    },
+    {
+      id: 'rotate_pages',
+      name: 'Rotate pages',
+      description: 'Rotate selected pages by 90, 180, or 270 degrees.',
+      creditCost: 1,
+      requiresUpload: true,
+      requiresSecondFile: false
+    },
+    {
+      id: 'delete_pages',
+      name: 'Delete pages',
+      description: 'Remove selected pages from the document.',
+      creditCost: 1,
+      requiresUpload: true,
+      requiresSecondFile: false
+    },
+    {
+      id: 'reorder',
+      name: 'Reorder pages',
+      description: 'Reorder pages into a new sequence.',
+      creditCost: 1,
+      requiresUpload: true,
+      requiresSecondFile: false
+    },
+    {
+      id: 'watermark',
+      name: 'Add watermark',
+      description: 'Apply a text or image watermark.',
+      creditCost: 2,
+      requiresUpload: true,
+      requiresSecondFile: false
+    },
+    {
+      id: 'normalize_pdf',
+      name: 'Normalize PDF',
+      description: 'Rebuild the PDF for consistent structure.',
+      creditCost: 3,
+      requiresUpload: true,
+      requiresSecondFile: false
+    },
+    {
+      id: 'metadata_view',
+      name: 'View metadata',
+      description: 'List metadata stored in the PDF.',
+      creditCost: 0,
+      requiresUpload: true,
+      requiresSecondFile: false
+    },
+    {
+      id: 'metadata_edit',
+      name: 'Edit metadata',
+      description: 'Write metadata key/value pairs.',
+      creditCost: 1,
+      requiresUpload: true,
+      requiresSecondFile: false
+    },
+    {
+      id: 'metadata_strip',
+      name: 'Strip metadata',
+      description: 'Remove metadata keys or strip all.',
+      creditCost: 2,
+      requiresUpload: true,
+      requiresSecondFile: false
+    },
+    {
+      id: 'encrypt',
+      name: 'Encrypt PDF',
+      description: 'Apply a user and owner password.',
+      creditCost: 3,
+      requiresUpload: true,
+      requiresSecondFile: false
+    },
+    {
+      id: 'decrypt',
+      name: 'Decrypt PDF',
+      description: 'Remove password protection.',
+      creditCost: 3,
+      requiresUpload: true,
+      requiresSecondFile: false
+    },
+    {
+      id: 'permissions',
+      name: 'Set permissions',
+      description: 'Restrict printing, copying, or editing.',
+      creditCost: 2,
+      requiresUpload: true,
+      requiresSecondFile: false
+    },
+    {
+      id: 'export_pdf',
+      name: 'Export PDF',
+      description: 'Download the latest PDF output.',
+      creditCost: 0,
+      requiresUpload: true,
+      requiresSecondFile: false
     }
   ];
   let toolGroups = [];
@@ -303,6 +431,7 @@ export function mountEditor() {
     toolPanelState.textContent = stateMessage;
     toolPanelAction.textContent = actionLabel;
     toolPanelAction.disabled = !actionEnabled;
+    renderToolInputs(tool);
   }
 
   toolPanelClose.addEventListener('click', () => {
@@ -318,6 +447,9 @@ export function mountEditor() {
     toolPanelState.textContent = 'Pick a tool to preview its readiness.';
     toolPanelAction.textContent = 'Run tool';
     toolPanelAction.disabled = true;
+    if (toolPanelInputs) {
+      toolPanelInputs.innerHTML = '';
+    }
   });
 
   toolPanelAction.addEventListener('click', async () => {
@@ -353,10 +485,12 @@ export function mountEditor() {
       renderTools();
       renderToolBadges();
     } catch (error) {
-      if (toolsGrid) {
-        toolsGrid.innerHTML = '<p class="muted">Unable to load tools right now.</p>';
-      }
-      setState('empty', 'Unable to load tools.');
+      operationCatalog = LOCAL_OPERATIONS;
+      toolGroups = buildToolGroups(operationCatalog);
+      refreshToolIndex();
+      renderTools();
+      renderToolBadges();
+      setState('empty', 'Local tools loaded.');
     }
   }
 
@@ -461,14 +595,30 @@ export function mountEditor() {
   async function refreshPreview(storagePath, label) {
     const { url } = await fetchPdfBytes(storagePath);
     previewFrame.src = url;
-    currentDownloadUrl = url;
+    setCurrentDownloadUrl(url);
     setPreviewMeta(label);
   }
 
   function refreshPreviewWithUrl(url, label) {
     previewFrame.src = url;
-    currentDownloadUrl = url;
+    setCurrentDownloadUrl(url);
     setPreviewMeta(label);
+  }
+
+  function setCurrentDownloadUrl(url) {
+    if (currentDownloadUrl && currentDownloadUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(currentDownloadUrl);
+    }
+    currentDownloadUrl = url;
+  }
+
+  function resetLocalOutputs() {
+    localOutputUrls.forEach((url) => {
+      if (url.startsWith('blob:')) {
+        URL.revokeObjectURL(url);
+      }
+    });
+    localOutputUrls = [];
   }
 
   async function markDocumentQueued(operationId) {
@@ -509,6 +659,11 @@ export function mountEditor() {
       return;
     }
 
+    const payload = collectToolPayload(tool);
+    if (payload === null) return;
+    const ranLocal = await tryRunLocalPdfcpu(tool, payload);
+    if (ranLocal) return;
+
     setState('running_operation', 'Queuing operation...');
     let secondaryStoragePath = null;
 
@@ -541,6 +696,15 @@ export function mountEditor() {
   }
 
   async function handleExport() {
+    if (currentDownloadUrl && currentDownloadUrl.startsWith('blob:')) {
+      const anchor = document.createElement('a');
+      anchor.href = currentDownloadUrl;
+      anchor.download = filename.textContent.replace('Document: ', '') || 'justapdf-export.pdf';
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      return;
+    }
     if (!currentDocId || !currentStoragePath) {
       setState('empty', 'Upload a PDF to export.');
       return;
@@ -555,6 +719,322 @@ export function mountEditor() {
     anchor.click();
     anchor.remove();
     URL.revokeObjectURL(url);
+  }
+
+  async function tryRunLocalPdfcpu(tool, payloadOverrides) {
+    const toolMap = {
+      merge_documents: 'merge',
+      normalize_pdf: 'normalize',
+      split_pages: 'split_pages',
+      rotate_pages: 'rotate',
+      delete_pages: 'delete_pages',
+      reorder: 'reorder',
+      watermark: 'watermark',
+      metadata_view: 'metadata_view',
+      metadata_edit: 'metadata_edit',
+      metadata_strip: 'metadata_strip',
+      encrypt: 'encrypt',
+      decrypt: 'decrypt',
+      permissions: 'permissions'
+    };
+    const toolId = toolMap[tool.id];
+    if (!toolId) return false;
+    if (!currentStoragePath) {
+      setState('empty', 'Upload a PDF to run this tool.');
+      return true;
+    }
+
+    let secondaryFile = null;
+    if (tool.requiresSecondFile) {
+      secondaryFile = await selectSecondaryFile();
+      if (!secondaryFile) {
+        setState('ready', 'Operation cancelled.');
+        return true;
+      }
+    }
+
+    setState('running_operation', 'Running locally...');
+    try {
+      const { runTool } = await import('/tools/runTool.js');
+      const { bytes } = await fetchPdfBytes(currentStoragePath);
+      const mainFile = new File([bytes], 'document.pdf', { type: 'application/pdf' });
+
+      let payload = { ...payloadOverrides };
+      let resolvedToolId = toolId;
+
+      if (toolId === 'merge') {
+        payload.files = [mainFile, secondaryFile].filter(Boolean);
+      } else {
+        payload.input = mainFile;
+      }
+
+      if (toolId === 'watermark') {
+        resolvedToolId = payload.mode === 'image' ? 'watermark_image' : 'watermark_text';
+        if (payload.imageFile) {
+          payload.image = payload.imageFile;
+        }
+      }
+
+      const result = await runTool(resolvedToolId, payload);
+      resetLocalOutputs();
+
+      if (result.files && result.files.length) {
+        const first = result.files[0];
+        const previewFile = new File([first.data], first.name || 'output.pdf', {
+          type: first.type || 'application/pdf'
+        });
+        const previewUrl = URL.createObjectURL(previewFile);
+        localOutputUrls.push(previewUrl);
+        previewFrame.src = previewUrl;
+        setCurrentDownloadUrl(previewUrl);
+        setPreviewMeta(`Local split (${result.files.length} files)`);
+        history.innerHTML = `
+          <div class="doc-list">
+            ${result.files.map((file, index) => {
+              const blobUrl = URL.createObjectURL(new Blob([file.data], { type: file.type }));
+              localOutputUrls.push(blobUrl);
+              return `
+                <a class="doc-row" href="${blobUrl}" download="${file.name || `split-${index + 1}.pdf`}">
+                  <span>${file.name || `Split ${index + 1}`}</span>
+                  <span>Download</span>
+                </a>
+              `;
+            }).join('')}
+          </div>
+        `;
+      } else if (result.type === 'text/plain') {
+        const text = new TextDecoder().decode(result.data);
+        renderMetadataViewer(text, result.name || 'metadata.txt');
+        setPreviewMeta('Metadata loaded');
+      } else {
+        const file = new File([result.data], result.name || 'output.pdf', {
+          type: result.type || 'application/pdf'
+        });
+        const url = URL.createObjectURL(file);
+        localOutputUrls.push(url);
+        previewFrame.src = url;
+        setCurrentDownloadUrl(url);
+        setPreviewMeta('Local preview (unsaved)');
+        history.innerHTML = `<p>Local ${tool.name} complete.</p>`;
+      }
+
+      docStatus.textContent = 'local';
+      exportButton.disabled = false;
+      setState('ready', `${tool.name} complete (local).`);
+      return true;
+    } catch (error) {
+      setState('ready', error.message || 'Local operation failed.');
+      return true;
+    }
+  }
+
+  function renderMetadataViewer(text, filename) {
+    history.innerHTML = `
+      <div class="meta-viewer">
+        <div class="meta-viewer-header">
+          <strong>${filename}</strong>
+          <a class="ghost" id="meta-download" download="${filename}">Download</a>
+        </div>
+        <pre class="meta-viewer-body"></pre>
+      </div>
+    `;
+    const pre = history.querySelector('.meta-viewer-body');
+    if (pre) {
+      pre.textContent = text;
+    }
+    const download = history.querySelector('#meta-download');
+    if (download) {
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      localOutputUrls.push(url);
+      download.href = url;
+    }
+  }
+
+  function renderToolInputs(tool) {
+    if (!toolPanelInputs) return;
+    const toolId = tool.id;
+    let content = '';
+
+    if (toolId === 'split_pages') {
+      content = `
+        <label class="tool-input">
+          Pages per split (optional)
+          <input type="number" id="tool-input-span" min="1" placeholder="e.g. 2" />
+        </label>
+      `;
+    }
+
+    if (toolId === 'rotate_pages') {
+      content = `
+        <label class="tool-input">
+          Rotation
+          <select id="tool-input-rotation">
+            <option value="90">90° clockwise</option>
+            <option value="180">180°</option>
+            <option value="270">270°</option>
+            <option value="-90">90° counter</option>
+            <option value="-180">180° counter</option>
+            <option value="-270">270° counter</option>
+          </select>
+        </label>
+        <label class="tool-input">
+          Pages (optional)
+          <input type="text" id="tool-input-pages" placeholder="e.g. 1-3,5" />
+        </label>
+      `;
+    }
+
+    if (toolId === 'delete_pages') {
+      content = `
+        <label class="tool-input">
+          Pages to delete
+          <input type="text" id="tool-input-pages" placeholder="e.g. 2-4,7" />
+        </label>
+      `;
+    }
+
+    if (toolId === 'reorder') {
+      content = `
+        <label class="tool-input">
+          New order
+          <input type="text" id="tool-input-order" placeholder="e.g. 3,1,2" />
+        </label>
+      `;
+    }
+
+    if (toolId === 'watermark') {
+      content = `
+        <label class="tool-input">
+          Watermark type
+          <select id="tool-input-wm-type">
+            <option value="text">Text</option>
+            <option value="image">Image</option>
+          </select>
+        </label>
+        <label class="tool-input">
+          Text
+          <input type="text" id="tool-input-text" placeholder="CONFIDENTIAL" />
+        </label>
+        <label class="tool-input">
+          Image file
+          <input type="file" id="tool-input-image" accept="image/*" />
+        </label>
+        <label class="tool-input">
+          Position
+          <select id="tool-input-position">
+            <option value="c">Center</option>
+            <option value="tl">Top left</option>
+            <option value="tc">Top center</option>
+            <option value="tr">Top right</option>
+            <option value="l">Left</option>
+            <option value="r">Right</option>
+            <option value="bl">Bottom left</option>
+            <option value="bc">Bottom center</option>
+            <option value="br">Bottom right</option>
+          </select>
+        </label>
+        <label class="tool-input">
+          Opacity (0-1)
+          <input type="number" id="tool-input-opacity" min="0" max="1" step="0.1" placeholder="0.3" />
+        </label>
+        <label class="tool-input">
+          Rotation
+          <input type="number" id="tool-input-wm-rotation" placeholder="45" />
+        </label>
+      `;
+    }
+
+    toolPanelInputs.innerHTML = content;
+
+    if (toolId === 'watermark') {
+      const typeSelect = toolPanelInputs.querySelector('#tool-input-wm-type');
+      const textInput = toolPanelInputs.querySelector('#tool-input-text');
+      const imageInput = toolPanelInputs.querySelector('#tool-input-image');
+      const toggle = () => {
+        const isImage = typeSelect.value === 'image';
+        if (textInput) textInput.parentElement.hidden = isImage;
+        if (imageInput) imageInput.parentElement.hidden = !isImage;
+      };
+      typeSelect.addEventListener('change', toggle);
+      toggle();
+    }
+  }
+
+  function collectToolPayload(tool) {
+    const toolId = tool.id;
+    const payload = {
+      outputName: `${toolId}-${Date.now()}.pdf`
+    };
+
+    if (!toolPanelInputs) return payload;
+
+    if (toolId === 'split_pages') {
+      const span = toolPanelInputs.querySelector('#tool-input-span')?.value;
+      if (span) payload.span = span;
+      return payload;
+    }
+
+    if (toolId === 'rotate_pages') {
+      const rotation = toolPanelInputs.querySelector('#tool-input-rotation')?.value;
+      if (!rotation) {
+        setState('ready', 'Choose a rotation.');
+        return null;
+      }
+      payload.deg = rotation;
+      const pages = toolPanelInputs.querySelector('#tool-input-pages')?.value;
+      if (pages) payload.pages = pages;
+      return payload;
+    }
+
+    if (toolId === 'delete_pages') {
+      const pages = toolPanelInputs.querySelector('#tool-input-pages')?.value;
+      if (!pages) {
+        setState('ready', 'Enter pages to delete.');
+        return null;
+      }
+      payload.pages = pages;
+      return payload;
+    }
+
+    if (toolId === 'reorder') {
+      const order = toolPanelInputs.querySelector('#tool-input-order')?.value;
+      if (!order) {
+        setState('ready', 'Enter a new page order.');
+        return null;
+      }
+      payload.order = order;
+      return payload;
+    }
+
+    if (toolId === 'watermark') {
+      const mode = toolPanelInputs.querySelector('#tool-input-wm-type')?.value || 'text';
+      payload.mode = mode;
+      const position = toolPanelInputs.querySelector('#tool-input-position')?.value || 'c';
+      payload.position = position;
+      const opacity = toolPanelInputs.querySelector('#tool-input-opacity')?.value;
+      if (opacity) payload.opacity = opacity;
+      const rotation = toolPanelInputs.querySelector('#tool-input-wm-rotation')?.value;
+      if (rotation) payload.rotation = rotation;
+      if (mode === 'text') {
+        const text = toolPanelInputs.querySelector('#tool-input-text')?.value;
+        if (!text) {
+          setState('ready', 'Enter watermark text.');
+          return null;
+        }
+        payload.text = text;
+      } else {
+        const imageFile = toolPanelInputs.querySelector('#tool-input-image')?.files?.[0];
+        if (!imageFile) {
+          setState('ready', 'Choose an image file.');
+          return null;
+        }
+        payload.imageFile = imageFile;
+      }
+      return payload;
+    }
+
+    return payload;
   }
 
   function handleFiles(files) {

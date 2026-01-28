@@ -4,12 +4,18 @@ import { db, doc, updateDoc } from '../firebase.js';
 const THEME_KEY = 'theme';
 
 export function getTheme() {
-  return localStorage.getItem(THEME_KEY) || 'dark_default';
+  const stored = localStorage.getItem(THEME_KEY);
+  if (!stored) return 'dark';
+  if (!THEMES.some((theme) => theme.id === stored)) {
+    return 'dark';
+  }
+  return stored;
 }
 
 export function applyTheme(themeId) {
-  document.documentElement.dataset.theme = themeId;
-  localStorage.setItem(THEME_KEY, themeId);
+  const resolved = THEMES.some((theme) => theme.id === themeId) ? themeId : 'dark';
+  document.documentElement.dataset.theme = resolved;
+  localStorage.setItem(THEME_KEY, resolved);
 }
 
 export async function persistTheme(userId, themeId) {

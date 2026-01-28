@@ -6,10 +6,17 @@
   <title>Just a PDF</title>
   <link rel="icon" type="image/png" href="/assets/branding/logo/just-a-pdf-favicon.png">
   <link rel="stylesheet" href="/src/styles/base.css" />
+  <link rel="stylesheet" href="/src/styles/theme.css" />
   <link rel="stylesheet" href="/src/styles/app.css" />
 </head>
 <body>
   <div id="app"></div>
+  <script>
+    window.addEventListener("error", (e) => {
+      document.body.innerHTML =
+        "<pre style='padding:16px'>" + e.message + "</pre>";
+    });
+  </script>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

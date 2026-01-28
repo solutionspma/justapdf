@@ -26,3 +26,8 @@ justapdf/
 ## Integration
 
 See `docs/` for integration guidelines.
+
+## Public API
+
+- `docs/PUBLIC_API.md`
+- `docs/openapi.yaml`

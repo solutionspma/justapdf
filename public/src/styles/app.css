@@ -419,8 +419,49 @@ button.doc-row:hover {
 }
 
 .editor-shell {
+  position: relative;
+  margin: 4rem auto;
+  max-width: var(--max-width);
+  background: var(--panel);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem;
+}
+
+#editor-root {
+  min-height: 520px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.08));
+  border-radius: var(--radius-sm);
+  outline: 1px solid rgba(255, 255, 255, 0.08);
   display: grid;
   gap: 16px;
+  padding: 20px;
+}
+
+#editor-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.04),
+    rgba(255, 255, 255, 0.04) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+  border-radius: var(--radius);
+  text-align: center;
+  padding: 24px;
+  pointer-events: none;
+}
+
+#editor-shell[data-state="ready"] #editor-overlay,
+#editor-shell[data-state="running_operation"] #editor-overlay,
+#editor-shell[data-state="uploading"] #editor-overlay {
+  display: none;
 }
 
 .editor-status {
@@ -508,7 +549,7 @@ button.doc-row:hover {
   display: grid;
   gap: 16px;
   padding: 20px;
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: var(--shadow);
@@ -561,16 +602,16 @@ button.doc-row:hover {
 }
 
 .tool-button {
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   background: var(--surface);
   color: var(--text-primary);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   padding: 12px;
   display: grid;
   gap: 6px;
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .tool-button.is-disabled,
@@ -583,13 +624,15 @@ button.doc-row:hover {
 
 .tool-button:hover {
   border-color: var(--accent);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   box-shadow: var(--shadow);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
 }
 
 .tool-button.is-selected {
   border-color: var(--accent);
   box-shadow: var(--shadow);
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface));
 }
 
 .tool-button-label {
@@ -605,7 +648,7 @@ button.doc-row:hover {
   display: grid;
   gap: 16px;
   padding: 20px;
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: var(--shadow);
@@ -634,6 +677,58 @@ button.doc-row:hover {
   gap: 8px;
 }
 
+.editor-tool-panel-inputs {
+  display: grid;
+  gap: 12px;
+}
+
+.tool-input {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.tool-input input,
+.tool-input select {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.meta-viewer {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.meta-viewer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.meta-viewer-body {
+  margin: 0;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.5;
+  max-height: 280px;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
 .tool-chip {
   border: 1px solid var(--border);
   border-radius: 999px;
@@ -651,6 +746,165 @@ button.doc-row:hover {
 .tool-chip-status.is-coming {
   border-color: rgba(255, 167, 38, 0.5);
   color: #ef6c00;
+}
+
+.tool-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+  padding: 1.5rem;
+  background: var(--panel);
+  border-top: 2px solid var(--accent);
+}
+
+.tool-strip button {
+  background: transparent;
+  border: 2px solid var(--accent);
+  color: var(--text-primary);
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.tool-strip button:hover {
+  background: var(--accent);
+  color: #000;
+}
+
+.tool-card {
+  background: var(--panel);
+  border-left: 4px solid var(--accent);
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow);
+}
+
+.tool-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.status-ok {
+  color: var(--accent);
+}
+
+.status-warn {
+  color: #facc15;
+}
+
+.status-error {
+  color: var(--danger);
+}
+
+.pricing {
+  max-width: var(--max-width);
+  margin: 3rem auto;
+  padding: 1.5rem;
+  color: var(--text-primary);
+}
+
+.pricing-hero {
+  margin-bottom: 2rem;
+  padding: 2rem;
+  background: var(--panel);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 2px solid var(--border);
+}
+
+.pricing-hero h1 {
+  font-size: 2.25rem;
+  margin: 0 0 0.75rem;
+}
+
+.pricing-section {
+  margin-top: 2.25rem;
+}
+
+.grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.plans {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.packs {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.addons {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.plan.featured {
+  outline: 3px solid var(--accent);
+}
+
+.pricing .card {
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.25rem;
+}
+
+.price {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0.25rem 0;
+}
+
+.price span {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.sub {
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+
+.fineprint {
+  color: var(--text-muted);
+  margin-top: 0.75rem;
+}
+
+.btn {
+  padding: 0.8rem 1rem;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  background: transparent;
+}
+
+.btn.primary {
+  background: var(--accent);
+  border: 2px solid var(--accent);
+  color: #000;
+}
+
+.btn.ghost {
+  background: transparent;
+  border: 2px solid var(--accent);
+  color: var(--text-primary);
+}
+
+.table {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.table .row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius-sm);
+  outline: 1px solid var(--border);
 }
 
 .editor-tool-panel-state {
