@@ -25,9 +25,46 @@ export default function Editor() {
       </aside>
 
       <section class="editor-workspace">
-        <div class="editor-utility-bar">
-          <button class="ghost panel-toggle" id="toggle-left-panel-alt" type="button">Hide tools</button>
-          <button class="ghost panel-toggle" id="toggle-right-panel-alt" type="button">Hide details</button>
+        <div class="editor-menubar" id="editor-menubar">
+          <button class="menubar-button" type="button" data-menu="file">File</button>
+          <button class="menubar-button" type="button" data-menu="edit">Edit</button>
+          <button class="menubar-button" type="button" data-menu="view">View</button>
+          <button class="menubar-button" type="button" data-menu="insert">Insert</button>
+          <button class="menubar-button" type="button" data-menu="tools">Tools</button>
+          <button class="menubar-button" type="button" data-menu="help">Help</button>
+          <div class="menubar-actions">
+            <button class="ghost panel-toggle" id="toggle-left-panel-alt" type="button">Hide tools</button>
+            <button class="ghost panel-toggle" id="toggle-right-panel-alt" type="button">Hide details</button>
+          </div>
+          <div class="menubar-menu" data-menu-panel="file">
+            <button type="button" data-action="file-open">Open…</button>
+            <button type="button" data-action="file-save">Save</button>
+            <button type="button" data-action="file-export">Export</button>
+          </div>
+          <div class="menubar-menu" data-menu-panel="edit">
+            <button type="button" data-action="edit-undo">Undo</button>
+            <button type="button" data-action="edit-redo">Redo</button>
+          </div>
+          <div class="menubar-menu" data-menu-panel="view">
+            <button type="button" data-action="view-fit">Fit width</button>
+            <button type="button" data-action="view-zoom-in">Zoom in</button>
+            <button type="button" data-action="view-zoom-out">Zoom out</button>
+          </div>
+          <div class="menubar-menu" data-menu-panel="insert">
+            <button type="button" data-action="tool-insert_text">Text box</button>
+            <button type="button" data-action="tool-insert_image">Image</button>
+            <button type="button" data-action="tool-highlight">Highlight</button>
+            <button type="button" data-action="tool-draw">Draw</button>
+            <button type="button" data-action="tool-comment">Comment</button>
+          </div>
+          <div class="menubar-menu" data-menu-panel="tools">
+            <button type="button" data-action="tool-edit_text">Edit text</button>
+            <button type="button" data-action="panel-tools">Toggle tools panel</button>
+            <button type="button" data-action="panel-details">Toggle detail panel</button>
+          </div>
+          <div class="menubar-menu" data-menu-panel="help">
+            <button type="button" data-action="help-about">About editor</button>
+          </div>
         </div>
         <div class="editor-status" id="editor-status">Drop a PDF to begin.</div>
 
@@ -149,6 +186,7 @@ export function mountEditor() {
   const layout = document.getElementById('editor-shell');
   const leftPanel = document.querySelector('.editor-tools-left');
   const rightPanel = document.querySelector('.editor-tools-right');
+  const menubar = document.getElementById('editor-menubar');
   const toggleLeft = document.getElementById('toggle-left-panel');
   const toggleRight = document.getElementById('toggle-right-panel');
   const toggleLeftAlt = document.getElementById('toggle-left-panel-alt');
@@ -186,6 +224,7 @@ export function mountEditor() {
   let activeToolId = null;
   let activeSelection = null;
   let pageViewports = [];
+  let editTextLimitReason = '';
   let pdfDocInstance = null;
   let zoomScale = 1;
   let currentPageIndex = 0;
@@ -628,15 +667,18 @@ export function mountEditor() {
       comment: '💬'
     };
 
-    toolsGrid.innerHTML = toolGroups.map((group) => `
+    toolsGrid.innerHTML = toolGroups.map((group, index) => `
       <section class="tool-group" data-group="${group.id}">
         <div class="tool-group-header">
           <div>
             <h3>${group.label}</h3>
             <p class="muted">${group.description}</p>
           </div>
+          <button class="ghost tool-group-toggle" type="button" aria-expanded="${index === 0 ? 'true' : 'false'}">
+            ${index === 0 ? 'Hide' : 'Show'}
+          </button>
         </div>
-        <div class="tool-group-grid tool-group-grid-compact">
+        <div class="tool-group-grid tool-group-grid-compact ${index === 0 ? 'is-open' : ''}">
           ${group.tools.map((tool) => `
             <button class="tool-button" type="button" data-tool-id="${tool.id}" data-requires-upload="${tool.requiresUpload}">
               <span class="tool-icon">${iconMap[tool.id] || '⚙️'}</span>
@@ -647,6 +689,25 @@ export function mountEditor() {
         </div>
       </section>
     `).join('');
+
+    toolsGrid.querySelectorAll('.tool-group-toggle').forEach((toggle) => {
+      toggle.addEventListener('click', () => {
+        const group = toggle.closest('.tool-group');
+        const grid = group?.querySelector('.tool-group-grid');
+        if (!grid || !toolsGrid) return;
+        const isOpen = grid.classList.contains('is-open');
+        toolsGrid.querySelectorAll('.tool-group-grid').forEach((pane) => pane.classList.remove('is-open'));
+        toolsGrid.querySelectorAll('.tool-group-toggle').forEach((btn) => {
+          btn.textContent = 'Show';
+          btn.setAttribute('aria-expanded', 'false');
+        });
+        if (!isOpen) {
+          grid.classList.add('is-open');
+          toggle.textContent = 'Hide';
+          toggle.setAttribute('aria-expanded', 'true');
+        }
+      });
+    });
 
     toolsGrid.querySelectorAll('[data-tool-id]').forEach((button) => {
       button.addEventListener('click', () => {
@@ -672,7 +733,7 @@ export function mountEditor() {
       if (!tool) return;
       const needsUpload = tool.requiresUpload && !currentDocId;
       const needsSelection = tool.requiresSelection && !activeSelection;
-      const disabled = needsUpload || needsSelection;
+      const disabled = needsUpload;
       button.disabled = disabled;
       button.classList.toggle('is-disabled', disabled);
       const meta = button.querySelector('.tool-button-meta');
@@ -811,6 +872,94 @@ export function mountEditor() {
       if (pdfZoomSelect) pdfZoomSelect.value = '1';
       if (currentPdfBytes) {
         renderPdf(currentPdfBytes);
+      }
+    });
+  }
+
+  function closeMenus() {
+    menubar?.querySelectorAll('.menubar-button.is-open').forEach((btn) => btn.classList.remove('is-open'));
+    menubar?.querySelectorAll('.menubar-menu.is-open').forEach((menu) => menu.classList.remove('is-open'));
+  }
+
+  function openMenu(menuId, button) {
+    closeMenus();
+    const menu = menubar?.querySelector(`[data-menu-panel="${menuId}"]`);
+    if (!menu || !button) return;
+    button.classList.add('is-open');
+    menu.classList.add('is-open');
+  }
+
+  if (menubar) {
+    menubar.addEventListener('click', (event) => {
+      const button = event.target.closest('.menubar-button');
+      const actionButton = event.target.closest('[data-action]');
+      if (button && button.dataset.menu) {
+        if (button.classList.contains('is-open')) {
+          closeMenus();
+        } else {
+          openMenu(button.dataset.menu, button);
+        }
+        return;
+      }
+      if (!actionButton) return;
+      const action = actionButton.dataset.action;
+      closeMenus();
+      if (action === 'file-open') {
+        fileInput?.click();
+        return;
+      }
+      if (action === 'file-save' || action === 'file-export') {
+        handleExport();
+        return;
+      }
+      if (action === 'edit-undo') {
+        undoAction();
+        return;
+      }
+      if (action === 'edit-redo') {
+        redoAction();
+        return;
+      }
+      if (action === 'view-fit') {
+        pdfFitWidth?.click();
+        return;
+      }
+      if (action === 'view-zoom-in') {
+        zoomScale = Math.min(3, zoomScale + 0.25);
+        if (pdfZoomSelect) pdfZoomSelect.value = String(zoomScale);
+        if (currentPdfBytes) renderPdf(currentPdfBytes);
+        return;
+      }
+      if (action === 'view-zoom-out') {
+        zoomScale = Math.max(0.5, zoomScale - 0.25);
+        if (pdfZoomSelect) pdfZoomSelect.value = String(zoomScale);
+        if (currentPdfBytes) renderPdf(currentPdfBytes);
+        return;
+      }
+      if (action === 'panel-tools') {
+        toggleLeftAlt?.click();
+        return;
+      }
+      if (action === 'panel-details') {
+        toggleRightAlt?.click();
+        return;
+      }
+      if (action.startsWith('tool-')) {
+        const toolId = action.replace('tool-', '');
+        const tool = toolIndex.get(toolId);
+        if (!tool) return;
+        selectedToolId = toolId;
+        activeToolId = toolId;
+        toolsGrid?.querySelectorAll('.tool-button').forEach((btn) => btn.classList.remove('is-selected'));
+        const btn = toolsGrid?.querySelector(`[data-tool-id="${toolId}"]`);
+        btn?.classList.add('is-selected');
+        openToolPanel(tool);
+      }
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!menubar.contains(event.target)) {
+        closeMenus();
       }
     });
   }
@@ -1009,9 +1158,9 @@ export function mountEditor() {
       await page.render({ canvasContext: context, viewport }).promise;
 
       const textContent = await page.getTextContent();
-      const textItems = textContent.items
-        .filter((item) => item.str && item.transform)
-        .map((item) => {
+    const textItems = textContent.items
+      .filter((item) => item.str && item.transform)
+      .map((item) => {
           const tx = pdfjs.Util.transform(viewport.transform, item.transform);
           const x = tx[4];
           const y = tx[5];
@@ -1024,6 +1173,8 @@ export function mountEditor() {
             width,
             height,
             pageIndex: i - 1
+          ,fontName: item.fontName || ''
+          ,transform: item.transform
           };
         });
       pageViewports[i - 1].textItems = textItems;
@@ -1059,6 +1210,10 @@ export function mountEditor() {
     }
     if (activeToolId === 'edit_text' || activeToolId === 'highlight') {
       const selection = findTextItemAt(pageIndex, x, y);
+      if (!selection && !pageViewports[pageIndex]?.textItems?.length) {
+        setState('ready', 'No editable text detected on this page.');
+        return;
+      }
       if (!selection) {
         setState('ready', 'No text selected.');
         return;
@@ -1621,8 +1776,40 @@ export function mountEditor() {
       const scale = pageViewports[payload.pageIndex ?? 0]?.scale || 1;
 
       if (toolId === 'edit_text') {
-        setState('ready', 'This text cannot be edited directly.');
-        emitAction('action_commit', { toolId, status: 'blocked' });
+        const selection = payload.selection;
+        if (!selection?.fontName) {
+          editTextLimitReason = 'This text cannot be edited directly (no font data).';
+          renderToolInputs({ id: 'edit_text' });
+          setState('ready', editTextLimitReason);
+          emitAction('action_commit', { toolId, status: 'blocked' });
+          return;
+        }
+        const { runTextRewrite } = await import('/tools/runTextRewrite.js');
+        const result = await runTextRewrite({
+          bytes: currentPdfBytes,
+          pageIndex: payload.pageIndex,
+          bbox: {
+            x: selection.x,
+            y: selection.y,
+            width: selection.width,
+            height: selection.height
+          },
+          fontName: selection.fontName,
+          originalText: selection.text,
+          newText: payload.text
+        });
+        if (!result.ok) {
+          editTextLimitReason = result.reason || 'This text cannot be edited directly.';
+          renderToolInputs({ id: 'edit_text' });
+          setState('ready', editTextLimitReason);
+          emitAction('action_commit', { toolId, status: 'blocked' });
+          return;
+        }
+        editTextLimitReason = '';
+        renderToolInputs({ id: 'edit_text' });
+        await setPdfBytes(result.bytes, { pushHistory: true });
+        setState('ready', 'Text updated.');
+        emitAction('action_commit', { toolId });
         return;
       }
 
@@ -1790,11 +1977,16 @@ export function mountEditor() {
     let content = '';
 
     if (toolId === 'edit_text') {
+      const warning = editTextLimitReason
+        ? `
+          <div class="tool-input tool-warning">
+            <strong>Limited</strong>
+            <span>${editTextLimitReason}</span>
+          </div>
+        `
+        : '';
       content = `
-        <div class="tool-input tool-warning">
-          <strong>Limited</strong>
-          <span>This text cannot be edited directly yet. Use overlay replacement when available.</span>
-        </div>
+        ${warning}
         <label class="tool-input">
           New text
           <textarea id="tool-input-edit-text" rows="2" placeholder="Edit selected text..."></textarea>
@@ -1992,6 +2184,10 @@ export function mountEditor() {
       payload.selection = activeSelection;
       payload.pageIndex = activeSelection.pageIndex;
       payload.text = toolPanelInputs.querySelector('#tool-input-edit-text')?.value || '';
+      if (!payload.text.trim()) {
+        setState('ready', 'Enter replacement text.');
+        return null;
+      }
       return payload;
     }
 

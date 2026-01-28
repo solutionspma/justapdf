@@ -558,6 +558,73 @@ button.doc-row:hover {
   min-height: 0;
 }
 
+.editor-history {
+  margin-top: auto;
+}
+
+.editor-menubar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  position: relative;
+  flex-wrap: wrap;
+}
+
+.menubar-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.menubar-button {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.menubar-button.is-open {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.menubar-menu {
+  display: none;
+  position: absolute;
+  top: 36px;
+  left: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  padding: 8px;
+  min-width: 180px;
+  z-index: 30;
+}
+
+.menubar-menu.is-open {
+  display: grid;
+  gap: 6px;
+}
+
+.menubar-menu button {
+  background: transparent;
+  border: 1px solid transparent;
+  text-align: left;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+.menubar-menu button:hover {
+  background: var(--surface-alt);
+}
+
 .editor-sidebar-header {
   display: flex;
   align-items: center;
@@ -734,6 +801,10 @@ button.doc-row:hover {
   gap: 12px;
 }
 
+.tool-group-toggle {
+  padding: 6px 10px;
+}
+
 .tool-group-header h3 {
   margin: 0 0 4px;
 }
@@ -742,6 +813,11 @@ button.doc-row:hover {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 8px;
+  display: none;
+}
+
+.tool-group-grid.is-open {
+  display: grid;
 }
 
 .tool-group-grid-compact {

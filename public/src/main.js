@@ -10,6 +10,8 @@ function updateHeaderAuthState(user) {
   const signOut = document.querySelector('[data-auth="signout"]');
   const account = document.querySelector('[data-auth="account"]');
 
+  document.body.dataset.auth = user ? 'signed-in' : 'signed-out';
+
   if (signIn) signIn.hidden = !!user;
   if (signUp) signUp.hidden = !!user;
   if (signOut) signOut.hidden = !user;
