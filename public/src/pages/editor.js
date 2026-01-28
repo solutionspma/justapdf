@@ -5,103 +5,98 @@ import { apiFetch } from '../api.js';
 export default function Editor() {
   return `
     ${Header()}
-    <main class="page editor-page">
-      <h1>Editor</h1>
-      <section class="editor-shell" id="editor-shell" data-state="empty">
-        <div id="editor-overlay">Upload a PDF to power the tools.</div>
-        <div id="editor-root">
-          <div class="editor-layout">
-            <aside class="editor-sidebar editor-sidebar-left">
-              <div class="editor-sidebar-header">
-                <span class="muted">Tools</span>
-                <button class="ghost panel-toggle" id="toggle-left-panel" type="button">Hide</button>
-              </div>
-              <div class="editor-tools" id="editor-tools">
-                <div class="editor-tools-header">
-                  <div>
-                    <h2>Tool system</h2>
-                    <p class="muted">Run real PDF operations and export the result.</p>
-                  </div>
-                  <div class="editor-tools-badges" id="editor-tools-badges"></div>
-                </div>
-                <div class="editor-tools-grid" id="editor-tools-grid"></div>
-              </div>
-            </aside>
-
-            <div class="editor-center">
-              <div class="editor-utility-bar">
-                <button class="ghost panel-toggle" id="toggle-left-panel-alt" type="button">Hide tools</button>
-                <button class="ghost panel-toggle" id="toggle-right-panel-alt" type="button">Hide details</button>
-              </div>
-              <div class="editor-status" id="editor-status">Drop a PDF to begin.</div>
-
-              <div class="card editor-auth" id="editor-auth">
-                <p>Sign in to upload and manage documents.</p>
-                <a class="primary" href="/login" data-link>Sign In</a>
-              </div>
-
-              <div class="card editor-dropzone" id="editor-dropzone">
-                <p>Drag a PDF here or click to upload.</p>
-                <input type="file" id="editor-file" accept="application/pdf" />
-              </div>
-
-              <div class="card editor-progress" id="editor-progress">
-                <p>Uploading...</p>
-                <div class="progress-bar">
-                  <div class="progress-fill" id="editor-progress-fill"></div>
-                </div>
-              </div>
-
-              <div class="card editor-document" id="editor-document">
-                <p id="editor-filename">Document loaded.</p>
-                <p class="muted">Status: <span id="editor-doc-status">ready</span></p>
-              </div>
-
-              <div class="card editor-preview" id="editor-preview-card">
-                <div class="editor-preview-header">
-                  <div>
-                    <p class="muted">Preview</p>
-                    <p class="editor-preview-meta" id="editor-preview-meta">No PDF loaded.</p>
-                  </div>
-                  <button class="ghost" id="editor-export" type="button">Export</button>
-                </div>
-                <iframe class="editor-preview-frame" id="editor-preview-frame" title="PDF preview"></iframe>
-              </div>
-
-              <div class="card editor-history" id="editor-history">
-                <p>Recent documents will appear here.</p>
-              </div>
+    <main class="editor-shell editor-page" id="editor-shell" data-state="empty">
+      <div id="editor-overlay">Upload a PDF to power the tools.</div>
+      <aside class="editor-tools-left">
+        <div class="editor-sidebar-header">
+          <span class="muted">Tools</span>
+          <button class="ghost panel-toggle" id="toggle-left-panel" type="button">Hide</button>
+        </div>
+        <div class="editor-tools" id="editor-tools">
+          <div class="editor-tools-header">
+            <div>
+              <h2>Tool system</h2>
+              <p class="muted">Run real PDF operations and export the result.</p>
             </div>
+            <div class="editor-tools-badges" id="editor-tools-badges"></div>
+          </div>
+          <div class="editor-tools-grid" id="editor-tools-grid"></div>
+        </div>
+      </aside>
 
-            <aside class="editor-sidebar editor-sidebar-right">
-              <div class="editor-sidebar-header">
-                <span class="muted">Tool detail</span>
-                <button class="ghost panel-toggle" id="toggle-right-panel" type="button">Hide</button>
-              </div>
-              <div class="editor-tool-panel" id="editor-tool-panel" aria-live="polite">
-                <div class="editor-tool-panel-header">
-                  <div>
-                    <p class="tool-panel-kicker">Tool detail</p>
-                    <h3 id="tool-panel-title">Select a tool</h3>
-                    <p class="muted" id="tool-panel-desc">Click any tool to see what it does.</p>
-                  </div>
-                  <button class="ghost tool-panel-close" id="tool-panel-close" type="button">Close</button>
-                </div>
-                <div class="editor-tool-panel-meta">
-                  <span class="tool-chip" id="tool-panel-group">Core</span>
-                  <span class="tool-chip tool-chip-status" id="tool-panel-status">Standby</span>
-                  <span class="tool-chip" id="tool-panel-credits">Credits: —</span>
-                </div>
-                <div class="editor-tool-panel-inputs" id="tool-panel-inputs"></div>
-                <div class="editor-tool-panel-state" id="tool-panel-state">Pick a tool to preview its readiness.</div>
-                <div class="editor-tool-panel-actions">
-                  <button class="primary" id="tool-panel-action" type="button" disabled>Run tool</button>
-                </div>
-              </div>
-            </aside>
+      <section class="editor-workspace">
+        <div class="editor-utility-bar">
+          <button class="ghost panel-toggle" id="toggle-left-panel-alt" type="button">Hide tools</button>
+          <button class="ghost panel-toggle" id="toggle-right-panel-alt" type="button">Hide details</button>
+        </div>
+        <div class="editor-status" id="editor-status">Drop a PDF to begin.</div>
+
+        <div class="card editor-auth" id="editor-auth">
+          <p>Sign in to upload and manage documents.</p>
+          <a class="primary" href="/login" data-link>Sign In</a>
+        </div>
+
+        <div class="card editor-dropzone" id="editor-dropzone">
+          <p>Drag a PDF here or click to upload.</p>
+          <input type="file" id="editor-file" accept="application/pdf" />
+        </div>
+
+        <div class="card editor-progress" id="editor-progress">
+          <p>Uploading...</p>
+          <div class="progress-bar">
+            <div class="progress-fill" id="editor-progress-fill"></div>
           </div>
         </div>
+
+        <div class="card editor-document" id="editor-document">
+          <p id="editor-filename">Document loaded.</p>
+          <p class="muted">Status: <span id="editor-doc-status">ready</span></p>
+        </div>
+
+        <div class="editor-canvas">
+          <div class="card editor-preview" id="editor-preview-card">
+            <div class="editor-preview-header">
+              <div>
+                <p class="muted">Preview</p>
+                <p class="editor-preview-meta" id="editor-preview-meta">No PDF loaded.</p>
+              </div>
+              <button class="ghost" id="editor-export" type="button">Export</button>
+            </div>
+            <iframe class="editor-preview-frame" id="editor-preview-frame" title="PDF preview"></iframe>
+          </div>
+        </div>
+
+        <div class="card editor-history" id="editor-history">
+          <p>Recent documents will appear here.</p>
+        </div>
       </section>
+
+      <aside class="editor-tools-right">
+        <div class="editor-sidebar-header">
+          <span class="muted">Tool detail</span>
+          <button class="ghost panel-toggle" id="toggle-right-panel" type="button">Hide</button>
+        </div>
+        <div class="editor-tool-panel" id="editor-tool-panel" aria-live="polite">
+          <div class="editor-tool-panel-header">
+            <div>
+              <p class="tool-panel-kicker">Tool detail</p>
+              <h3 id="tool-panel-title">Select a tool</h3>
+              <p class="muted" id="tool-panel-desc">Click any tool to see what it does.</p>
+            </div>
+            <button class="ghost tool-panel-close" id="tool-panel-close" type="button">Close</button>
+          </div>
+          <div class="editor-tool-panel-meta">
+            <span class="tool-chip" id="tool-panel-group">Core</span>
+            <span class="tool-chip tool-chip-status" id="tool-panel-status">Standby</span>
+            <span class="tool-chip" id="tool-panel-credits">Credits: —</span>
+          </div>
+          <div class="editor-tool-panel-inputs" id="tool-panel-inputs"></div>
+          <div class="editor-tool-panel-state" id="tool-panel-state">Pick a tool to preview its readiness.</div>
+          <div class="editor-tool-panel-actions">
+            <button class="primary" id="tool-panel-action" type="button" disabled>Run tool</button>
+          </div>
+        </div>
+      </aside>
     </main>
     ${Footer()}
   `;
@@ -124,11 +119,15 @@ export function mountEditor() {
   const previewFrame = document.getElementById('editor-preview-frame');
   const previewMeta = document.getElementById('editor-preview-meta');
   const exportButton = document.getElementById('editor-export');
-  const layout = document.querySelector('.editor-layout');
+  const layout = document.getElementById('editor-shell');
+  const leftPanel = document.querySelector('.editor-tools-left');
+  const rightPanel = document.querySelector('.editor-tools-right');
   const toggleLeft = document.getElementById('toggle-left-panel');
   const toggleRight = document.getElementById('toggle-right-panel');
   const toggleLeftAlt = document.getElementById('toggle-left-panel-alt');
   const toggleRightAlt = document.getElementById('toggle-right-panel-alt');
+  const headerToggleLeft = document.getElementById('header-toggle-tools');
+  const headerToggleRight = document.getElementById('header-toggle-details');
   const toolPanel = document.getElementById('editor-tool-panel');
   const toolPanelTitle = document.getElementById('tool-panel-title');
   const toolPanelDesc = document.getElementById('tool-panel-desc');
@@ -317,6 +316,10 @@ export function mountEditor() {
     button.textContent = collapsed ? `Show ${label}` : `Hide ${label}`;
   }
 
+  function isOverlayMode() {
+    return window.matchMedia('(max-width: 1024px)').matches;
+  }
+
   function setPanelCollapsed(side, collapsed) {
     if (!layout) return;
     layout.classList.toggle(`is-${side}-collapsed`, collapsed);
@@ -330,26 +333,67 @@ export function mountEditor() {
     }
   }
 
-  if (toggleLeft || toggleLeftAlt) {
+  function setPanelActive(side, active) {
+    const panel = side === 'left' ? leftPanel : rightPanel;
+    if (!panel) return;
+    panel.classList.toggle('active', active);
+    if (active) {
+      const otherPanel = side === 'left' ? rightPanel : leftPanel;
+      otherPanel?.classList.remove('active');
+    }
+    if (side === 'left') {
+      updatePanelToggle(toggleLeft, !active, 'tools');
+      updatePanelToggle(toggleLeftAlt, !active, 'tools');
+      updatePanelToggle(headerToggleLeft, !active, 'tools');
+    }
+    if (side === 'right') {
+      updatePanelToggle(toggleRight, !active, 'details');
+      updatePanelToggle(toggleRightAlt, !active, 'details');
+      updatePanelToggle(headerToggleRight, !active, 'details');
+    }
+  }
+
+  if (toggleLeft || toggleLeftAlt || headerToggleLeft) {
     const handler = () => {
+      if (isOverlayMode()) {
+        const active = leftPanel?.classList.contains('active');
+        setPanelActive('left', !active);
+        return;
+      }
       const collapsed = layout?.classList.contains('is-left-collapsed');
       setPanelCollapsed('left', !collapsed);
     };
     if (toggleLeft) toggleLeft.addEventListener('click', handler);
     if (toggleLeftAlt) toggleLeftAlt.addEventListener('click', handler);
+    if (headerToggleLeft) headerToggleLeft.addEventListener('click', handler);
   }
 
-  if (toggleRight || toggleRightAlt) {
+  if (toggleRight || toggleRightAlt || headerToggleRight) {
     const handler = () => {
+      if (isOverlayMode()) {
+        const active = rightPanel?.classList.contains('active');
+        setPanelActive('right', !active);
+        return;
+      }
       const collapsed = layout?.classList.contains('is-right-collapsed');
       setPanelCollapsed('right', !collapsed);
     };
     if (toggleRight) toggleRight.addEventListener('click', handler);
     if (toggleRightAlt) toggleRightAlt.addEventListener('click', handler);
+    if (headerToggleRight) headerToggleRight.addEventListener('click', handler);
   }
 
   setPanelCollapsed('left', false);
   setPanelCollapsed('right', false);
+  setPanelActive('left', false);
+  setPanelActive('right', false);
+
+  window.addEventListener('resize', () => {
+    if (!isOverlayMode()) {
+      leftPanel?.classList.remove('active');
+      rightPanel?.classList.remove('active');
+    }
+  });
 
   function buildToolGroups(operations) {
     const operationsById = new Map(operations.map((operation) => [operation.id, operation]));

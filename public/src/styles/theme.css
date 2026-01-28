@@ -4,6 +4,7 @@
   --shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
   --max-width: 1320px;
   --font-ui: Inter, system-ui, sans-serif;
+  --header-height: 84px;
 
   --text-xl: clamp(36px, 4vw, 56px);
   --text-lg: clamp(22px, 2.4vw, 28px);
