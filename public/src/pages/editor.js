@@ -60,7 +60,23 @@ export default function Editor() {
                 <p class="muted">Preview</p>
                 <p class="editor-preview-meta" id="editor-preview-meta">No PDF loaded.</p>
               </div>
-              <button class="ghost" id="editor-export" type="button">Export</button>
+              <div class="editor-preview-toolbar">
+                <button class="ghost" id="pdf-prev" type="button" aria-label="Previous page">◀</button>
+                <div class="page-indicator">
+                  <input type="number" id="pdf-page-input" min="1" value="1" aria-label="Page number" />
+                  <span class="muted">/ <span id="pdf-page-total">—</span></span>
+                </div>
+                <button class="ghost" id="pdf-next" type="button" aria-label="Next page">▶</button>
+                <select id="pdf-zoom-select" aria-label="Zoom level">
+                  <option value="0.75">75%</option>
+                  <option value="1" selected>100%</option>
+                  <option value="1.25">125%</option>
+                  <option value="1.5">150%</option>
+                  <option value="2">200%</option>
+                </select>
+                <button class="ghost" id="pdf-fit-width" type="button">Fit width</button>
+                <button class="ghost" id="editor-export" type="button">Export</button>
+              </div>
             </div>
             <div class="editor-preview-frame" id="editor-preview-frame" aria-label="PDF preview">
               <div class="pdf-pages" id="pdf-pages"></div>
@@ -124,6 +140,12 @@ export function mountEditor() {
   const pdfPages = document.getElementById('pdf-pages');
   const previewMeta = document.getElementById('editor-preview-meta');
   const exportButton = document.getElementById('editor-export');
+  const pdfPrev = document.getElementById('pdf-prev');
+  const pdfNext = document.getElementById('pdf-next');
+  const pdfPageInput = document.getElementById('pdf-page-input');
+  const pdfPageTotal = document.getElementById('pdf-page-total');
+  const pdfZoomSelect = document.getElementById('pdf-zoom-select');
+  const pdfFitWidth = document.getElementById('pdf-fit-width');
   const layout = document.getElementById('editor-shell');
   const leftPanel = document.querySelector('.editor-tools-left');
   const rightPanel = document.querySelector('.editor-tools-right');
@@ -164,6 +186,9 @@ export function mountEditor() {
   let activeToolId = null;
   let activeSelection = null;
   let pageViewports = [];
+  let pdfDocInstance = null;
+  let zoomScale = 1;
+  let currentPageIndex = 0;
 
   const INTERNAL_ADMIN_UID = window.__ENV__?.INTERNAL_ADMIN_UID || '';
   const GROUP_CONFIG = [
@@ -736,6 +761,60 @@ export function mountEditor() {
     toolPanelRedo.addEventListener('click', redoAction);
   }
 
+  if (pdfPages) {
+    pdfPages.addEventListener('scroll', () => {
+      requestAnimationFrame(updateCurrentPageFromScroll);
+    });
+  }
+
+  if (pdfPrev) {
+    pdfPrev.addEventListener('click', () => {
+      const next = Math.max(0, currentPageIndex - 1);
+      currentPageIndex = next;
+      scrollToPage(next);
+      updatePreviewControls();
+    });
+  }
+
+  if (pdfNext) {
+    pdfNext.addEventListener('click', () => {
+      const total = pdfDocInstance?.numPages || 0;
+      const next = Math.min(total - 1, currentPageIndex + 1);
+      currentPageIndex = next;
+      scrollToPage(next);
+      updatePreviewControls();
+    });
+  }
+
+  if (pdfPageInput) {
+    pdfPageInput.addEventListener('change', () => {
+      const total = pdfDocInstance?.numPages || 0;
+      const value = Math.max(1, Math.min(total, Number(pdfPageInput.value || 1)));
+      currentPageIndex = value - 1;
+      scrollToPage(currentPageIndex);
+      updatePreviewControls();
+    });
+  }
+
+  if (pdfZoomSelect) {
+    pdfZoomSelect.addEventListener('change', () => {
+      zoomScale = Number(pdfZoomSelect.value || 1);
+      if (currentPdfBytes) {
+        renderPdf(currentPdfBytes);
+      }
+    });
+  }
+
+  if (pdfFitWidth) {
+    pdfFitWidth.addEventListener('click', () => {
+      zoomScale = 1;
+      if (pdfZoomSelect) pdfZoomSelect.value = '1';
+      if (currentPdfBytes) {
+        renderPdf(currentPdfBytes);
+      }
+    });
+  }
+
   toolPanelAction.addEventListener('click', async () => {
     const toolId = selectedToolId;
     const tool = toolIndex.get(toolId);
@@ -893,12 +972,15 @@ export function mountEditor() {
 
     const pdfjs = await getPdfJs();
     const doc = await pdfjs.getDocument({ data: bytes }).promise;
+    pdfDocInstance = doc;
+    updatePreviewControls();
     const containerWidth = previewFrame.clientWidth || 800;
 
     for (let i = 1; i <= doc.numPages; i += 1) {
       const page = await doc.getPage(i);
       const unscaledViewport = page.getViewport({ scale: 1 });
-      const scale = Math.max(0.5, Math.min(2.5, (containerWidth - 24) / unscaledViewport.width));
+      const baseScale = Math.max(0.5, Math.min(2.5, (containerWidth - 24) / unscaledViewport.width));
+      const scale = baseScale * zoomScale;
       const viewport = page.getViewport({ scale });
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
@@ -957,6 +1039,10 @@ export function mountEditor() {
         handleCanvasPointerDown(event, i - 1, overlay);
       });
     }
+
+    requestAnimationFrame(() => {
+      updateCurrentPageFromScroll();
+    });
   }
 
   function handleCanvasClick(pageIndex, x, y, overlay) {
@@ -1022,6 +1108,46 @@ export function mountEditor() {
     }
     if (activeToolId === 'insert_image') {
       startImagePlacement(event, pageIndex, overlay);
+    }
+  }
+
+  function updatePreviewControls() {
+    if (!pdfPageInput || !pdfPageTotal) return;
+    const total = pdfDocInstance?.numPages || 0;
+    pdfPageTotal.textContent = total ? String(total) : '—';
+    pdfPageInput.max = total ? String(total) : '1';
+    pdfPageInput.value = total ? String(currentPageIndex + 1) : '1';
+    const disabled = !total;
+    if (pdfPrev) pdfPrev.disabled = disabled || currentPageIndex <= 0;
+    if (pdfNext) pdfNext.disabled = disabled || currentPageIndex >= total - 1;
+    if (pdfZoomSelect) pdfZoomSelect.disabled = disabled;
+    if (pdfFitWidth) pdfFitWidth.disabled = disabled;
+  }
+
+  function scrollToPage(index) {
+    const target = pdfPages?.querySelector(`[data-page-index="${index}"]`);
+    if (!target || !pdfPages) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function updateCurrentPageFromScroll() {
+    if (!pdfPages) return;
+    const pages = Array.from(pdfPages.querySelectorAll('.pdf-page'));
+    if (!pages.length) return;
+    const containerTop = pdfPages.scrollTop;
+    let closestIndex = 0;
+    let closestDistance = Infinity;
+    pages.forEach((page) => {
+      const top = page.offsetTop;
+      const distance = Math.abs(top - containerTop);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = Number(page.dataset.pageIndex || 0);
+      }
+    });
+    if (closestIndex !== currentPageIndex) {
+      currentPageIndex = closestIndex;
+      updatePreviewControls();
     }
   }
 
