@@ -498,11 +498,21 @@ button.doc-row:hover {
   display: block;
 }
 
-.editor-tooling {
+.editor-layout {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(220px, 320px) minmax(0, 1fr) minmax(260px, 360px);
+  align-items: start;
+}
+
+.editor-center {
   display: grid;
   gap: 16px;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr);
-  align-items: start;
+}
+
+.editor-sidebar {
+  display: grid;
+  gap: 16px;
 }
 
 .editor-preview {
@@ -553,6 +563,8 @@ button.doc-row:hover {
   border-radius: var(--radius);
   background: var(--surface);
   box-shadow: var(--shadow);
+  position: sticky;
+  top: 100px;
 }
 
 .editor-tools-header {
@@ -1027,9 +1039,23 @@ button.doc-row:hover {
   }
 }
 
+@media (max-width: 1100px) {
+  .editor-layout {
+    grid-template-columns: minmax(200px, 1fr) minmax(0, 1.4fr);
+  }
+
+  .editor-sidebar-right {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 960px) {
-  .editor-tooling {
+  .editor-layout {
     grid-template-columns: 1fr;
+  }
+
+  .editor-tools {
+    position: static;
   }
 
   .editor-tool-panel {

@@ -10,77 +10,84 @@ export default function Editor() {
       <section class="editor-shell" id="editor-shell" data-state="empty">
         <div id="editor-overlay">Upload a PDF to power the tools.</div>
         <div id="editor-root">
-        <div class="editor-status" id="editor-status">Drop a PDF to begin.</div>
-
-        <div class="card editor-auth" id="editor-auth">
-          <p>Sign in to upload and manage documents.</p>
-          <a class="primary" href="/login" data-link>Sign In</a>
-        </div>
-
-        <div class="card editor-dropzone" id="editor-dropzone">
-          <p>Drag a PDF here or click to upload.</p>
-          <input type="file" id="editor-file" accept="application/pdf" />
-        </div>
-
-        <div class="card editor-progress" id="editor-progress">
-          <p>Uploading...</p>
-          <div class="progress-bar">
-            <div class="progress-fill" id="editor-progress-fill"></div>
-          </div>
-        </div>
-
-        <div class="card editor-document" id="editor-document">
-          <p id="editor-filename">Document loaded.</p>
-          <p class="muted">Status: <span id="editor-doc-status">ready</span></p>
-        </div>
-
-        <div class="card editor-preview" id="editor-preview-card">
-          <div class="editor-preview-header">
-            <div>
-              <p class="muted">Preview</p>
-              <p class="editor-preview-meta" id="editor-preview-meta">No PDF loaded.</p>
-            </div>
-            <button class="ghost" id="editor-export" type="button">Export</button>
-          </div>
-          <iframe class="editor-preview-frame" id="editor-preview-frame" title="PDF preview"></iframe>
-        </div>
-
-        <div class="editor-tooling">
-          <div class="editor-tools" id="editor-tools">
-            <div class="editor-tools-header">
-              <div>
-                <h2>Tool system</h2>
-                <p class="muted">Run real PDF operations and export the result.</p>
+          <div class="editor-layout">
+            <aside class="editor-sidebar editor-sidebar-left">
+              <div class="editor-tools" id="editor-tools">
+                <div class="editor-tools-header">
+                  <div>
+                    <h2>Tool system</h2>
+                    <p class="muted">Run real PDF operations and export the result.</p>
+                  </div>
+                  <div class="editor-tools-badges" id="editor-tools-badges"></div>
+                </div>
+                <div class="editor-tools-grid" id="editor-tools-grid"></div>
               </div>
-              <div class="editor-tools-badges" id="editor-tools-badges"></div>
-            </div>
-            <div class="editor-tools-grid" id="editor-tools-grid"></div>
-          </div>
-          <aside class="editor-tool-panel" id="editor-tool-panel" aria-live="polite">
-            <div class="editor-tool-panel-header">
-              <div>
-                <p class="tool-panel-kicker">Tool detail</p>
-                <h3 id="tool-panel-title">Select a tool</h3>
-                <p class="muted" id="tool-panel-desc">Click any tool to see what it does.</p>
-              </div>
-              <button class="ghost tool-panel-close" id="tool-panel-close" type="button">Close</button>
-            </div>
-            <div class="editor-tool-panel-meta">
-              <span class="tool-chip" id="tool-panel-group">Core</span>
-              <span class="tool-chip tool-chip-status" id="tool-panel-status">Standby</span>
-              <span class="tool-chip" id="tool-panel-credits">Credits: —</span>
-            </div>
-            <div class="editor-tool-panel-inputs" id="tool-panel-inputs"></div>
-            <div class="editor-tool-panel-state" id="tool-panel-state">Pick a tool to preview its readiness.</div>
-            <div class="editor-tool-panel-actions">
-              <button class="primary" id="tool-panel-action" type="button" disabled>Run tool</button>
-            </div>
-          </aside>
-        </div>
+            </aside>
 
-        <div class="card editor-history" id="editor-history">
-          <p>Recent documents will appear here.</p>
-        </div>
+            <div class="editor-center">
+              <div class="editor-status" id="editor-status">Drop a PDF to begin.</div>
+
+              <div class="card editor-auth" id="editor-auth">
+                <p>Sign in to upload and manage documents.</p>
+                <a class="primary" href="/login" data-link>Sign In</a>
+              </div>
+
+              <div class="card editor-dropzone" id="editor-dropzone">
+                <p>Drag a PDF here or click to upload.</p>
+                <input type="file" id="editor-file" accept="application/pdf" />
+              </div>
+
+              <div class="card editor-progress" id="editor-progress">
+                <p>Uploading...</p>
+                <div class="progress-bar">
+                  <div class="progress-fill" id="editor-progress-fill"></div>
+                </div>
+              </div>
+
+              <div class="card editor-document" id="editor-document">
+                <p id="editor-filename">Document loaded.</p>
+                <p class="muted">Status: <span id="editor-doc-status">ready</span></p>
+              </div>
+
+              <div class="card editor-preview" id="editor-preview-card">
+                <div class="editor-preview-header">
+                  <div>
+                    <p class="muted">Preview</p>
+                    <p class="editor-preview-meta" id="editor-preview-meta">No PDF loaded.</p>
+                  </div>
+                  <button class="ghost" id="editor-export" type="button">Export</button>
+                </div>
+                <iframe class="editor-preview-frame" id="editor-preview-frame" title="PDF preview"></iframe>
+              </div>
+
+              <div class="card editor-history" id="editor-history">
+                <p>Recent documents will appear here.</p>
+              </div>
+            </div>
+
+            <aside class="editor-sidebar editor-sidebar-right">
+              <div class="editor-tool-panel" id="editor-tool-panel" aria-live="polite">
+                <div class="editor-tool-panel-header">
+                  <div>
+                    <p class="tool-panel-kicker">Tool detail</p>
+                    <h3 id="tool-panel-title">Select a tool</h3>
+                    <p class="muted" id="tool-panel-desc">Click any tool to see what it does.</p>
+                  </div>
+                  <button class="ghost tool-panel-close" id="tool-panel-close" type="button">Close</button>
+                </div>
+                <div class="editor-tool-panel-meta">
+                  <span class="tool-chip" id="tool-panel-group">Core</span>
+                  <span class="tool-chip tool-chip-status" id="tool-panel-status">Standby</span>
+                  <span class="tool-chip" id="tool-panel-credits">Credits: —</span>
+                </div>
+                <div class="editor-tool-panel-inputs" id="tool-panel-inputs"></div>
+                <div class="editor-tool-panel-state" id="tool-panel-state">Pick a tool to preview its readiness.</div>
+                <div class="editor-tool-panel-actions">
+                  <button class="primary" id="tool-panel-action" type="button" disabled>Run tool</button>
+                </div>
+              </div>
+            </aside>
+          </div>
         </div>
       </section>
     </main>
