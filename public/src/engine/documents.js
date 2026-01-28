@@ -53,11 +53,26 @@ export async function logOperation(id, operation) {
 }
 
 export async function listUserDocuments(userId) {
-  const q = query(
-    collection(db, 'documents'),
-    where('ownerId', '==', userId),
-    orderBy('createdAt', 'desc')
-  );
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((docSnap) => docSnap.data());
+  try {
+    const q = query(
+      collection(db, 'documents'),
+      where('ownerId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((docSnap) => docSnap.data());
+  } catch (error) {
+    const fallback = query(
+      collection(db, 'documents'),
+      where('ownerId', '==', userId)
+    );
+    const snapshot = await getDocs(fallback);
+    return snapshot.docs
+      .map((docSnap) => docSnap.data())
+      .sort((a, b) => {
+        const aTime = a?.createdAt?.seconds || 0;
+        const bTime = b?.createdAt?.seconds || 0;
+        return bTime - aTime;
+      });
+  }
 }

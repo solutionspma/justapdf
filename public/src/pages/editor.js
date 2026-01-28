@@ -225,6 +225,16 @@ export function mountEditor() {
   let activeSelection = null;
   let pageViewports = [];
   let editTextLimitReason = '';
+  let textEditMode = 'overlay';
+
+  function getNativeTextEditRunner() {
+    return window?.JUSTAPDF_NATIVE_TEXT_EDIT || null;
+  }
+
+  function getOcrTextEditRunner() {
+    return window?.JUSTAPDF_OCR_TEXT_EDIT || null;
+  }
+  let activeTextOverlay = null;
   let pdfDocInstance = null;
   let zoomScale = 1;
   let currentPageIndex = 0;
@@ -1154,7 +1164,7 @@ export function mountEditor() {
       pageWrap.appendChild(overlay);
       pdfPages.appendChild(pageWrap);
 
-      pageViewports.push({ pageIndex: i - 1, viewport, scale, page });
+      pageViewports.push({ pageIndex: i - 1, viewport, scale, page, overlay });
       await page.render({ canvasContext: context, viewport }).promise;
 
       const textContent = await page.getTextContent();
@@ -1218,8 +1228,20 @@ export function mountEditor() {
         setState('ready', 'No text selected.');
         return;
       }
+      if (!activeToolId || activeToolId === 'edit_text') {
+        const tool = toolIndex.get('edit_text');
+        if (tool) {
+          selectedToolId = 'edit_text';
+          activeToolId = 'edit_text';
+          toolsGrid?.querySelectorAll('.tool-button').forEach((btn) => btn.classList.remove('is-selected'));
+          const btn = toolsGrid?.querySelector('[data-tool-id="edit_text"]');
+          btn?.classList.add('is-selected');
+          openToolPanel(tool);
+        }
+      }
       activeSelection = selection;
       renderSelectionOverlay(overlay, selection);
+      updateTextOverlay(selection, '');
       syncToolAvailability();
       if (activeToolId === 'highlight') {
         setState('ready', 'Text selected. Run tool to highlight.');
@@ -1238,8 +1260,7 @@ export function mountEditor() {
   }
 
   function renderSelectionOverlay(overlay, selection) {
-    const existing = overlay.querySelector('.selection-box');
-    if (existing) existing.remove();
+    pdfPages?.querySelectorAll('.selection-box').forEach((box) => box.remove());
     if (!selection) return;
     const box = document.createElement('div');
     box.className = 'selection-box';
@@ -1249,6 +1270,29 @@ export function mountEditor() {
     box.style.width = `${selection.width}px`;
     box.style.height = `${selection.height}px`;
     overlay.appendChild(box);
+  }
+
+  function updateTextOverlay(selection, text) {
+    if (!selection) {
+      if (activeTextOverlay) {
+        activeTextOverlay.remove();
+        activeTextOverlay = null;
+      }
+      return;
+    }
+    const overlay = pageViewports[selection.pageIndex]?.overlay;
+    if (!overlay) return;
+    if (!activeTextOverlay) {
+      activeTextOverlay = document.createElement('div');
+      activeTextOverlay.className = 'text-overlay-preview';
+      overlay.appendChild(activeTextOverlay);
+    }
+    activeTextOverlay.style.position = 'absolute';
+    activeTextOverlay.style.left = `${selection.x}px`;
+    activeTextOverlay.style.top = `${selection.y}px`;
+    activeTextOverlay.style.width = `${selection.width}px`;
+    activeTextOverlay.style.height = `${selection.height}px`;
+    activeTextOverlay.textContent = text;
   }
 
   function handleCanvasPointerDown(event, pageIndex, overlay) {
@@ -1777,38 +1821,114 @@ export function mountEditor() {
 
       if (toolId === 'edit_text') {
         const selection = payload.selection;
-        if (!selection?.fontName) {
-          editTextLimitReason = 'This text cannot be edited directly (no font data).';
-          renderToolInputs({ id: 'edit_text' });
-          setState('ready', editTextLimitReason);
+        if (!selection) {
+          setState('ready', 'Select text to edit.');
           emitAction('action_commit', { toolId, status: 'blocked' });
           return;
         }
-        const { runTextRewrite } = await import('/tools/runTextRewrite.js');
-        const result = await runTextRewrite({
-          bytes: currentPdfBytes,
-          pageIndex: payload.pageIndex,
-          bbox: {
-            x: selection.x,
-            y: selection.y,
-            width: selection.width,
-            height: selection.height
-          },
-          fontName: selection.fontName,
-          originalText: selection.text,
-          newText: payload.text
+        if (payload.mode === 'native') {
+          const runner = getNativeTextEditRunner();
+          if (!runner) {
+            editTextLimitReason = 'Native edit unavailable. Engine not detected.';
+            renderToolInputs({ id: 'edit_text' });
+            setState('ready', editTextLimitReason);
+            emitAction('action_commit', { toolId, status: 'blocked' });
+            return;
+          }
+          setState('running_operation', 'Running native edit...');
+          try {
+            const result = await runner({
+              bytes: currentPdfBytes,
+              selection,
+              pageIndex: payload.pageIndex,
+              bbox: toPdfBox(payload.pageIndex, selection),
+              originalText: selection.text,
+              newText: payload.text,
+              fontName: selection.fontName,
+              font: payload.font,
+              size: payload.size,
+              color: payload.color
+            });
+            const nextBytes = result?.bytes || result;
+            if (!nextBytes) {
+              throw new Error('Native edit failed.');
+            }
+            await setPdfBytes(nextBytes, { pushHistory: true });
+            setState('ready', 'Text updated (native).');
+            emitAction('action_commit', { toolId });
+          } catch (error) {
+            setState('ready', error.message || 'Native edit failed.');
+            emitAction('action_commit', { toolId, status: 'failed' });
+          }
+          return;
+        }
+        if (payload.mode === 'ocr') {
+          const runner = getOcrTextEditRunner();
+          if (!runner) {
+            editTextLimitReason = 'OCR + rebuild unavailable. Engine not detected.';
+            renderToolInputs({ id: 'edit_text' });
+            setState('ready', editTextLimitReason);
+            emitAction('action_commit', { toolId, status: 'blocked' });
+            return;
+          }
+          setState('running_operation', 'Running OCR + rebuild...');
+          try {
+            const result = await runner({
+              bytes: currentPdfBytes,
+              selection,
+              pageIndex: payload.pageIndex,
+              selectionBox: toPdfBox(payload.pageIndex, selection),
+              text: payload.text,
+              font: payload.font,
+              size: payload.size,
+              color: payload.color
+            });
+            const nextBytes = result?.bytes || result;
+            if (!nextBytes) {
+              throw new Error('OCR + rebuild failed.');
+            }
+            await setPdfBytes(nextBytes, { pushHistory: true });
+            setState('ready', 'Text updated (OCR + rebuild).');
+            emitAction('action_commit', { toolId });
+          } catch (error) {
+            setState('ready', error.message || 'OCR + rebuild failed.');
+            emitAction('action_commit', { toolId, status: 'failed' });
+          }
+          return;
+        }
+        const scale = pageViewports[payload.pageIndex]?.scale || 1;
+        const rect = toPdfBox(payload.pageIndex, {
+          x: selection.x,
+          y: selection.y,
+          width: selection.width,
+          height: selection.height
         });
-        if (!result.ok) {
-          editTextLimitReason = result.reason || 'This text cannot be edited directly.';
-          renderToolInputs({ id: 'edit_text' });
-          setState('ready', editTextLimitReason);
-          emitAction('action_commit', { toolId, status: 'blocked' });
-          return;
-        }
+        const font = pdfDoc.embedStandardFont(StandardFonts[payload.font] || StandardFonts.Helvetica);
+        const color = hexToRgb(payload.color || '#000000', rgb);
+        page.drawRectangle({
+          x: rect.x,
+          y: rect.y,
+          width: rect.width,
+          height: rect.height,
+          color: rgb(1, 1, 1),
+          opacity: 1
+        });
+        page.drawText(payload.text, {
+          x: rect.x,
+          y: rect.y + (rect.height - (payload.size || 12)),
+          size: payload.size || Math.max(6, Math.round((selection.height / scale) * 0.85)),
+          font,
+          color,
+          maxWidth: rect.width,
+          lineHeight: (payload.size || 12) * 1.2
+        });
+        activeTextOverlay?.remove();
+        activeTextOverlay = null;
         editTextLimitReason = '';
         renderToolInputs({ id: 'edit_text' });
-        await setPdfBytes(result.bytes, { pushHistory: true });
-        setState('ready', 'Text updated.');
+        const updatedBytes = await pdfDoc.save();
+        await setPdfBytes(updatedBytes, { pushHistory: true });
+        setState('ready', 'Text updated (overlay).');
         emitAction('action_commit', { toolId });
         return;
       }
@@ -1988,9 +2108,34 @@ export function mountEditor() {
       content = `
         ${warning}
         <label class="tool-input">
+          Mode
+          <select id="tool-input-edit-mode">
+            <option value="overlay">Overlay (default)</option>
+            <option value="native">Native (experimental)</option>
+            <option value="ocr">OCR + Rebuild</option>
+          </select>
+        </label>
+        <label class="tool-input">
+          Font
+          <select id="tool-input-edit-font">
+            <option value="Helvetica">Helvetica</option>
+            <option value="TimesRoman">Times</option>
+            <option value="Courier">Courier</option>
+          </select>
+        </label>
+        <label class="tool-input">
+          Size
+          <input type="number" id="tool-input-edit-size" min="6" max="96" value="12" />
+        </label>
+        <label class="tool-input">
+          Color
+          <input type="color" id="tool-input-edit-color" value="#000000" />
+        </label>
+        <label class="tool-input">
           New text
           <textarea id="tool-input-edit-text" rows="2" placeholder="Edit selected text..."></textarea>
         </label>
+        <div class="tool-input tool-note" id="tool-input-edit-mode-note"></div>
       `;
     }
 
@@ -2154,6 +2299,49 @@ export function mountEditor() {
 
     toolPanelInputs.innerHTML = content;
 
+    if (toolId === 'edit_text') {
+      const modeSelect = toolPanelInputs.querySelector('#tool-input-edit-mode');
+      const input = toolPanelInputs.querySelector('#tool-input-edit-text');
+      const sizeInput = toolPanelInputs.querySelector('#tool-input-edit-size');
+      const modeNote = toolPanelInputs.querySelector('#tool-input-edit-mode-note');
+      if (activeSelection && sizeInput) {
+        const size = Math.max(6, Math.round((activeSelection.height / (pageViewports[activeSelection.pageIndex]?.scale || 1)) * 0.85));
+        sizeInput.value = String(size);
+      }
+      if (modeSelect) {
+        modeSelect.value = textEditMode;
+        const updateNote = (mode) => {
+          if (!modeNote) return;
+          if (mode === 'native') {
+            modeNote.textContent = getNativeTextEditRunner()
+              ? 'Native edit is experimental. Results depend on the document structure.'
+              : 'Native edit is unavailable. Engine not detected.';
+          } else if (mode === 'ocr') {
+            modeNote.textContent = getOcrTextEditRunner()
+              ? 'OCR + rebuild reconstructs the document. Intended for scanned PDFs.'
+              : 'OCR + rebuild is unavailable. Engine not detected.';
+          } else {
+            modeNote.textContent = 'Overlay mode hides original text and draws new text on top.';
+          }
+        };
+        updateNote(textEditMode);
+        modeSelect.addEventListener('change', () => {
+          textEditMode = modeSelect.value;
+          updateNote(textEditMode);
+          if (textEditMode !== 'overlay') {
+            updateTextOverlay(null, '');
+          }
+        });
+      }
+      if (input) {
+        input.addEventListener('input', () => {
+          if (textEditMode === 'overlay') {
+            updateTextOverlay(activeSelection, input.value);
+          }
+        });
+      }
+    }
+
     if (toolId === 'watermark') {
       const typeSelect = toolPanelInputs.querySelector('#tool-input-wm-type');
       const textInput = toolPanelInputs.querySelector('#tool-input-text');
@@ -2183,11 +2371,15 @@ export function mountEditor() {
       }
       payload.selection = activeSelection;
       payload.pageIndex = activeSelection.pageIndex;
+      payload.mode = toolPanelInputs.querySelector('#tool-input-edit-mode')?.value || textEditMode;
       payload.text = toolPanelInputs.querySelector('#tool-input-edit-text')?.value || '';
       if (!payload.text.trim()) {
         setState('ready', 'Enter replacement text.');
         return null;
       }
+      payload.font = toolPanelInputs.querySelector('#tool-input-edit-font')?.value || 'Helvetica';
+      payload.size = Number(toolPanelInputs.querySelector('#tool-input-edit-size')?.value || 12);
+      payload.color = toolPanelInputs.querySelector('#tool-input-edit-color')?.value || '#000000';
       return payload;
     }
 

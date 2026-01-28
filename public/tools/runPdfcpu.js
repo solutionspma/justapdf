@@ -4,7 +4,7 @@ export async function runPdfcpu(action, payload = {}) {
     files.map(async (file, index) => ({
       name: file.name || `input-${index + 1}.pdf`,
       type: file.type || "application/pdf",
-      data: await file.arrayBuffer()
+      data: (await file.arrayBuffer()).slice(0)
     }))
   );
 

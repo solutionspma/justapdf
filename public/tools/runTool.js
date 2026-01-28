@@ -42,7 +42,14 @@ function normalizePayload(payload) {
   if (payload.image instanceof File) {
     files.push(payload.image);
   }
-  return { ...payload, files };
+  const cloned = { ...payload, files };
+  if (payload.bytes instanceof ArrayBuffer) {
+    cloned.bytes = payload.bytes.slice(0);
+  }
+  if (payload.bytes instanceof Uint8Array) {
+    cloned.bytes = payload.bytes.slice().buffer;
+  }
+  return cloned;
 }
 
 export function runTool(toolId, payload = {}) {

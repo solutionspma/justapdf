@@ -970,6 +970,19 @@ button.doc-row:hover {
   pointer-events: none;
 }
 
+.text-overlay-preview {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.9);
+  color: #000;
+  padding: 2px 4px;
+  font-size: 12px;
+  line-height: 1.2;
+  border-radius: 4px;
+  pointer-events: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+}
+
 .text-box-ghost {
   border: 2px dashed var(--accent);
   background: color-mix(in srgb, var(--accent) 12%, transparent);
