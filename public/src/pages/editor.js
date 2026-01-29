@@ -767,7 +767,7 @@ export function mountEditor() {
       const tool = toolIndex.get(toolId);
       if (!tool) return;
       const needsUpload = tool.requiresUpload && !currentDocId;
-      const needsSelection = tool.requiresSelection && !activeSelection;
+      const needsSelection = tool.requiresSelection && !activeSelection && !(tool.id === 'edit_text' && textEditMode === 'ocr');
       const disabled = needsUpload;
       button.disabled = disabled;
       button.classList.toggle('is-disabled', disabled);
@@ -784,7 +784,7 @@ export function mountEditor() {
 
   function openToolPanel(tool) {
     const requiresUpload = tool.requiresUpload && !currentDocId && tool.id !== 'upload_pdf';
-    const requiresSelection = tool.requiresSelection && !activeSelection;
+    const requiresSelection = tool.requiresSelection && !activeSelection && !(tool.id === 'edit_text' && textEditMode === 'ocr');
     toolPanelTitle.textContent = tool.name;
     toolPanelDesc.textContent = tool.description;
     toolPanelGroup.textContent = tool.groupLabel;
@@ -1860,7 +1860,7 @@ export function mountEditor() {
 
       if (toolId === 'edit_text') {
         const selection = payload.selection;
-        if (!selection) {
+        if (!selection && payload.mode !== 'ocr') {
           setState('ready', 'Select text to edit.');
           emitAction('action_commit', { toolId, status: 'blocked' });
           return;
@@ -1914,9 +1914,8 @@ export function mountEditor() {
           try {
             const result = await runner({
               bytes: currentPdfBytes,
-              selection,
               pageIndex: payload.pageIndex,
-              selectionBox: toPdfBox(payload.pageIndex, selection),
+              selectionBox: selection ? toPdfBox(payload.pageIndex, selection) : null,
               text: payload.text,
               font: payload.font,
               size: payload.size,
@@ -2404,13 +2403,13 @@ export function mountEditor() {
     if (!toolPanelInputs) return payload;
 
     if (toolId === 'edit_text') {
-      if (!activeSelection) {
+      payload.mode = toolPanelInputs.querySelector('#tool-input-edit-mode')?.value || textEditMode;
+      if (!activeSelection && payload.mode !== 'ocr') {
         setState('ready', 'Select text to edit.');
         return null;
       }
-      payload.selection = activeSelection;
-      payload.pageIndex = activeSelection.pageIndex;
-      payload.mode = toolPanelInputs.querySelector('#tool-input-edit-mode')?.value || textEditMode;
+      payload.selection = activeSelection || null;
+      payload.pageIndex = activeSelection?.pageIndex ?? currentPageIndex ?? 0;
       payload.text = toolPanelInputs.querySelector('#tool-input-edit-text')?.value || '';
       if (!payload.text.trim()) {
         setState('ready', 'Enter replacement text.');

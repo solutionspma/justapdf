@@ -1477,18 +1477,29 @@ button.doc-row:hover {
 }
 
 @media (max-width: 768px) {
+  body[data-route="/editor"] {
+    overflow: auto;
+  }
+
   .editor-shell {
     flex-direction: column;
+    height: calc(100dvh - var(--header-height));
+  }
+
+  .editor-body {
+    display: block;
   }
 
   .editor-workspace {
     flex: 1;
     width: 100%;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .editor-canvas {
     width: 100%;
-    height: 100%;
+    height: auto;
   }
 
   .editor-tools-left,
