@@ -479,15 +479,10 @@ button.doc-row:hover {
 
 .editor-shell {
   position: relative;
-  display: flex;
-  width: 100vw;
-  height: calc(100vh - var(--header-height));
   background: var(--panel);
-  overflow: hidden;
   border-radius: 0;
   box-shadow: none;
   padding: 0;
-  gap: 16px;
 }
 
 #editor-root {
