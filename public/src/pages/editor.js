@@ -44,10 +44,6 @@ export default function Editor() {
             <button class="menubar-button menubar-button--compact" type="button" data-action="view-zoom-out">−</button>
             <button class="menubar-button menubar-button--compact" type="button" data-action="view-zoom-in">+</button>
           </div>
-          <div class="menubar-actions">
-            <button class="ghost panel-toggle" id="toggle-left-panel-alt" type="button">Tools</button>
-            <button class="ghost panel-toggle" id="toggle-right-panel-alt" type="button">Details</button>
-          </div>
           <div class="menubar-menu" data-menu-panel="file">
             <button type="button" data-action="file-open">Open…</button>
             <button type="button" data-action="file-save">Save</button>
@@ -201,8 +197,8 @@ export function mountEditor() {
   const menubar = document.getElementById('editor-menubar');
   const toggleLeft = document.getElementById('toggle-left-panel');
   const toggleRight = document.getElementById('toggle-right-panel');
-  const toggleLeftAlt = document.getElementById('toggle-left-panel-alt');
-  const toggleRightAlt = document.getElementById('toggle-right-panel-alt');
+  const toggleLeftAlt = null;
+  const toggleRightAlt = null;
   const headerToggleLeft = document.getElementById('header-toggle-tools');
   const headerToggleRight = document.getElementById('header-toggle-details');
   const toolPanel = document.getElementById('editor-tool-panel');
