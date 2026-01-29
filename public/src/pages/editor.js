@@ -9,8 +9,8 @@ export default function Editor() {
       <div id="editor-overlay">Upload a PDF to power the tools.</div>
       <div class="editor-topbar">
         <div class="editor-menubar" id="editor-menubar">
-          <button class="menubar-button" type="button" data-action="panel-tools">Tool tools</button>
-          <div class="menubar-group">
+          <div class="menubar-left">
+            <button class="menubar-button menubar-button--primary" type="button" data-action="panel-tools">Tool tools</button>
             <button class="menubar-button" type="button" data-menu="file">File</button>
             <button class="menubar-button" type="button" data-menu="edit">Edit</button>
             <button class="menubar-button" type="button" data-menu="view">View</button>
@@ -18,13 +18,17 @@ export default function Editor() {
             <button class="menubar-button" type="button" data-menu="tools">Tools</button>
             <button class="menubar-button" type="button" data-menu="help">Help</button>
           </div>
-          <div class="menubar-quick">
-            <button class="menubar-button menubar-button--compact" type="button" data-action="file-open">Open</button>
-            <span class="menubar-separator"></span>
-            <button class="menubar-button menubar-button--compact" type="button" data-action="edit-undo">Undo</button>
-            <button class="menubar-button menubar-button--compact" type="button" data-action="edit-redo">Redo</button>
-            <span class="menubar-separator"></span>
-            <button class="menubar-button menubar-button--compact" type="button" data-action="view-fit">Fit</button>
+          <div class="menubar-mid">
+            <button class="menubar-button menubar-button--compact" type="button" data-action="edit-undo" aria-label="Undo">↶</button>
+            <button class="menubar-button menubar-button--compact" type="button" data-action="edit-redo" aria-label="Redo">↷</button>
+            <button class="menubar-button menubar-button--compact" type="button" disabled>Web</button>
+            <button class="menubar-button menubar-button--compact" type="button" disabled>Ners</button>
+          </div>
+          <div class="menubar-right">
+            <button class="menubar-button" type="button" data-action="file-open">Open</button>
+            <button class="menubar-button" type="button" data-action="edit-undo">Undo</button>
+            <button class="menubar-button" type="button" data-action="edit-redo">Redo</button>
+            <button class="menubar-button" type="button" data-action="view-fit">Fit</button>
             <button class="menubar-button menubar-button--compact" type="button" data-action="view-zoom-out">−</button>
             <button class="menubar-button menubar-button--compact" type="button" data-action="view-zoom-in">+</button>
           </div>
@@ -79,16 +83,17 @@ export default function Editor() {
         <section class="editor-workspace">
         <div class="editor-status" id="editor-status">Drop a PDF to begin.</div>
         <div class="editor-canvas-toolbar">
-          <div class="editor-canvas-toolbar-left">
-            <button class="ghost panel-toggle" id="toggle-left-panel-alt" type="button">Show tools</button>
-          </div>
+          <div class="editor-canvas-toolbar-left"></div>
           <div class="editor-canvas-toolbar-center">
+            <button class="ghost panel-toggle" id="toggle-left-panel-alt" type="button">Show tools</button>
             <button class="ghost" type="button" data-action="file-export">Export</button>
             <button class="ghost" type="button" disabled>Paste</button>
           </div>
           <div class="editor-canvas-toolbar-right">
-            <button class="ghost" type="button" data-action="edit-undo">Undo</button>
-            <button class="ghost" type="button" data-action="edit-redo">Redo</button>
+            <button class="ghost" type="button" disabled>Filter</button>
+            <button class="ghost" type="button" disabled>PK</button>
+            <button class="ghost" type="button" disabled>Sort</button>
+            <button class="ghost" type="button" disabled>Term</button>
           </div>
         </div>
 

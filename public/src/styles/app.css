@@ -617,6 +617,15 @@ button.doc-row:hover {
   gap: 8px;
 }
 
+.editor-canvas-toolbar-center {
+  justify-content: center;
+  flex: 1;
+}
+
+.editor-canvas-toolbar-left,
+.editor-canvas-toolbar-right {
+  flex: 0 0 auto;
+}
 .editor-canvas-toolbar .ghost {
   padding: 4px 10px;
   height: 28px;
@@ -634,39 +643,33 @@ button.doc-row:hover {
 }
 
 .editor-menubar {
-  display: flex;
-  gap: 14px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  position: relative;
-  flex-wrap: nowrap;
+  gap: 12px;
   width: 100%;
-  justify-content: flex-start;
-  overflow-x: auto;
-  scrollbar-width: thin;
 }
 
-.menubar-group,
-.menubar-quick,
-.menubar-actions {
+.menubar-left,
+.menubar-mid,
+.menubar-right {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.menubar-group {
-  flex-wrap: wrap;
+.menubar-left {
+  justify-self: start;
 }
 
-.menubar-quick {
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-  border: 0;
+.menubar-mid {
+  justify-self: center;
 }
 
-.menubar-actions {
-  margin-left: auto;
+.menubar-right {
+  justify-self: end;
 }
+
 
 .menubar-button {
   background: transparent;
@@ -678,6 +681,12 @@ button.doc-row:hover {
   font-weight: 600;
   font-size: 13px;
   height: 32px;
+}
+
+.menubar-button--primary {
+  border-color: var(--accent);
+  color: var(--text-primary);
+  font-weight: 700;
 }
 
 .menubar-button--compact {
