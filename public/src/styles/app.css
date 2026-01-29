@@ -137,7 +137,8 @@ body[data-route="/editor"] .theme-toggle {
 
 .editor-body {
   flex: 1;
-  display: flex;
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) 320px;
   min-height: 0;
 }
 

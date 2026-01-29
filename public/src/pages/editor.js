@@ -154,35 +154,35 @@ export default function Editor() {
           <p>Recent documents will appear here.</p>
         </div>
         </section>
-      </div>
 
-      <aside class="editor-tools-right">
-        <div class="editor-sidebar-header">
-          <span class="muted">Tool detail</span>
-        </div>
-        <div class="editor-tool-panel" id="editor-tool-panel" aria-live="polite">
-          <div class="editor-tool-panel-header">
-            <div>
-              <p class="tool-panel-kicker">Tool detail</p>
-              <h3 id="tool-panel-title">Select a tool</h3>
-              <p class="muted" id="tool-panel-desc">Click any tool to see what it does.</p>
+        <aside class="editor-tools-right">
+          <div class="editor-sidebar-header">
+            <span class="muted">Tool detail</span>
+          </div>
+          <div class="editor-tool-panel" id="editor-tool-panel" aria-live="polite">
+            <div class="editor-tool-panel-header">
+              <div>
+                <p class="tool-panel-kicker">Tool detail</p>
+                <h3 id="tool-panel-title">Select a tool</h3>
+                <p class="muted" id="tool-panel-desc">Click any tool to see what it does.</p>
+              </div>
+              <button class="ghost tool-panel-close" id="tool-panel-close" type="button">Close</button>
             </div>
-            <button class="ghost tool-panel-close" id="tool-panel-close" type="button">Close</button>
+            <div class="editor-tool-panel-meta">
+              <span class="tool-chip" id="tool-panel-group">Core</span>
+              <span class="tool-chip tool-chip-status" id="tool-panel-status">Standby</span>
+              <span class="tool-chip" id="tool-panel-credits">Credits: —</span>
+            </div>
+            <div class="editor-tool-panel-inputs" id="tool-panel-inputs"></div>
+            <div class="editor-tool-panel-state" id="tool-panel-state">Pick a tool to preview its readiness.</div>
+            <div class="editor-tool-panel-actions">
+              <button class="ghost" id="tool-panel-undo" type="button" disabled>Undo</button>
+              <button class="ghost" id="tool-panel-redo" type="button" disabled>Redo</button>
+              <button class="primary" id="tool-panel-action" type="button" disabled>Run tool</button>
+            </div>
           </div>
-          <div class="editor-tool-panel-meta">
-            <span class="tool-chip" id="tool-panel-group">Core</span>
-            <span class="tool-chip tool-chip-status" id="tool-panel-status">Standby</span>
-            <span class="tool-chip" id="tool-panel-credits">Credits: —</span>
-          </div>
-          <div class="editor-tool-panel-inputs" id="tool-panel-inputs"></div>
-          <div class="editor-tool-panel-state" id="tool-panel-state">Pick a tool to preview its readiness.</div>
-          <div class="editor-tool-panel-actions">
-            <button class="ghost" id="tool-panel-undo" type="button" disabled>Undo</button>
-            <button class="ghost" id="tool-panel-redo" type="button" disabled>Redo</button>
-            <button class="primary" id="tool-panel-action" type="button" disabled>Run tool</button>
-          </div>
-        </div>
-      </aside>
+        </aside>
+      </div>
     </main>
     ${Footer()}
   `;
