@@ -7,25 +7,9 @@ export default function Editor() {
     ${Header()}
     <main class="editor-shell editor-page" id="editor-shell" data-state="empty">
       <div id="editor-overlay">Upload a PDF to power the tools.</div>
-      <aside class="editor-tools-left">
-        <div class="editor-sidebar-header">
-          <span class="muted">Tools</span>
-          <button class="ghost panel-toggle" id="toggle-left-panel" type="button">Hide</button>
-        </div>
-        <div class="editor-tools" id="editor-tools">
-          <div class="editor-tools-header">
-            <div>
-              <h2>Tool system</h2>
-              <p class="muted">Run real PDF operations and export the result.</p>
-            </div>
-            <div class="editor-tools-badges" id="editor-tools-badges"></div>
-          </div>
-          <div class="editor-tools-grid" id="editor-tools-grid"></div>
-        </div>
-      </aside>
-
-      <section class="editor-workspace">
+      <div class="editor-topbar">
         <div class="editor-menubar" id="editor-menubar">
+          <button class="menubar-button menubar-button--compact" id="toggle-left-panel-alt" type="button">Show tools</button>
           <div class="menubar-group">
             <button class="menubar-button" type="button" data-menu="file">File</button>
             <button class="menubar-button" type="button" data-menu="edit">Edit</button>
@@ -68,12 +52,32 @@ export default function Editor() {
           <div class="menubar-menu" data-menu-panel="tools">
             <button type="button" data-action="tool-edit_text">Edit text</button>
             <button type="button" data-action="panel-tools">Toggle tools panel</button>
-            <button type="button" data-action="panel-details">Toggle detail panel</button>
           </div>
           <div class="menubar-menu" data-menu-panel="help">
             <button type="button" data-action="help-about">About editor</button>
           </div>
         </div>
+      </div>
+
+      <div class="editor-body">
+        <aside class="editor-tools-left">
+          <div class="editor-sidebar-header">
+            <span class="muted">Tools</span>
+            <button class="ghost panel-toggle" id="toggle-left-panel" type="button">Hide</button>
+          </div>
+          <div class="editor-tools" id="editor-tools">
+            <div class="editor-tools-header">
+              <div>
+                <h2>Tool system</h2>
+                <p class="muted">Run real PDF operations and export the result.</p>
+              </div>
+              <div class="editor-tools-badges" id="editor-tools-badges"></div>
+            </div>
+            <div class="editor-tools-grid" id="editor-tools-grid"></div>
+          </div>
+        </aside>
+
+        <section class="editor-workspace">
         <div class="editor-status" id="editor-status">Drop a PDF to begin.</div>
 
         <div class="card editor-auth" id="editor-auth">
@@ -132,7 +136,8 @@ export default function Editor() {
         <div class="card editor-history" id="editor-history">
           <p>Recent documents will appear here.</p>
         </div>
-      </section>
+        </section>
+      </div>
 
       <aside class="editor-tools-right">
         <div class="editor-sidebar-header">
@@ -197,10 +202,10 @@ export function mountEditor() {
   const menubar = document.getElementById('editor-menubar');
   const toggleLeft = document.getElementById('toggle-left-panel');
   const toggleRight = document.getElementById('toggle-right-panel');
-  const toggleLeftAlt = null;
+  const toggleLeftAlt = document.getElementById('toggle-left-panel-alt');
   const toggleRightAlt = null;
-  const headerToggleLeft = document.getElementById('header-toggle-tools');
-  const headerToggleRight = document.getElementById('header-toggle-details');
+  const headerToggleLeft = null;
+  const headerToggleRight = null;
   const toolPanel = document.getElementById('editor-tool-panel');
   const toolPanelTitle = document.getElementById('tool-panel-title');
   const toolPanelDesc = document.getElementById('tool-panel-desc');
