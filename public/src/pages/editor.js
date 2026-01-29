@@ -38,6 +38,23 @@ export default function Editor() {
             <button class="menubar-button" type="button" disabled>Sort</button>
             <button class="menubar-button" type="button" disabled>Term</button>
             <button class="menubar-button" type="button" data-action="panel-tools">Show tools</button>
+            <div class="editor-preview-toolbar editor-preview-toolbar--top">
+              <button class="ghost" id="pdf-prev" type="button" aria-label="Previous page">◀</button>
+              <div class="page-indicator">
+                <input type="number" id="pdf-page-input" min="1" value="1" aria-label="Page number" />
+                <span class="muted">/ <span id="pdf-page-total">—</span></span>
+              </div>
+              <button class="ghost" id="pdf-next" type="button" aria-label="Next page">▶</button>
+              <select id="pdf-zoom-select" aria-label="Zoom level">
+                <option value="0.75">75%</option>
+                <option value="1" selected>100%</option>
+                <option value="1.25">125%</option>
+                <option value="1.5">150%</option>
+                <option value="2">200%</option>
+              </select>
+              <button class="ghost" id="pdf-fit-width" type="button">Fit width</button>
+              <button class="ghost" id="editor-export" type="button">Export</button>
+            </div>
           </div>
           <div class="menubar-menu" data-menu-panel="file">
             <button type="button" data-action="file-open">Open…</button>
@@ -118,23 +135,6 @@ export default function Editor() {
               <div>
                 <p class="muted">Preview</p>
                 <p class="editor-preview-meta" id="editor-preview-meta">No PDF loaded.</p>
-              </div>
-              <div class="editor-preview-toolbar">
-                <button class="ghost" id="pdf-prev" type="button" aria-label="Previous page">◀</button>
-                <div class="page-indicator">
-                  <input type="number" id="pdf-page-input" min="1" value="1" aria-label="Page number" />
-                  <span class="muted">/ <span id="pdf-page-total">—</span></span>
-                </div>
-                <button class="ghost" id="pdf-next" type="button" aria-label="Next page">▶</button>
-                <select id="pdf-zoom-select" aria-label="Zoom level">
-                  <option value="0.75">75%</option>
-                  <option value="1" selected>100%</option>
-                  <option value="1.25">125%</option>
-                  <option value="1.5">150%</option>
-                  <option value="2">200%</option>
-                </select>
-                <button class="ghost" id="pdf-fit-width" type="button">Fit width</button>
-                <button class="ghost" id="editor-export" type="button">Export</button>
               </div>
             </div>
             <div class="editor-preview-frame" id="editor-preview-frame" aria-label="PDF preview">

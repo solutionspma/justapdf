@@ -762,6 +762,11 @@ button.doc-row:hover {
   gap: 8px;
 }
 
+.editor-preview-toolbar--top {
+  margin-left: 8px;
+  flex-wrap: nowrap;
+}
+
 .editor-preview-toolbar select,
 .editor-preview-toolbar input {
   padding: 6px 8px;
