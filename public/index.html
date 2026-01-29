@@ -16,6 +16,11 @@
       document.body.innerHTML =
         "<pre style='padding:16px'>" + e.message + "</pre>";
     });
+    window.addEventListener("unhandledrejection", (e) => {
+      const message = e.reason?.message || e.reason || "Unhandled promise rejection";
+      document.body.innerHTML =
+        "<pre style='padding:16px'>" + message + "</pre>";
+    });
   </script>
   <script type="module" src="/src/main.js"></script>
 </body>

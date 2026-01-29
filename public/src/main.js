@@ -3,8 +3,6 @@ import { render } from './app.js';
 import { auth, onAuthStateChanged, db, doc, getDoc } from './firebase.js';
 import { seedOperations } from './engine/operations.js';
 import { applyTheme, getTheme } from './engine/themes.js';
-import { runNativeTextEdit } from '/tools/runNativeTextEdit.js';
-import { runOcrRebuild } from '/tools/runOcrRebuild.js';
 
 function updateHeaderAuthState(user) {
   const signIn = document.querySelector('[data-auth="signin"]');
@@ -32,8 +30,14 @@ function updateHeaderAuthState(user) {
 }
 
 window.updateHeaderAuthState = updateHeaderAuthState;
-window.JUSTAPDF_NATIVE_TEXT_EDIT = runNativeTextEdit;
-window.JUSTAPDF_OCR_TEXT_EDIT = runOcrRebuild;
+window.JUSTAPDF_NATIVE_TEXT_EDIT = async (payload) => {
+  const module = await import('/tools/runNativeTextEdit.js');
+  return module.runNativeTextEdit(payload);
+};
+window.JUSTAPDF_OCR_TEXT_EDIT = async (payload) => {
+  const module = await import('/tools/runOcrRebuild.js');
+  return module.runOcrRebuild(payload);
+};
 
 function updateHeaderHeight() {
   const header = document.querySelector('.app-header');
