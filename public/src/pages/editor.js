@@ -31,6 +31,13 @@ export default function Editor() {
             <button class="menubar-button" type="button" data-action="view-fit">Fit</button>
             <button class="menubar-button menubar-button--compact" type="button" data-action="view-zoom-out">−</button>
             <button class="menubar-button menubar-button--compact" type="button" data-action="view-zoom-in">+</button>
+            <button class="menubar-button" type="button" data-action="file-export">Export</button>
+            <button class="menubar-button" type="button" disabled>Paste</button>
+            <button class="menubar-button" type="button" disabled>Filter</button>
+            <button class="menubar-button" type="button" disabled>PK</button>
+            <button class="menubar-button" type="button" disabled>Sort</button>
+            <button class="menubar-button" type="button" disabled>Term</button>
+            <button class="menubar-button" type="button" data-action="panel-tools">Show tools</button>
           </div>
           <div class="menubar-menu" data-menu-panel="file">
             <button type="button" data-action="file-open">Open…</button>
@@ -82,20 +89,6 @@ export default function Editor() {
 
         <section class="editor-workspace">
         <div class="editor-status" id="editor-status">Drop a PDF to begin.</div>
-        <div class="editor-canvas-toolbar">
-          <div class="editor-canvas-toolbar-left"></div>
-          <div class="editor-canvas-toolbar-center">
-            <button class="ghost panel-toggle" id="toggle-left-panel-alt" type="button">Show tools</button>
-            <button class="ghost" type="button" data-action="file-export">Export</button>
-            <button class="ghost" type="button" disabled>Paste</button>
-          </div>
-          <div class="editor-canvas-toolbar-right">
-            <button class="ghost" type="button" disabled>Filter</button>
-            <button class="ghost" type="button" disabled>PK</button>
-            <button class="ghost" type="button" disabled>Sort</button>
-            <button class="ghost" type="button" disabled>Term</button>
-          </div>
-        </div>
 
         <div class="card editor-auth" id="editor-auth">
           <p>Sign in to upload and manage documents.</p>
@@ -1015,13 +1008,6 @@ export function mountEditor() {
   }
 
   const canvasToolbar = document.querySelector('.editor-canvas-toolbar');
-  if (canvasToolbar) {
-    canvasToolbar.addEventListener('click', (event) => {
-      const actionButton = event.target.closest('[data-action]');
-      if (!actionButton) return;
-      handleToolbarAction(actionButton.dataset.action);
-    });
-  }
 
   toolPanelAction.addEventListener('click', async () => {
     const toolId = selectedToolId;

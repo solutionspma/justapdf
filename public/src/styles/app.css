@@ -599,39 +599,6 @@ button.doc-row:hover {
   min-width: 0;
 }
 
-.editor-canvas-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-}
-
-.editor-canvas-toolbar-left,
-.editor-canvas-toolbar-center,
-.editor-canvas-toolbar-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.editor-canvas-toolbar-center {
-  justify-content: center;
-  flex: 1;
-}
-
-.editor-canvas-toolbar-left,
-.editor-canvas-toolbar-right {
-  flex: 0 0 auto;
-}
-.editor-canvas-toolbar .ghost {
-  padding: 4px 10px;
-  height: 28px;
-  border-radius: 6px;
-}
 
 .editor-canvas {
   flex: 1;
