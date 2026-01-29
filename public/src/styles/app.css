@@ -603,6 +603,31 @@ button.doc-row:hover {
   min-width: 0;
 }
 
+.editor-canvas-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.editor-canvas-toolbar-left,
+.editor-canvas-toolbar-center,
+.editor-canvas-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.editor-canvas-toolbar .ghost {
+  padding: 4px 10px;
+  height: 28px;
+  border-radius: 6px;
+}
+
 .editor-canvas {
   flex: 1;
   overflow: auto;
@@ -915,13 +940,14 @@ button.doc-row:hover {
   background: var(--surface);
   color: var(--text-primary);
   border-radius: 10px;
-  padding: 10px;
+  padding: 8px 10px;
   display: grid;
-  gap: 4px;
+  gap: 6px;
   text-align: left;
   cursor: pointer;
   transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-  min-height: 64px;
+  min-height: 48px;
+  font-size: 12px;
 }
 
 .tool-button-static {
@@ -930,14 +956,14 @@ button.doc-row:hover {
 }
 
 .tool-icon {
-  width: 26px;
-  height: 26px;
+  width: 18px;
+  height: 18px;
   border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: var(--surface-alt);
-  font-size: 14px;
+  font-size: 11px;
 }
 
 .tool-button.is-disabled,

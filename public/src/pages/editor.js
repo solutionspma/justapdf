@@ -9,7 +9,7 @@ export default function Editor() {
       <div id="editor-overlay">Upload a PDF to power the tools.</div>
       <div class="editor-topbar">
         <div class="editor-menubar" id="editor-menubar">
-          <button class="menubar-button menubar-button--compact" id="toggle-left-panel-alt" type="button">Show tools</button>
+          <button class="menubar-button" type="button" data-action="panel-tools">Tool tools</button>
           <div class="menubar-group">
             <button class="menubar-button" type="button" data-menu="file">File</button>
             <button class="menubar-button" type="button" data-menu="edit">Edit</button>
@@ -78,6 +78,19 @@ export default function Editor() {
 
         <section class="editor-workspace">
         <div class="editor-status" id="editor-status">Drop a PDF to begin.</div>
+        <div class="editor-canvas-toolbar">
+          <div class="editor-canvas-toolbar-left">
+            <button class="ghost panel-toggle" id="toggle-left-panel-alt" type="button">Show tools</button>
+          </div>
+          <div class="editor-canvas-toolbar-center">
+            <button class="ghost" type="button" data-action="file-export">Export</button>
+            <button class="ghost" type="button" disabled>Paste</button>
+          </div>
+          <div class="editor-canvas-toolbar-right">
+            <button class="ghost" type="button" data-action="edit-undo">Undo</button>
+            <button class="ghost" type="button" data-action="edit-redo">Redo</button>
+          </div>
+        </div>
 
         <div class="card editor-auth" id="editor-auth">
           <p>Sign in to upload and manage documents.</p>
@@ -917,6 +930,62 @@ export function mountEditor() {
     menu.style.top = `${top}px`;
   }
 
+  function handleToolbarAction(action) {
+    if (!action) return;
+    closeMenus();
+    if (action === 'file-open') {
+      fileInput?.click();
+      return;
+    }
+    if (action === 'file-save' || action === 'file-export') {
+      handleExport();
+      return;
+    }
+    if (action === 'edit-undo') {
+      undoAction();
+      return;
+    }
+    if (action === 'edit-redo') {
+      redoAction();
+      return;
+    }
+    if (action === 'view-fit') {
+      pdfFitWidth?.click();
+      return;
+    }
+    if (action === 'view-zoom-in') {
+      zoomScale = Math.min(3, zoomScale + 0.25);
+      if (pdfZoomSelect) pdfZoomSelect.value = String(zoomScale);
+      if (currentPdfBytes) renderPdf(currentPdfBytes);
+      return;
+    }
+    if (action === 'view-zoom-out') {
+      zoomScale = Math.max(0.5, zoomScale - 0.25);
+      if (pdfZoomSelect) pdfZoomSelect.value = String(zoomScale);
+      if (currentPdfBytes) renderPdf(currentPdfBytes);
+      return;
+    }
+    if (action === 'panel-tools') {
+      toggleLeftAlt?.click();
+      return;
+    }
+    if (action === 'panel-details') {
+      toggleRightAlt?.click();
+      return;
+    }
+    if (action.startsWith('tool-')) {
+      const toolId = action.replace('tool-', '');
+      const tool = toolIndex.get(toolId);
+      if (!tool) return;
+      selectedToolId = toolId;
+      activeToolId = toolId;
+      toolsGrid?.querySelectorAll('.tool-button').forEach((btn) => btn.classList.remove('is-selected'));
+      const btn = toolsGrid?.querySelector(`[data-tool-id="${toolId}"]`);
+      btn?.classList.add('is-selected');
+      openToolPanel(tool);
+    }
+  }
+
   if (menubar) {
     menubar.addEventListener('click', (event) => {
       const button = event.target.closest('.menubar-button');
@@ -930,65 +999,22 @@ export function mountEditor() {
         return;
       }
       if (!actionButton) return;
-      const action = actionButton.dataset.action;
-      closeMenus();
-      if (action === 'file-open') {
-        fileInput?.click();
-        return;
-      }
-      if (action === 'file-save' || action === 'file-export') {
-        handleExport();
-        return;
-      }
-      if (action === 'edit-undo') {
-        undoAction();
-        return;
-      }
-      if (action === 'edit-redo') {
-        redoAction();
-        return;
-      }
-      if (action === 'view-fit') {
-        pdfFitWidth?.click();
-        return;
-      }
-      if (action === 'view-zoom-in') {
-        zoomScale = Math.min(3, zoomScale + 0.25);
-        if (pdfZoomSelect) pdfZoomSelect.value = String(zoomScale);
-        if (currentPdfBytes) renderPdf(currentPdfBytes);
-        return;
-      }
-      if (action === 'view-zoom-out') {
-        zoomScale = Math.max(0.5, zoomScale - 0.25);
-        if (pdfZoomSelect) pdfZoomSelect.value = String(zoomScale);
-        if (currentPdfBytes) renderPdf(currentPdfBytes);
-        return;
-      }
-      if (action === 'panel-tools') {
-        toggleLeftAlt?.click();
-        return;
-      }
-      if (action === 'panel-details') {
-        toggleRightAlt?.click();
-        return;
-      }
-      if (action.startsWith('tool-')) {
-        const toolId = action.replace('tool-', '');
-        const tool = toolIndex.get(toolId);
-        if (!tool) return;
-        selectedToolId = toolId;
-        activeToolId = toolId;
-        toolsGrid?.querySelectorAll('.tool-button').forEach((btn) => btn.classList.remove('is-selected'));
-        const btn = toolsGrid?.querySelector(`[data-tool-id="${toolId}"]`);
-        btn?.classList.add('is-selected');
-        openToolPanel(tool);
-      }
+      handleToolbarAction(actionButton.dataset.action);
     });
 
     document.addEventListener('click', (event) => {
       if (!menubar.contains(event.target)) {
         closeMenus();
       }
+    });
+  }
+
+  const canvasToolbar = document.querySelector('.editor-canvas-toolbar');
+  if (canvasToolbar) {
+    canvasToolbar.addEventListener('click', (event) => {
+      const actionButton = event.target.closest('[data-action]');
+      if (!actionButton) return;
+      handleToolbarAction(actionButton.dataset.action);
     });
   }
 
