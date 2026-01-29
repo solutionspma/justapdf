@@ -19,7 +19,7 @@
 }
 
 .brand-logo {
-  height: 52px;
+  height: calc(var(--header-height) * 0.75);
 }
 
 .nav-links {
@@ -34,6 +34,20 @@
   gap: 10px;
   align-items: center;
   justify-self: end;
+}
+
+body[data-auth="signed-in"] .nav-actions [data-auth="signin"],
+body[data-auth="signed-in"] .nav-actions [data-auth="signup"] {
+  display: none;
+}
+
+body[data-auth="signed-out"] .nav-actions [data-auth="signout"],
+body[data-auth="signed-out"] .nav-actions [data-auth="account"] {
+  display: none;
+}
+
+body[data-route="/editor"] .theme-toggle {
+  display: none;
 }
 
 .nav-account {
@@ -100,15 +114,25 @@
   width: 100vw;
   height: calc(100vh - var(--header-height));
   overflow: hidden;
+  --tools-left-width: 240px;
+  --tools-right-width: 320px;
+}
+
+.editor-shell.is-left-collapsed {
+  --tools-left-width: 0px;
+}
+
+.editor-shell.is-right-collapsed {
+  --tools-right-width: 0px;
 }
 
 .editor-topbar {
   display: flex;
   align-items: center;
   min-height: var(--toolbar-height);
-  padding: 10px 18px;
+  padding: 8px 16px;
   border-bottom: 1px solid var(--border);
-  background: var(--surface);
+  background: var(--surface-alt);
 }
 
 .editor-body {
@@ -537,6 +561,8 @@ button.doc-row:hover {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
 }
 
 .editor-tools-right {
@@ -546,6 +572,8 @@ button.doc-row:hover {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  background: var(--surface);
+  border-left: 1px solid var(--border);
 }
 
 .editor-shell.is-left-collapsed .editor-tools-left {
@@ -590,7 +618,11 @@ button.doc-row:hover {
   gap: 14px;
   align-items: center;
   position: relative;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  width: 100%;
+  justify-content: flex-start;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .menubar-group,
@@ -606,10 +638,10 @@ button.doc-row:hover {
 }
 
 .menubar-quick {
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
 }
 
 .menubar-actions {
@@ -620,17 +652,19 @@ button.doc-row:hover {
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text-primary);
-  padding: 6px 10px;
+  padding: 6px 12px;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
   font-size: 13px;
+  height: 32px;
 }
 
 .menubar-button--compact {
-  padding: 5px 8px;
+  padding: 4px 8px;
   font-size: 12px;
-  border-radius: 999px;
+  border-radius: 6px;
+  height: 28px;
 }
 
 .menubar-separator {

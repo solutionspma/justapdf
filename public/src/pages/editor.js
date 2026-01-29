@@ -63,7 +63,6 @@ export default function Editor() {
         <aside class="editor-tools-left">
           <div class="editor-sidebar-header">
             <span class="muted">Tools</span>
-            <button class="ghost panel-toggle" id="toggle-left-panel" type="button">Hide</button>
           </div>
           <div class="editor-tools" id="editor-tools">
             <div class="editor-tools-header">
@@ -142,7 +141,6 @@ export default function Editor() {
       <aside class="editor-tools-right">
         <div class="editor-sidebar-header">
           <span class="muted">Tool detail</span>
-          <button class="ghost panel-toggle" id="toggle-right-panel" type="button">Hide</button>
         </div>
         <div class="editor-tool-panel" id="editor-tool-panel" aria-live="polite">
           <div class="editor-tool-panel-header">
@@ -200,8 +198,8 @@ export function mountEditor() {
   const leftPanel = document.querySelector('.editor-tools-left');
   const rightPanel = document.querySelector('.editor-tools-right');
   const menubar = document.getElementById('editor-menubar');
-  const toggleLeft = document.getElementById('toggle-left-panel');
-  const toggleRight = document.getElementById('toggle-right-panel');
+  const toggleLeft = null;
+  const toggleRight = null;
   const toggleLeftAlt = document.getElementById('toggle-left-panel-alt');
   const toggleRightAlt = null;
   const headerToggleLeft = null;

@@ -19,7 +19,7 @@ function updateHeaderAuthState(user) {
   if (signOut) signOut.hidden = !user;
   if (account) {
     account.hidden = !user;
-    account.textContent = user?.email ? `Signed in: ${user.email}` : 'Signed in';
+    account.textContent = user?.email ? `Signed in as ${user.email}` : 'Signed in';
   }
 
   if (signOut) {
