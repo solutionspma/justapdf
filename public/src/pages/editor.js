@@ -26,15 +26,27 @@ export default function Editor() {
 
       <section class="editor-workspace">
         <div class="editor-menubar" id="editor-menubar">
-          <button class="menubar-button" type="button" data-menu="file">File</button>
-          <button class="menubar-button" type="button" data-menu="edit">Edit</button>
-          <button class="menubar-button" type="button" data-menu="view">View</button>
-          <button class="menubar-button" type="button" data-menu="insert">Insert</button>
-          <button class="menubar-button" type="button" data-menu="tools">Tools</button>
-          <button class="menubar-button" type="button" data-menu="help">Help</button>
+          <div class="menubar-group">
+            <button class="menubar-button" type="button" data-menu="file">File</button>
+            <button class="menubar-button" type="button" data-menu="edit">Edit</button>
+            <button class="menubar-button" type="button" data-menu="view">View</button>
+            <button class="menubar-button" type="button" data-menu="insert">Insert</button>
+            <button class="menubar-button" type="button" data-menu="tools">Tools</button>
+            <button class="menubar-button" type="button" data-menu="help">Help</button>
+          </div>
+          <div class="menubar-quick">
+            <button class="menubar-button menubar-button--compact" type="button" data-action="file-open">Open</button>
+            <span class="menubar-separator"></span>
+            <button class="menubar-button menubar-button--compact" type="button" data-action="edit-undo">Undo</button>
+            <button class="menubar-button menubar-button--compact" type="button" data-action="edit-redo">Redo</button>
+            <span class="menubar-separator"></span>
+            <button class="menubar-button menubar-button--compact" type="button" data-action="view-fit">Fit</button>
+            <button class="menubar-button menubar-button--compact" type="button" data-action="view-zoom-out">−</button>
+            <button class="menubar-button menubar-button--compact" type="button" data-action="view-zoom-in">+</button>
+          </div>
           <div class="menubar-actions">
-            <button class="ghost panel-toggle" id="toggle-left-panel-alt" type="button">Hide tools</button>
-            <button class="ghost panel-toggle" id="toggle-right-panel-alt" type="button">Hide details</button>
+            <button class="ghost panel-toggle" id="toggle-left-panel-alt" type="button">Tools</button>
+            <button class="ghost panel-toggle" id="toggle-right-panel-alt" type="button">Details</button>
           </div>
           <div class="menubar-menu" data-menu-panel="file">
             <button type="button" data-action="file-open">Open…</button>
@@ -900,6 +912,10 @@ export function mountEditor() {
     if (!menu || !button) return;
     button.classList.add('is-open');
     menu.classList.add('is-open');
+    const left = button.offsetLeft;
+    const top = button.offsetTop + button.offsetHeight + 8;
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
   }
 
   if (menubar) {
@@ -1213,7 +1229,6 @@ export function mountEditor() {
   }
 
   function handleCanvasClick(pageIndex, x, y, overlay) {
-    if (!activeToolId) return;
     if (activeToolId === 'comment') {
       const payload = {
         pageIndex,
@@ -1224,7 +1239,7 @@ export function mountEditor() {
       runClientToolAction('comment', payload);
       return;
     }
-    if (activeToolId === 'edit_text' || activeToolId === 'highlight') {
+    if (!activeToolId || activeToolId === 'edit_text' || activeToolId === 'highlight') {
       const selection = findTextItemAt(pageIndex, x, y);
       if (!selection && !pageViewports[pageIndex]?.textItems?.length) {
         setState('ready', 'No editable text detected on this page.');
@@ -1234,6 +1249,7 @@ export function mountEditor() {
         setState('ready', 'No text selected.');
         return;
       }
+      activeSelection = selection;
       if (!activeToolId || activeToolId === 'edit_text') {
         const tool = toolIndex.get('edit_text');
         if (tool) {
@@ -1244,8 +1260,9 @@ export function mountEditor() {
           btn?.classList.add('is-selected');
           openToolPanel(tool);
         }
+      } else if (toolIndex.get(activeToolId)?.requiresSelection) {
+        openToolPanel(toolIndex.get(activeToolId));
       }
-      activeSelection = selection;
       renderSelectionOverlay(overlay, selection);
       updateTextOverlay(selection, '');
       syncToolAvailability();

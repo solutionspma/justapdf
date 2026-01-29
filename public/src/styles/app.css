@@ -564,16 +564,33 @@ button.doc-row:hover {
 
 .editor-menubar {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
   position: relative;
   flex-wrap: wrap;
 }
 
+.menubar-group,
+.menubar-quick,
+.menubar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.menubar-group {
+  flex-wrap: wrap;
+}
+
+.menubar-quick {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
 .menubar-actions {
   margin-left: auto;
-  display: flex;
-  gap: 8px;
 }
 
 .menubar-button {
@@ -585,6 +602,18 @@ button.doc-row:hover {
   cursor: pointer;
   font-weight: 600;
   font-size: 13px;
+}
+
+.menubar-button--compact {
+  padding: 5px 8px;
+  font-size: 12px;
+  border-radius: 999px;
+}
+
+.menubar-separator {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
 }
 
 .menubar-button.is-open {
