@@ -176,6 +176,15 @@ export default function Editor() {
           </div>
         </aside>
       </div>
+      <div class="editor-context-menu" id="editor-context-menu" hidden>
+        <button type="button" data-action="edit-undo">Undo</button>
+        <button type="button" data-action="edit-redo">Redo</button>
+        <button type="button" data-action="view-zoom-in">Zoom in</button>
+        <button type="button" data-action="view-zoom-out">Zoom out</button>
+        <button type="button" data-action="view-fit">Fit width</button>
+        <button type="button" data-action="panel-tools">Toggle tools</button>
+        <button type="button" data-action="panel-details">Toggle details</button>
+      </div>
     </main>
     ${Footer()}
   `;
@@ -199,6 +208,8 @@ export function mountEditor() {
   const pdfPages = document.getElementById('pdf-pages');
   const previewMeta = document.getElementById('editor-preview-meta');
   const exportButton = document.getElementById('editor-export');
+  const contextMenu = document.getElementById('editor-context-menu');
+  const workspace = document.querySelector('.editor-workspace');
   const pdfPrev = document.getElementById('pdf-prev');
   const pdfNext = document.getElementById('pdf-next');
   const pdfPageInput = document.getElementById('pdf-page-input');
@@ -954,6 +965,25 @@ export function mountEditor() {
     menu.style.top = `${top}px`;
   }
 
+  function hideContextMenu() {
+    if (!contextMenu) return;
+    contextMenu.hidden = true;
+  }
+
+  function showContextMenu(event) {
+    if (!contextMenu) return;
+    event.preventDefault();
+    const menuWidth = 180;
+    const menuHeight = contextMenu.offsetHeight || 220;
+    const maxX = window.innerWidth - menuWidth - 8;
+    const maxY = window.innerHeight - menuHeight - 8;
+    const x = Math.max(8, Math.min(event.clientX, maxX));
+    const y = Math.max(8, Math.min(event.clientY, maxY));
+    contextMenu.style.left = `${x}px`;
+    contextMenu.style.top = `${y}px`;
+    contextMenu.hidden = false;
+  }
+
   function handleToolbarAction(action) {
     if (!action) return;
     closeMenus();
@@ -1032,6 +1062,23 @@ export function mountEditor() {
       }
     });
   }
+
+  if (contextMenu) {
+    contextMenu.addEventListener('click', (event) => {
+      const actionButton = event.target.closest('[data-action]');
+      if (!actionButton) return;
+      handleToolbarAction(actionButton.dataset.action);
+      hideContextMenu();
+    });
+  }
+
+  if (workspace) {
+    workspace.addEventListener('contextmenu', showContextMenu);
+  }
+
+  document.addEventListener('click', hideContextMenu);
+  document.addEventListener('scroll', hideContextMenu, true);
+  window.addEventListener('resize', hideContextMenu);
 
   const canvasToolbar = document.querySelector('.editor-canvas-toolbar');
 
@@ -1306,7 +1353,11 @@ export function mountEditor() {
         openToolPanel(toolIndex.get(activeToolId));
       }
       renderSelectionOverlay(overlay, selection);
-      updateTextOverlay(selection, '');
+      if (textEditMode === 'overlay') {
+        updateTextOverlay(selection, '');
+      } else {
+        updateTextOverlay(null, '');
+      }
       syncToolAvailability();
       if (activeToolId === 'highlight') {
         setState('ready', 'Text selected. Run tool to highlight.');
