@@ -177,6 +177,7 @@ export default function Editor() {
         </aside>
       </div>
       <div class="editor-context-menu" id="editor-context-menu" hidden>
+        <button type="button" data-action="tool-edit_text">Edit text</button>
         <button type="button" data-action="edit-undo">Undo</button>
         <button type="button" data-action="edit-redo">Redo</button>
         <button type="button" data-action="view-zoom-in">Zoom in</button>
@@ -258,7 +259,7 @@ export function mountEditor() {
   let activeSelection = null;
   let pageViewports = [];
   let editTextLimitReason = '';
-  let textEditMode = 'auto';
+  let textEditMode = 'native';
 
   function getNativeTextEditRunner() {
     return window?.JUSTAPDF_NATIVE_TEXT_EDIT || null;
@@ -587,6 +588,19 @@ export function mountEditor() {
       updatePanelToggle(toggleRight, collapsed, 'details');
       updatePanelToggle(toggleRightAlt, collapsed, 'details');
     }
+  }
+
+  function updateOverlayCursor() {
+    const cursor = activeToolId === 'edit_text'
+      ? 'text'
+      : activeToolId === 'draw' || activeToolId === 'insert_text' || activeToolId === 'highlight'
+        ? 'crosshair'
+        : 'default';
+    pageViewports.forEach((viewport) => {
+      if (viewport?.overlay) {
+        viewport.overlay.style.cursor = cursor;
+      }
+    });
   }
 
   function setPanelActive(side, active) {
@@ -1037,6 +1051,7 @@ export function mountEditor() {
       const btn = toolsGrid?.querySelector(`[data-tool-id="${toolId}"]`);
       btn?.classList.add('is-selected');
       openToolPanel(tool);
+      updateOverlayCursor();
     }
   }
 
@@ -1358,6 +1373,7 @@ export function mountEditor() {
       } else {
         updateTextOverlay(null, '');
       }
+      updateOverlayCursor();
       syncToolAvailability();
       if (activeToolId === 'highlight') {
         setState('ready', 'Text selected. Run tool to highlight.');
@@ -2295,11 +2311,8 @@ export function mountEditor() {
         ${warning}
         <label class="tool-input">
           Mode
-          <select id="tool-input-edit-mode">
-            <option value="auto">Auto</option>
-            <option value="overlay">Overlay</option>
-            <option value="native">Native (experimental)</option>
-            <option value="ocr">OCR + Rebuild</option>
+          <select id="tool-input-edit-mode" disabled>
+            <option value="native">Native (forced)</option>
           </select>
         </label>
         <label class="tool-input">
@@ -2499,28 +2512,12 @@ export function mountEditor() {
         modeSelect.value = textEditMode;
         const updateNote = (mode) => {
           if (!modeNote) return;
-          if (mode === 'auto') {
-            modeNote.textContent = 'Auto tries native edit first, then OCR if needed.';
-          } else if (mode === 'native') {
-            modeNote.textContent = getNativeTextEditRunner()
-              ? 'Native edit is experimental. Results depend on the document structure.'
-              : 'Native edit is unavailable. Engine not detected.';
-          } else if (mode === 'ocr') {
-            modeNote.textContent = getOcrTextEditRunner()
-              ? 'OCR + rebuild reconstructs the document. Intended for scanned PDFs.'
-              : 'OCR + rebuild is unavailable. Engine not detected.';
-          } else {
-            modeNote.textContent = 'Overlay mode hides original text and draws new text on top.';
-          }
+          modeNote.textContent = getNativeTextEditRunner()
+            ? 'Native edit is forced. If glyph mapping fails, the edit is blocked.'
+            : 'Native edit is unavailable. Engine not detected.';
         };
+        textEditMode = 'native';
         updateNote(textEditMode);
-        modeSelect.addEventListener('change', () => {
-          textEditMode = modeSelect.value;
-          updateNote(textEditMode);
-          if (textEditMode !== 'overlay') {
-            updateTextOverlay(null, '');
-          }
-        });
       }
       if (input) {
         input.addEventListener('input', () => {
@@ -2554,7 +2551,8 @@ export function mountEditor() {
     if (!toolPanelInputs) return payload;
 
     if (toolId === 'edit_text') {
-      payload.mode = toolPanelInputs.querySelector('#tool-input-edit-mode')?.value || textEditMode;
+      payload.mode = 'native';
+      textEditMode = 'native';
       if (!activeSelection && requiresEditTextSelection(payload.mode)) {
         setState('ready', 'Select text to edit.');
         return null;
