@@ -1072,6 +1072,20 @@ button.doc-row:hover {
   white-space: pre-wrap;
 }
 
+.text-inline-editor {
+  position: absolute;
+  z-index: 6;
+  border: 1px solid var(--accent);
+  background: rgba(255, 255, 255, 0.85);
+  color: #000;
+  padding: 2px 4px;
+  resize: none;
+  outline: none;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  line-height: 1.2;
+}
+
 .text-box-ghost {
   border: 2px dashed var(--accent);
   background: color-mix(in srgb, var(--accent) 12%, transparent);

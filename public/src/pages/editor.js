@@ -260,6 +260,7 @@ export function mountEditor() {
   let pageViewports = [];
   let editTextLimitReason = '';
   let textEditMode = 'native';
+  let inlineEditInput = null;
 
   function getNativeTextEditRunner() {
     return window?.JUSTAPDF_NATIVE_TEXT_EDIT || null;
@@ -600,6 +601,58 @@ export function mountEditor() {
       if (viewport?.overlay) {
         viewport.overlay.style.cursor = cursor;
       }
+    });
+  }
+
+  function removeInlineEditor() {
+    if (inlineEditInput) {
+      inlineEditInput.remove();
+      inlineEditInput = null;
+    }
+  }
+
+  function syncInlineEditorValue(value) {
+    const textInput = toolPanelInputs?.querySelector('#tool-input-edit-text');
+    if (textInput) {
+      textInput.value = value;
+    }
+  }
+
+  function spawnInlineEditor(selection) {
+    if (!selection || textEditMode !== 'native') return;
+    const overlay = pageViewports[selection.pageIndex]?.overlay;
+    if (!overlay) return;
+    removeInlineEditor();
+
+    const editor = document.createElement('textarea');
+    editor.className = 'text-inline-editor';
+    editor.value = selection.text || '';
+    editor.style.left = `${selection.x}px`;
+    editor.style.top = `${selection.y}px`;
+    editor.style.width = `${selection.width}px`;
+    editor.style.height = `${selection.height}px`;
+
+    overlay.appendChild(editor);
+    inlineEditInput = editor;
+    editor.focus();
+    editor.setSelectionRange(editor.value.length, editor.value.length);
+    syncInlineEditorValue(editor.value);
+
+    editor.addEventListener('input', () => {
+      syncInlineEditorValue(editor.value);
+    });
+
+    editor.addEventListener('keydown', (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+        toolPanelAction?.click();
+      }
+      if (event.key === 'Escape') {
+        removeInlineEditor();
+      }
+    });
+
+    editor.addEventListener('blur', () => {
+      syncInlineEditorValue(editor.value);
     });
   }
 
@@ -1051,6 +1104,9 @@ export function mountEditor() {
       const btn = toolsGrid?.querySelector(`[data-tool-id="${toolId}"]`);
       btn?.classList.add('is-selected');
       openToolPanel(tool);
+      if (toolId !== 'edit_text') {
+        removeInlineEditor();
+      }
       updateOverlayCursor();
     }
   }
@@ -1333,6 +1389,9 @@ export function mountEditor() {
   }
 
   function handleCanvasClick(pageIndex, x, y, overlay) {
+    if (inlineEditInput) {
+      inlineEditInput.blur();
+    }
     if (activeToolId === 'comment') {
       const payload = {
         pageIndex,
@@ -1373,6 +1432,7 @@ export function mountEditor() {
       } else {
         updateTextOverlay(null, '');
       }
+      spawnInlineEditor(selection);
       updateOverlayCursor();
       syncToolAvailability();
       if (activeToolId === 'highlight') {
