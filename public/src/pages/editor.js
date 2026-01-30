@@ -247,7 +247,7 @@ export function mountEditor() {
   let activeSelection = null;
   let pageViewports = [];
   let editTextLimitReason = '';
-  let textEditMode = 'overlay';
+  let textEditMode = 'auto';
 
   function getNativeTextEditRunner() {
     return window?.JUSTAPDF_NATIVE_TEXT_EDIT || null;
@@ -543,6 +543,10 @@ export function mountEditor() {
     button.textContent = collapsed ? `Show ${label}` : `Hide ${label}`;
   }
 
+  function requiresEditTextSelection(mode) {
+    return mode === 'overlay' || mode === 'native';
+  }
+
   function isOverlayMode() {
     return window.matchMedia('(max-width: 1024px)').matches;
   }
@@ -767,7 +771,8 @@ export function mountEditor() {
       const tool = toolIndex.get(toolId);
       if (!tool) return;
       const needsUpload = tool.requiresUpload && !currentDocId;
-      const needsSelection = tool.requiresSelection && !activeSelection && !(tool.id === 'edit_text' && textEditMode === 'ocr');
+      const needsSelection = tool.requiresSelection && !activeSelection &&
+        !(tool.id === 'edit_text' && !requiresEditTextSelection(textEditMode));
       const disabled = needsUpload;
       button.disabled = disabled;
       button.classList.toggle('is-disabled', disabled);
@@ -775,6 +780,8 @@ export function mountEditor() {
       if (meta) {
         if (needsSelection) {
           meta.textContent = 'Select text';
+        } else if (tool.id === 'edit_text' && !activeSelection) {
+          meta.textContent = 'OCR ready';
         } else {
           meta.textContent = disabled ? 'Upload required' : 'Ready';
         }
@@ -784,7 +791,8 @@ export function mountEditor() {
 
   function openToolPanel(tool) {
     const requiresUpload = tool.requiresUpload && !currentDocId && tool.id !== 'upload_pdf';
-    const requiresSelection = tool.requiresSelection && !activeSelection && !(tool.id === 'edit_text' && textEditMode === 'ocr');
+    const requiresSelection = tool.requiresSelection && !activeSelection &&
+      !(tool.id === 'edit_text' && !requiresEditTextSelection(textEditMode));
     toolPanelTitle.textContent = tool.name;
     toolPanelDesc.textContent = tool.description;
     toolPanelGroup.textContent = tool.groupLabel;
@@ -815,9 +823,13 @@ export function mountEditor() {
     } else if (tool.requiresUpload && !currentDocId) {
       stateMessage = 'Upload a PDF to run this tool.';
       actionLabel = 'Upload required';
-    } else if (tool.requiresSelection && !activeSelection) {
+    } else if (tool.requiresSelection && !activeSelection && requiresSelection) {
       stateMessage = 'Select text to use this tool.';
       actionLabel = 'Select text';
+    } else if (tool.id === 'edit_text' && !activeSelection) {
+      stateMessage = 'OCR mode can run without selection.';
+      actionLabel = 'Run tool';
+      actionEnabled = true;
     } else {
       stateMessage = 'Ready to run on your current document.';
       actionLabel = 'Run tool';
@@ -1860,12 +1872,78 @@ export function mountEditor() {
 
       if (toolId === 'edit_text') {
         const selection = payload.selection;
-        if (!selection && payload.mode !== 'ocr') {
+        const mode = payload.mode || textEditMode;
+        if (!selection && requiresEditTextSelection(mode)) {
           setState('ready', 'Select text to edit.');
           emitAction('action_commit', { toolId, status: 'blocked' });
           return;
         }
-        if (payload.mode === 'native') {
+        const runNative = async () => {
+          const runner = getNativeTextEditRunner();
+          if (!runner) {
+            throw new Error('Native edit unavailable. Engine not detected.');
+          }
+          const result = await runner({
+            bytes: currentPdfBytes,
+            selection,
+            pageIndex: payload.pageIndex,
+            bbox: selection ? toPdfBox(payload.pageIndex, selection) : null,
+            originalText: selection?.text,
+            newText: payload.text,
+            fontName: selection?.fontName,
+            font: payload.font,
+            size: payload.size,
+            color: payload.color
+          });
+          return result?.bytes || result;
+        };
+        const runOcr = async () => {
+          const runner = getOcrTextEditRunner();
+          if (!runner) {
+            throw new Error('OCR + rebuild unavailable. Engine not detected.');
+          }
+          const result = await runner({
+            bytes: currentPdfBytes,
+            pageIndex: payload.pageIndex,
+            selectionBox: selection ? toPdfBox(payload.pageIndex, selection) : null,
+            text: payload.text,
+            font: payload.font,
+            size: payload.size,
+            color: payload.color
+          });
+          return result?.bytes || result;
+        };
+
+        if (mode === 'auto') {
+          setState('running_operation', 'Running auto edit...');
+          try {
+            if (selection && getNativeTextEditRunner()) {
+              const nextBytes = await runNative();
+              if (nextBytes) {
+                await setPdfBytes(nextBytes, { pushHistory: true });
+                setState('ready', 'Text updated (native).');
+                emitAction('action_commit', { toolId });
+                return;
+              }
+            }
+            const nextBytes = await runOcr();
+            if (nextBytes) {
+              await setPdfBytes(nextBytes, { pushHistory: true });
+              setState('ready', 'Text updated (OCR + rebuild).');
+              emitAction('action_commit', { toolId });
+              return;
+            }
+            throw new Error('Auto edit failed.');
+          } catch (error) {
+            editTextLimitReason = error.message || 'Auto edit failed.';
+            renderToolInputs({ id: 'edit_text' });
+            setState('ready', editTextLimitReason);
+            emitAction('action_commit', { toolId, status: 'failed' });
+            return;
+          }
+        }
+
+        if (mode === 'native') {
           const runner = getNativeTextEditRunner();
           if (!runner) {
             editTextLimitReason = 'Native edit unavailable. Engine not detected.';
@@ -1901,27 +1979,10 @@ export function mountEditor() {
           }
           return;
         }
-        if (payload.mode === 'ocr') {
-          const runner = getOcrTextEditRunner();
-          if (!runner) {
-            editTextLimitReason = 'OCR + rebuild unavailable. Engine not detected.';
-            renderToolInputs({ id: 'edit_text' });
-            setState('ready', editTextLimitReason);
-            emitAction('action_commit', { toolId, status: 'blocked' });
-            return;
-          }
+        if (mode === 'ocr') {
           setState('running_operation', 'Running OCR + rebuild...');
           try {
-            const result = await runner({
-              bytes: currentPdfBytes,
-              pageIndex: payload.pageIndex,
-              selectionBox: selection ? toPdfBox(payload.pageIndex, selection) : null,
-              text: payload.text,
-              font: payload.font,
-              size: payload.size,
-              color: payload.color
-            });
-            const nextBytes = result?.bytes || result;
+            const nextBytes = await runOcr();
             if (!nextBytes) {
               throw new Error('OCR + rebuild failed.');
             }
@@ -2148,7 +2209,8 @@ export function mountEditor() {
         <label class="tool-input">
           Mode
           <select id="tool-input-edit-mode">
-            <option value="overlay">Overlay (default)</option>
+            <option value="auto">Auto</option>
+            <option value="overlay">Overlay</option>
             <option value="native">Native (experimental)</option>
             <option value="ocr">OCR + Rebuild</option>
           </select>
@@ -2350,7 +2412,9 @@ export function mountEditor() {
         modeSelect.value = textEditMode;
         const updateNote = (mode) => {
           if (!modeNote) return;
-          if (mode === 'native') {
+          if (mode === 'auto') {
+            modeNote.textContent = 'Auto tries native edit first, then OCR if needed.';
+          } else if (mode === 'native') {
             modeNote.textContent = getNativeTextEditRunner()
               ? 'Native edit is experimental. Results depend on the document structure.'
               : 'Native edit is unavailable. Engine not detected.';
@@ -2404,7 +2468,7 @@ export function mountEditor() {
 
     if (toolId === 'edit_text') {
       payload.mode = toolPanelInputs.querySelector('#tool-input-edit-mode')?.value || textEditMode;
-      if (!activeSelection && payload.mode !== 'ocr') {
+      if (!activeSelection && requiresEditTextSelection(payload.mode)) {
         setState('ready', 'Select text to edit.');
         return null;
       }
