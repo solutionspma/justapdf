@@ -68,6 +68,13 @@ OPENAI_API_KEY=<USER_PROVIDED>
 AI_CONTRACT_MODEL="gpt-4"
 
 # ┌─────────────────────────────────────────────────────────────────────────────┐
+# │ NATIVE EDIT SERVICE                                                         │
+# └─────────────────────────────────────────────────────────────────────────────┘
+NATIVE_EDIT_URL=<USER_PROVIDED>
+NATIVE_EDIT_VALIDATE_PDFIUM=true
+NATIVE_EDIT_ENGINE=rewrite
+
+# ┌─────────────────────────────────────────────────────────────────────────────┐
 # │ WEB3 / SMART CONTRACTS                                                      │
 # └─────────────────────────────────────────────────────────────────────────────┘
 WEB3_PROVIDER_URL=<USER_PROVIDED>

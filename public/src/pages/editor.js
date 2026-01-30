@@ -1936,12 +1936,16 @@ export function mountEditor() {
           setState('running_operation', 'Running auto edit...');
           try {
             if (selection && getNativeTextEditRunner()) {
-              const nextBytes = await runNative();
-              if (nextBytes) {
-                await setPdfBytes(nextBytes, { pushHistory: true });
-                setState('ready', 'Text updated (native).');
-                emitAction('action_commit', { toolId });
-                return;
+              try {
+                const nextBytes = await runNative();
+                if (nextBytes) {
+                  await setPdfBytes(nextBytes, { pushHistory: true });
+                  setState('ready', 'Text updated (native).');
+                  emitAction('action_commit', { toolId });
+                  return;
+                }
+              } catch (error) {
+                setState('running_operation', 'Native blocked, running OCR...');
               }
             }
             if (selection) {

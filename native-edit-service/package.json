@@ -1,0 +1,17 @@
+{
+  "name": "justapdf-native-edit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@embedpdf/pdfium": "^2.3.0",
+    "@hyzyla/pdfium": "^2.1.9",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "pdfcpu-wasm": "^0.1.0"
+  }
+}

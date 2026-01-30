@@ -16,5 +16,11 @@ export const supabaseConfig = {
 };
 
 export const apiConfig = {
-  baseUrl: '/api'
+  baseUrl: '/api',
+  get nativeEditUrl() {
+    return window.__ENV__?.NATIVE_EDIT_URL || env.NATIVE_EDIT_URL || '';
+  },
+  get nativeEditEngine() {
+    return window.__ENV__?.NATIVE_EDIT_ENGINE || env.NATIVE_EDIT_ENGINE || '';
+  }
 };

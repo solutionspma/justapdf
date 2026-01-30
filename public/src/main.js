@@ -31,8 +31,13 @@ function updateHeaderAuthState(user) {
 
 window.updateHeaderAuthState = updateHeaderAuthState;
 window.JUSTAPDF_NATIVE_TEXT_EDIT = async (payload) => {
-  const module = await import('/tools/runNativeTextEdit.js');
-  return module.runNativeTextEdit(payload);
+  try {
+    const module = await import('/tools/runNativeServerEdit.js');
+    return module.runNativeServerEdit(payload);
+  } catch (error) {
+    const module = await import('/tools/runNativeTextEdit.js');
+    return module.runNativeTextEdit(payload);
+  }
 };
 window.JUSTAPDF_OCR_TEXT_EDIT = async (payload) => {
   const module = await import('/tools/runOcrRebuild.js');
@@ -63,6 +68,12 @@ window.addEventListener('popstate', () => {
 
 document.addEventListener('click', handleLinkClick);
 document.addEventListener('DOMContentLoaded', () => {
+  fetch('/api/env')
+    .then((res) => (res.ok ? res.json() : {}))
+    .then((data) => {
+      window.__ENV__ = { ...(window.__ENV__ || {}), ...(data || {}) };
+    })
+    .catch(() => {});
   applyTheme(getTheme());
   const PUBLIC_ROUTES = new Set(['/', '/pricing', '/login', '/register']);
   window.addEventListener('resize', updateHeaderHeight);

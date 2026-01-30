@@ -7,7 +7,9 @@ export const handler = async () => {
     FIREBASE_MESSAGING_SENDER_ID: process.env.FIREBASE_MESSAGING_SENDER_ID || '',
     FIREBASE_APP_ID: process.env.FIREBASE_APP_ID || '',
     FIREBASE_MEASUREMENT_ID: process.env.FIREBASE_MEASUREMENT_ID || '',
-    INTERNAL_ADMIN_UID: process.env.INTERNAL_ADMIN_UID || ''
+    INTERNAL_ADMIN_UID: process.env.INTERNAL_ADMIN_UID || '',
+    NATIVE_EDIT_URL: process.env.NATIVE_EDIT_URL || '',
+    NATIVE_EDIT_ENGINE: process.env.NATIVE_EDIT_ENGINE || ''
   };
 
   return {
