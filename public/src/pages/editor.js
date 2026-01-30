@@ -547,6 +547,20 @@ export function mountEditor() {
     return mode === 'overlay' || mode === 'native';
   }
 
+  function getNativeEditBlockReason(selection) {
+    if (!selection) return 'No text selection available.';
+    if (!selection.text || !selection.text.trim()) {
+      return 'Selected text is empty or non-text glyphs.';
+    }
+    if (!selection.fontName) {
+      return 'Font mapping unavailable for this selection.';
+    }
+    if (/[\uFFFD\u0000]/.test(selection.text)) {
+      return 'Glyph mapping failed (unknown characters).';
+    }
+    return null;
+  }
+
   function isOverlayMode() {
     return window.matchMedia('(max-width: 1024px)').matches;
   }
@@ -1883,6 +1897,10 @@ export function mountEditor() {
           if (!runner) {
             throw new Error('Native edit unavailable. Engine not detected.');
           }
+          const blockReason = getNativeEditBlockReason(selection);
+          if (blockReason) {
+            throw new Error(blockReason);
+          }
           const result = await runner({
             bytes: currentPdfBytes,
             selection,
@@ -1926,6 +1944,12 @@ export function mountEditor() {
                 return;
               }
             }
+            if (selection) {
+              const blockReason = getNativeEditBlockReason(selection);
+              if (blockReason) {
+                setState('running_operation', 'Native blocked, running OCR...');
+              }
+            }
             const nextBytes = await runOcr();
             if (nextBytes) {
               await setPdfBytes(nextBytes, { pushHistory: true });
@@ -1947,6 +1971,14 @@ export function mountEditor() {
           const runner = getNativeTextEditRunner();
           if (!runner) {
             editTextLimitReason = 'Native edit unavailable. Engine not detected.';
+            renderToolInputs({ id: 'edit_text' });
+            setState('ready', editTextLimitReason);
+            emitAction('action_commit', { toolId, status: 'blocked' });
+            return;
+          }
+          const blockReason = getNativeEditBlockReason(selection);
+          if (blockReason) {
+            editTextLimitReason = `${blockReason} Use OCR mode.`;
             renderToolInputs({ id: 'edit_text' });
             setState('ready', editTextLimitReason);
             emitAction('action_commit', { toolId, status: 'blocked' });
