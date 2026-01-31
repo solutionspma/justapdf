@@ -1,0 +1,28 @@
+# OS
+.DS_Store
+
+# Env
+.env
+config/.env
+
+# Node
+node_modules/
+
+# Netlify
+.netlify/
+
+# Archives
+*.zip
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
