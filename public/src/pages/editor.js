@@ -186,6 +186,20 @@ export default function Editor() {
         <button type="button" data-action="panel-tools">Toggle tools</button>
         <button type="button" data-action="panel-details">Toggle details</button>
       </div>
+      <div class="modal-backdrop" id="native-render-modal" hidden>
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="native-render-title">
+          <div class="modal-header">
+            <h3 id="native-render-title">Rendered page</h3>
+            <button class="ghost" id="native-render-close" type="button">Close</button>
+          </div>
+          <div class="modal-body">
+            <img id="native-render-image" alt="Rendered page preview" />
+          </div>
+          <div class="modal-footer">
+            <a class="ghost" id="native-render-download" download="page.png">Download PNG</a>
+          </div>
+        </div>
+      </div>
     </main>
     ${Footer()}
   `;
@@ -261,6 +275,10 @@ export function mountEditor() {
   let editTextLimitReason = '';
   let textEditMode = 'native';
   let inlineEditInput = null;
+  const renderModal = document.getElementById('native-render-modal');
+  const renderModalImage = document.getElementById('native-render-image');
+  const renderModalClose = document.getElementById('native-render-close');
+  const renderModalDownload = document.getElementById('native-render-download');
 
   function getNativeTextEditRunner() {
     return window?.JUSTAPDF_NATIVE_TEXT_EDIT || null;
@@ -616,6 +634,85 @@ export function mountEditor() {
     if (textInput) {
       textInput.value = value;
     }
+  }
+
+  function openRenderModal(pngBase64) {
+    if (!renderModal || !renderModalImage || !renderModalDownload) return;
+    const url = `data:image/png;base64,${pngBase64}`;
+    renderModalImage.src = url;
+    renderModalDownload.href = url;
+    renderModal.hidden = false;
+  }
+
+  function closeRenderModal() {
+    if (!renderModal) return;
+    renderModal.hidden = true;
+  }
+
+  function downloadRenderPng(pngBase64) {
+    const link = document.createElement('a');
+    link.href = `data:image/png;base64,${pngBase64}`;
+    link.download = `page-${(activeSelection?.pageIndex ?? currentPageIndex ?? 0) + 1}.png`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
+  function toBase64(bytes) {
+    const view = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes || []);
+    const chunkSize = 0x8000;
+    let binary = '';
+    for (let i = 0; i < view.length; i += chunkSize) {
+      binary += String.fromCharCode(...view.subarray(i, i + chunkSize));
+    }
+    return btoa(binary);
+  }
+
+  async function runNativeValidate(selection) {
+    if (!currentPdfBytes) {
+      return { ok: false, error: 'No PDF loaded.' };
+    }
+    if (!selection?.text) {
+      return { ok: false, error: 'Select text first.' };
+    }
+    const response = await apiFetch('/native-validate', {
+      method: 'POST',
+      body: JSON.stringify({
+        pdfBase64: toBase64(currentPdfBytes),
+        pageIndex: selection.pageIndex ?? 0,
+        originalText: selection.text
+      })
+    });
+    return response;
+  }
+
+  async function runNativeExtract(pageIndex) {
+    if (!currentPdfBytes) {
+      return { ok: false, error: 'No PDF loaded.' };
+    }
+    const response = await apiFetch('/native-extract', {
+      method: 'POST',
+      body: JSON.stringify({
+        pdfBase64: toBase64(currentPdfBytes),
+        pageIndex: pageIndex ?? currentPageIndex ?? 0
+      })
+    });
+    return response;
+  }
+
+  async function runNativeRender(pageIndex) {
+    if (!currentPdfBytes) {
+      return { ok: false, error: 'No PDF loaded.' };
+    }
+    const response = await apiFetch('/native-render', {
+      method: 'POST',
+      body: JSON.stringify({
+        pdfBase64: toBase64(currentPdfBytes),
+        pageIndex: pageIndex ?? currentPageIndex ?? 0,
+        scale: 2
+      })
+    });
+    return response;
   }
 
   function spawnInlineEditor(selection) {
@@ -1150,6 +1247,21 @@ export function mountEditor() {
   document.addEventListener('click', hideContextMenu);
   document.addEventListener('scroll', hideContextMenu, true);
   window.addEventListener('resize', hideContextMenu);
+  if (renderModalClose) {
+    renderModalClose.addEventListener('click', closeRenderModal);
+  }
+  if (renderModal) {
+    renderModal.addEventListener('click', (event) => {
+      if (event.target === renderModal) {
+        closeRenderModal();
+      }
+    });
+  }
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeRenderModal();
+    }
+  });
 
   const canvasToolbar = document.querySelector('.editor-canvas-toolbar');
 
@@ -2395,6 +2507,16 @@ export function mountEditor() {
           New text
           <textarea id="tool-input-edit-text" rows="2" placeholder="Edit selected text..."></textarea>
         </label>
+        <div class="tool-input tool-section">
+          <div class="tool-section-title">Native tools</div>
+          <div class="tool-actions">
+            <button class="ghost" id="tool-input-native-validate" type="button">Validate selection</button>
+            <button class="ghost" id="tool-input-native-extract" type="button">Extract page text</button>
+            <button class="ghost" id="tool-input-native-render" type="button">Render page PNG</button>
+            <button class="ghost" id="tool-input-native-download" type="button">Save PNG</button>
+          </div>
+          <div class="tool-output" id="tool-input-native-output"></div>
+        </div>
         <div class="tool-input tool-note" id="tool-input-edit-mode-note"></div>
       `;
     }
@@ -2564,6 +2686,11 @@ export function mountEditor() {
       const input = toolPanelInputs.querySelector('#tool-input-edit-text');
       const sizeInput = toolPanelInputs.querySelector('#tool-input-edit-size');
       const modeNote = toolPanelInputs.querySelector('#tool-input-edit-mode-note');
+      const validateButton = toolPanelInputs.querySelector('#tool-input-native-validate');
+      const extractButton = toolPanelInputs.querySelector('#tool-input-native-extract');
+      const renderButton = toolPanelInputs.querySelector('#tool-input-native-render');
+      const downloadButton = toolPanelInputs.querySelector('#tool-input-native-download');
+      const output = toolPanelInputs.querySelector('#tool-input-native-output');
       if (activeSelection && sizeInput) {
         const size = Math.max(6, Math.round((activeSelection.height / (pageViewports[activeSelection.pageIndex]?.scale || 1)) * 0.85));
         sizeInput.value = String(size);
@@ -2584,6 +2711,74 @@ export function mountEditor() {
           if (textEditMode === 'overlay') {
             updateTextOverlay(activeSelection, input.value);
           }
+        });
+      }
+      if (validateButton) {
+        validateButton.disabled = !activeSelection;
+        validateButton.addEventListener('click', async () => {
+          if (!output) return;
+          output.textContent = 'Validating selection...';
+          try {
+            const result = await runNativeValidate(activeSelection);
+            output.textContent = result?.ok
+              ? 'Selection validated (text found).'
+              : `Validation failed: ${result?.error || 'Unknown error'}`;
+          } catch (error) {
+            output.textContent = `Validation failed: ${error?.message || 'Unknown error'}`;
+          }
+        });
+      }
+      if (extractButton) {
+        extractButton.disabled = !currentPdfBytes;
+        extractButton.addEventListener('click', async () => {
+          if (!output) return;
+          output.textContent = 'Extracting text...';
+          try {
+            const result = await runNativeExtract(activeSelection?.pageIndex ?? currentPageIndex ?? 0);
+            output.textContent = result?.ok
+              ? (result?.text || 'No text returned.')
+              : `Extract failed: ${result?.error || 'Unknown error'}`;
+          } catch (error) {
+            output.textContent = `Extract failed: ${error?.message || 'Unknown error'}`;
+          }
+        });
+      }
+      if (renderButton) {
+        renderButton.disabled = !currentPdfBytes;
+        renderButton.addEventListener('click', async () => {
+          if (!output) return;
+          output.textContent = 'Rendering page...';
+          try {
+            const result = await runNativeRender(activeSelection?.pageIndex ?? currentPageIndex ?? 0);
+            if (result?.ok && result?.pngBase64) {
+              output.innerHTML = `
+                <div class="tool-output-row">
+                  <span>Render complete.</span>
+                  <button class="ghost" type="button" id="tool-open-render">Open preview</button>
+                </div>
+              `;
+              const openButton = output.querySelector('#tool-open-render');
+              if (openButton) {
+                openButton.addEventListener('click', () => openRenderModal(result.pngBase64));
+              }
+              openRenderModal(result.pngBase64);
+              if (downloadButton) {
+                downloadButton.disabled = false;
+                downloadButton.onclick = () => downloadRenderPng(result.pngBase64);
+              }
+            } else {
+              output.textContent = `Render failed: ${result?.error || 'Unknown error'}`;
+            }
+          } catch (error) {
+            output.textContent = `Render failed: ${error?.message || 'Unknown error'}`;
+          }
+        });
+      }
+      if (downloadButton) {
+        downloadButton.disabled = true;
+        downloadButton.addEventListener('click', () => {
+          if (!output) return;
+          output.textContent = 'Run render first to enable download.';
         });
       }
     }

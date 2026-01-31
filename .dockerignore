@@ -1,0 +1,7 @@
+*
+!backend/
+!public/
+!package.json
+!package-lock.json
+!Dockerfile
+!fly.toml

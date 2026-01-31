@@ -19,13 +19,6 @@ const FIREBASE_PRIVATE_KEY = process.env.FIREBASE_PRIVATE_KEY;
 const FIREBASE_STORAGE_BUCKET = process.env.FIREBASE_STORAGE_BUCKET;
 const FIREBASE_SERVICE_ACCOUNT_JSON = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
 
-// Validate required environment variables
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  if (!FIREBASE_ENABLED) {
-    console.warn('⚠️  Database credentials not configured. Database features will be limited.');
-  }
-}
-
 let firestore = null;
 let firebaseBucket = null;
 const FIREBASE_ENABLED = !!(
@@ -33,6 +26,13 @@ const FIREBASE_ENABLED = !!(
   FIREBASE_SERVICE_ACCOUNT_JSON ||
   (FIREBASE_CLIENT_EMAIL && FIREBASE_PRIVATE_KEY)
 );
+
+// Validate required environment variables
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  if (!FIREBASE_ENABLED) {
+    console.warn('⚠️  Database credentials not configured. Database features will be limited.');
+  }
+}
 
 if (FIREBASE_ENABLED) {
   try {

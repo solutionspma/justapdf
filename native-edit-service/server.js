@@ -4,7 +4,8 @@ import fs from "fs";
 import path from "path";
 import { createRequire } from "module";
 import { Pdfcpu } from "pdfcpu-wasm";
-import { validateTextPresence } from "./pdfium/validate.js";
+import { runPdfiumEdit } from "./pdfium/edit.js";
+import { extractPageText, renderPagePng, validateTextPresence } from "./pdfium/validate.js";
 
 const require = createRequire(import.meta.url);
 const wasmPath = require.resolve("pdfcpu-wasm/pdfcpu.wasm");
@@ -24,7 +25,7 @@ app.use(express.json({ limit: "50mb" }));
 app.get("/health", (_req, res) => {
   const defaultWasmPath = path.resolve("pdfium/pdfium.wasm");
   const wasmPath = process.env.PDFIUM_WASM_PATH || defaultWasmPath;
-  const engine = process.env.NATIVE_EDIT_ENGINE || "rewrite";
+  const engine = process.env.NATIVE_EDIT_ENGINE || "pdfium";
   res.json({
     ok: true,
     engine,
@@ -35,6 +36,79 @@ app.get("/health", (_req, res) => {
       validationEnabled: process.env.NATIVE_EDIT_VALIDATE_PDFIUM === "true"
     }
   });
+});
+
+app.post("/native-validate", async (req, res) => {
+  try {
+    const { pdfBase64, pageIndex = 0, originalText } = req.body || {};
+    if (!pdfBase64 || !originalText) {
+      res.status(400).json({ ok: false, error: "Invalid payload" });
+      return;
+    }
+    const bytes = Uint8Array.from(Buffer.from(pdfBase64, "base64"));
+    const validation = await validateTextPresence({
+      bytes,
+      pageIndex: Number(pageIndex),
+      originalText
+    });
+    if (!validation.ok) {
+      res.status(422).json({ ok: false, error: validation.reason });
+      return;
+    }
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error?.message || "Validation failed." });
+  }
+});
+
+app.post("/native-extract", async (req, res) => {
+  try {
+    const { pdfBase64, pageIndex = 0 } = req.body || {};
+    if (!pdfBase64) {
+      res.status(400).json({ ok: false, error: "Invalid payload" });
+      return;
+    }
+    const bytes = Uint8Array.from(Buffer.from(pdfBase64, "base64"));
+    const result = await extractPageText({
+      bytes,
+      pageIndex: Number(pageIndex)
+    });
+    if (!result.ok) {
+      res.status(500).json({ ok: false, error: result.reason });
+      return;
+    }
+    res.json({ ok: true, text: result.text });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error?.message || "Extract failed." });
+  }
+});
+
+app.post("/native-render", async (req, res) => {
+  try {
+    const { pdfBase64, pageIndex = 0, scale = 2 } = req.body || {};
+    if (!pdfBase64) {
+      res.status(400).json({ ok: false, error: "Invalid payload" });
+      return;
+    }
+    const bytes = Uint8Array.from(Buffer.from(pdfBase64, "base64"));
+    const result = await renderPagePng({
+      bytes,
+      pageIndex: Number(pageIndex),
+      scale: Number(scale) || 2
+    });
+    if (!result.ok) {
+      res.status(500).json({ ok: false, error: result.reason });
+      return;
+    }
+    res.json({
+      ok: true,
+      pngBase64: result.buffer.toString("base64"),
+      width: result.width,
+      height: result.height
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error?.message || "Render failed." });
+  }
 });
 
 app.post("/native-edit", async (req, res) => {
@@ -57,7 +131,7 @@ app.post("/native-edit", async (req, res) => {
     }
 
     const bytes = Uint8Array.from(Buffer.from(pdfBase64, "base64"));
-    const activeEngine = engine || process.env.NATIVE_EDIT_ENGINE || "rewrite";
+    const activeEngine = engine || process.env.NATIVE_EDIT_ENGINE || "pdfium";
     const shouldValidate = process.env.NATIVE_EDIT_VALIDATE_PDFIUM === "true";
     if (shouldValidate) {
       if (!pdfiumAvailable) {
@@ -75,10 +149,16 @@ app.post("/native-edit", async (req, res) => {
       }
     }
     if (activeEngine === "pdfium") {
-      res.status(501).json({
-        ok: false,
-        error: "PDFium WASM does not support operand-level rewrite. Use engine: 'rewrite'."
+      const outBytes = await runPdfiumEdit({
+        bytes,
+        pageIndex: Number(pageIndex),
+        bbox,
+        newText,
+        fontName,
+        fontSize,
+        color
       });
+      res.json({ ok: true, bytesBase64: Buffer.from(outBytes).toString("base64"), warnings: [] });
       return;
     }
 
@@ -118,6 +198,7 @@ app.post("/native-edit", async (req, res) => {
 });
 
 const port = process.env.PORT || 8787;
-app.listen(port, () => {
-  console.log(`Native edit service listening on ${port}`);
+const host = process.env.HOST || "0.0.0.0";
+app.listen(port, host, () => {
+  console.log(`Native edit service listening on ${host}:${port}`);
 });

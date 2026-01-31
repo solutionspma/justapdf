@@ -36,7 +36,8 @@ This uses `@hyzyla/pdfium` to confirm the text exists on the page.
 NATIVE_EDIT_ENGINE=pdfium
 ```
 
-When set to `rewrite`, the service performs operand-level rewrite via pdfcpu (no white-out).
+When set to `pdfium`, the service edits via PDFium (white-out + new text).
+When set to `rewrite`, the service performs operand-level rewrite via pdfcpu.
 Use `NATIVE_EDIT_VALIDATE_PDFIUM=true` to validate with PDFium before rewrite.
 
 ## API

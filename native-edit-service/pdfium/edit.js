@@ -4,6 +4,27 @@ import { init } from "@embedpdf/pdfium";
 
 let pdfiumInstancePromise = null;
 
+function getExports(pdfium) {
+  return pdfium.pdfium || pdfium.wasmExports || pdfium;
+}
+
+function getMalloc(pdfium) {
+  const exports = getExports(pdfium);
+  return exports.malloc || exports._malloc;
+}
+
+function getFree(pdfium) {
+  const exports = getExports(pdfium);
+  return exports.free || exports._free;
+}
+
+function getHeap(pdfium) {
+  const exports = getExports(pdfium);
+  return exports.HEAPU8 || pdfium.HEAPU8;
+}
+
+
+
 async function getPdfiumInstance() {
   if (!pdfiumInstancePromise) {
     pdfiumInstancePromise = (async () => {
@@ -22,8 +43,22 @@ async function getPdfiumInstance() {
 
 function allocateUtf16(pdfium, text) {
   const bytes = (text.length + 1) * 2;
-  const ptr = pdfium.wasmExports.malloc(bytes);
-  pdfium.stringToUTF16(text, ptr, bytes);
+  const malloc = getMalloc(pdfium);
+  if (!malloc) {
+    throw new Error("PDFium malloc export unavailable.");
+  }
+  const ptr = malloc(bytes);
+  const heap = getHeap(pdfium);
+  if (!heap) {
+    throw new Error("PDFium heap unavailable.");
+  }
+  for (let i = 0; i < text.length; i += 1) {
+    const code = text.charCodeAt(i);
+    heap[ptr + i * 2] = code & 0xff;
+    heap[ptr + i * 2 + 1] = (code >> 8) & 0xff;
+  }
+  heap[ptr + text.length * 2] = 0;
+  heap[ptr + text.length * 2 + 1] = 0;
   return ptr;
 }
 
@@ -49,10 +84,17 @@ function writeFileFromPdfium(pdfium, documentHandle) {
     throw new Error("PDFium save failed.");
   }
   const size = pdfium.PDFiumExt_GetFileWriterSize(writer);
-  const bufferPtr = pdfium.wasmExports.malloc(size);
+  const malloc = getMalloc(pdfium);
+  const free = getFree(pdfium);
+  const heap = getHeap(pdfium);
+  if (!malloc || !free || !heap) {
+    pdfium.PDFiumExt_CloseFileWriter(writer);
+    throw new Error("PDFium memory exports unavailable.");
+  }
+  const bufferPtr = malloc(size);
   pdfium.PDFiumExt_GetFileWriterData(writer, bufferPtr, size);
-  const bytes = new Uint8Array(pdfium.pdfium.HEAPU8.subarray(bufferPtr, bufferPtr + size));
-  pdfium.wasmExports.free(bufferPtr);
+  const bytes = new Uint8Array(heap.subarray(bufferPtr, bufferPtr + size));
+  free(bufferPtr);
   pdfium.PDFiumExt_CloseFileWriter(writer);
   return bytes;
 }
@@ -74,19 +116,25 @@ export async function runPdfiumEdit({
   }
 
   const pdfium = await getPdfiumInstance();
-  const dataPtr = pdfium.wasmExports.malloc(bytes.length);
-  pdfium.pdfium.HEAPU8.set(bytes, dataPtr);
+  const malloc = getMalloc(pdfium);
+  const free = getFree(pdfium);
+  const heap = getHeap(pdfium);
+  if (!malloc || !free || !heap) {
+    throw new Error("PDFium memory exports unavailable.");
+  }
+  const dataPtr = malloc(bytes.length);
+  heap.set(bytes, dataPtr);
 
   const doc = pdfium.FPDF_LoadMemDocument(dataPtr, bytes.length, "");
   if (!doc) {
-    pdfium.wasmExports.free(dataPtr);
+    free(dataPtr);
     throw new Error("PDFium failed to load document.");
   }
 
   const page = pdfium.FPDF_LoadPage(doc, pageIndex);
   if (!page) {
     pdfium.FPDF_CloseDocument(doc);
-    pdfium.wasmExports.free(dataPtr);
+    free(dataPtr);
     throw new Error("PDFium failed to load page.");
   }
 
@@ -100,11 +148,11 @@ export async function runPdfiumEdit({
   const textObj = pdfium.FPDFPageObj_NewTextObj(doc, fontName || "Helvetica", size);
   const textPtr = allocateUtf16(pdfium, newText);
   const setOk = pdfium.FPDFText_SetText(textObj, textPtr);
-  pdfium.wasmExports.free(textPtr);
+  free(textPtr);
   if (!setOk) {
     pdfium.FPDF_ClosePage(page);
     pdfium.FPDF_CloseDocument(doc);
-    pdfium.wasmExports.free(dataPtr);
+    free(dataPtr);
     throw new Error("PDFium failed to set text.");
   }
 
@@ -117,7 +165,7 @@ export async function runPdfiumEdit({
 
   pdfium.FPDF_ClosePage(page);
   pdfium.FPDF_CloseDocument(doc);
-  pdfium.wasmExports.free(dataPtr);
+  free(dataPtr);
 
   return outBytes;
 }

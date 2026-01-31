@@ -38,6 +38,10 @@ import marketingRoutes from './routes/marketing.js';
 import seoRoutes from './routes/seo.js';
 import cmsRoutes from './routes/cms.js';
 import adsRoutes from './routes/ads.js';
+import nativeEditRoutes from './routes/nativeEdit.js';
+import nativeValidateRoutes from './routes/nativeValidate.js';
+import nativeExtractRoutes from './routes/nativeExtract.js';
+import nativeRenderRoutes from './routes/nativeRender.js';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler.js';
@@ -47,6 +51,7 @@ import { ensureSupraAdmin } from './services/supraAdmin.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MIDDLEWARE
@@ -108,6 +113,19 @@ app.use('/api/seo', authMiddleware, seoRoutes);
 app.use('/api/cms', authMiddleware, cmsRoutes);
 app.use('/api/ads', authMiddleware, adsRoutes);
 
+const allowPublicNativeEdit = process.env.NATIVE_EDIT_PUBLIC === 'true';
+if (allowPublicNativeEdit) {
+  app.use('/api/native-edit', nativeEditRoutes);
+  app.use('/api/native-validate', nativeValidateRoutes);
+  app.use('/api/native-extract', nativeExtractRoutes);
+  app.use('/api/native-render', nativeRenderRoutes);
+} else {
+  app.use('/api/native-edit', authMiddleware, nativeEditRoutes);
+  app.use('/api/native-validate', authMiddleware, nativeValidateRoutes);
+  app.use('/api/native-extract', authMiddleware, nativeExtractRoutes);
+  app.use('/api/native-render', authMiddleware, nativeRenderRoutes);
+}
+
 // Admin routes (requires root_master_admin role)
 app.use('/api/admin', authMiddleware, adminRoutes);
 
@@ -167,7 +185,7 @@ app.use(errorHandler);
 // SERVER START
 // ═══════════════════════════════════════════════════════════════════════════════
 
-app.listen(PORT, () => {
+app.listen(PORT, HOST, () => {
   console.log(`
   ╔═══════════════════════════════════════════════════════════════════════════════╗
   ║                                                                               ║
@@ -178,7 +196,7 @@ app.listen(PORT, () => {
   ║   ██║ ╚═╝ ██║╚██████╔╝██████╔╝    ██║     ██████╔╝██║                        ║
   ║   ╚═╝     ╚═╝ ╚═════╝ ╚═════╝     ╚═╝     ╚═════╝ ╚═╝                        ║
   ║                                                                               ║
-  ║   🚀 Server running on http://localhost:${PORT}                                ║
+  ║   🚀 Server running on http://${HOST}:${PORT}                                  ║
   ║   📄 Part of Pitch Modular Spaces                                            ║
   ║   🔐 Supra Admin Email: ${SUPRA_ADMIN_EMAIL}
   ║                                                                               ║
