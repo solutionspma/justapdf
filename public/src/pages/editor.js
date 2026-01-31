@@ -611,9 +611,6 @@ export function mountEditor() {
     if (!selection.text || !selection.text.trim()) {
       return 'Selected text is empty or non-text glyphs.';
     }
-    if (!selection.fontName) {
-      return 'Font mapping unavailable for this selection.';
-    }
     if (/[\uFFFD\u0000]/.test(selection.text)) {
       return 'Glyph mapping failed (unknown characters).';
     }
