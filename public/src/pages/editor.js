@@ -535,6 +535,33 @@ export function mountEditor() {
     }
   }
 
+  function refreshToolPanelAction() {
+    if (!toolPanelAction) return;
+    const tool = toolIndex.get(selectedToolId);
+    if (!tool) {
+      toolPanelAction.disabled = true;
+      return;
+    }
+    const requiresUpload = tool.requiresUpload && !currentDocId && tool.id !== 'upload_pdf';
+    const requiresSelection = tool.requiresSelection && !activeSelection &&
+      !(tool.id === 'edit_text' && !requiresEditTextSelection(textEditMode));
+
+    let actionEnabled = true;
+    if (tool.id === 'upload_pdf') {
+      actionEnabled = !!currentUser;
+    } else if (tool.id === 'export_pdf') {
+      actionEnabled = !!currentDocId;
+    } else if (requiresUpload) {
+      actionEnabled = false;
+    } else if (tool.requiresSelection && !activeSelection && requiresSelection) {
+      actionEnabled = false;
+    } else if (tool.id === 'edit_text' && !activeSelection) {
+      actionEnabled = true;
+    }
+
+    toolPanelAction.disabled = !actionEnabled;
+  }
+
   async function setPdfBytes(bytes, { pushHistory = true } = {}) {
     if (!bytes) return;
     const nextBytes = bytes instanceof Uint8Array
@@ -548,6 +575,7 @@ export function mountEditor() {
     }
     await renderPdf(currentPdfBytes);
     updateUndoRedo();
+    refreshToolPanelAction();
   }
 
   async function undoAction() {
@@ -740,8 +768,10 @@ export function mountEditor() {
     });
 
     editor.addEventListener('keydown', (event) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+      if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+        event.preventDefault();
         toolPanelAction?.click();
+        return;
       }
       if (event.key === 'Escape') {
         removeInlineEditor();
@@ -976,6 +1006,7 @@ export function mountEditor() {
         }
       }
     });
+    refreshToolPanelAction();
   }
 
   function openToolPanel(tool) {
@@ -1029,6 +1060,7 @@ export function mountEditor() {
     toolPanelAction.textContent = actionLabel;
     toolPanelAction.disabled = !actionEnabled;
     renderToolInputs(tool);
+    updateUndoRedo();
   }
 
   toolPanelClose.addEventListener('click', () => {
@@ -2710,6 +2742,12 @@ export function mountEditor() {
         input.addEventListener('input', () => {
           if (textEditMode === 'overlay') {
             updateTextOverlay(activeSelection, input.value);
+          }
+        });
+        input.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
+            event.preventDefault();
+            toolPanelAction?.click();
           }
         });
       }
