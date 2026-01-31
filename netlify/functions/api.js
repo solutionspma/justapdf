@@ -38,6 +38,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+import { getAllOperations } from '../../backend/services/operationRegistry.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'mod-pdf-jwt-secret-change-in-production';
 const SUPRA_ADMIN_EMAIL = 'justapdf@pitchmarketing.agency';
@@ -55,6 +56,39 @@ app.get('/api/env', (req, res) => {
     INTERNAL_ADMIN_UID: process.env.INTERNAL_ADMIN_UID || ''
   });
 });
+
+// Public operations catalog
+app.get('/api/registry/operations', (req, res) => {
+  res.json({ operations: getAllOperations() });
+});
+
+// Native edit proxy (public)
+const nativeProxy = async (req, res, path) => {
+  const nativeEditUrl = process.env.NATIVE_EDIT_URL;
+  if (!nativeEditUrl) {
+    return res.status(503).json({ ok: false, error: 'Native edit service not configured.' });
+  }
+  try {
+    const target = `${nativeEditUrl.replace(/\/$/, '')}${path}`;
+    const response = await fetch(target, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body || {})
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return res.status(response.status).json({ ok: false, error: data.error || 'Native request failed.' });
+    }
+    return res.json(data);
+  } catch (error) {
+    return res.status(500).json({ ok: false, error: error?.message || 'Native request failed.' });
+  }
+};
+
+app.post('/api/native-edit', (req, res) => nativeProxy(req, res, '/native-edit'));
+app.post('/api/native-validate', (req, res) => nativeProxy(req, res, '/native-validate'));
+app.post('/api/native-extract', (req, res) => nativeProxy(req, res, '/native-extract'));
+app.post('/api/native-render', (req, res) => nativeProxy(req, res, '/native-render'));
 
 // Role permissions
 const PERMISSIONS = {
