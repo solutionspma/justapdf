@@ -1083,6 +1083,10 @@ button.doc-row:hover {
   z-index: 50;
 }
 
+.modal-backdrop[hidden] {
+  display: none;
+}
+
 .modal-card {
   width: min(900px, 92vw);
   max-height: 90vh;
