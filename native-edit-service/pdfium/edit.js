@@ -145,10 +145,27 @@ export async function runPdfiumEdit({
   pdfium.FPDFPageObj_SetFillColor(rect, 255, 255, 255, 255);
   pdfium.FPDFPage_InsertObject(page, rect);
 
-  const textObj = pdfium.FPDFPageObj_NewTextObj(doc, fontName || "Helvetica", size);
+  let textObj = pdfium.FPDFPageObj_NewTextObj(doc, fontName || "Helvetica", size);
+  if (!textObj && fontName) {
+    textObj = pdfium.FPDFPageObj_NewTextObj(doc, "Helvetica", size);
+  }
+  if (!textObj) {
+    pdfium.FPDF_ClosePage(page);
+    pdfium.FPDF_CloseDocument(doc);
+    free(dataPtr);
+    throw new Error("PDFium failed to create text object.");
+  }
   const textPtr = allocateUtf16(pdfium, newText);
-  const setOk = pdfium.FPDFText_SetText(textObj, textPtr);
+  let setOk = pdfium.FPDFText_SetText(textObj, textPtr);
   free(textPtr);
+  if (!setOk && fontName) {
+    textObj = pdfium.FPDFPageObj_NewTextObj(doc, "Helvetica", size);
+    if (textObj) {
+      const fallbackPtr = allocateUtf16(pdfium, newText);
+      setOk = pdfium.FPDFText_SetText(textObj, fallbackPtr);
+      free(fallbackPtr);
+    }
+  }
   if (!setOk) {
     pdfium.FPDF_ClosePage(page);
     pdfium.FPDF_CloseDocument(doc);

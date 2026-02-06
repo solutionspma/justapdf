@@ -611,9 +611,14 @@ export function mountEditor() {
     if (!selection.text || !selection.text.trim()) {
       return 'Selected text is empty or non-text glyphs.';
     }
-    if (/[\uFFFD\u0000]/.test(selection.text)) {
-      return 'Glyph mapping failed (unknown characters).';
-    }
+    return null;
+  }
+
+  function resolveEditFontName(selection) {
+    if (!selection?.fontName) return null;
+    const name = String(selection.fontName || '');
+    const allowed = new Set(['Helvetica', 'TimesRoman', 'Courier']);
+    if (allowed.has(name)) return name;
     return null;
   }
 
@@ -2169,6 +2174,7 @@ export function mountEditor() {
           if (blockReason) {
             throw new Error(blockReason);
           }
+          const resolvedFontName = resolveEditFontName(selection);
           const result = await runner({
             bytes: currentPdfBytes,
             selection,
@@ -2176,12 +2182,16 @@ export function mountEditor() {
             bbox: selection ? toPdfBox(payload.pageIndex, selection) : null,
             originalText: selection?.text,
             newText: payload.text,
-            fontName: selection?.fontName,
+            fontName: resolvedFontName,
             font: payload.font,
             size: payload.size,
             color: payload.color
           });
-          return result?.bytes || result;
+          const nextBytes = result?.bytes || result;
+          if (!(nextBytes instanceof Uint8Array) && !(nextBytes instanceof ArrayBuffer)) {
+            throw new Error(result?.reason || result?.error || 'Native edit failed.');
+          }
+          return nextBytes;
         };
         const runOcr = async () => {
           const runner = getOcrTextEditRunner();
@@ -2256,6 +2266,7 @@ export function mountEditor() {
             emitAction('action_commit', { toolId, status: 'blocked' });
             return;
           }
+          const resolvedFontName = resolveEditFontName(selection);
           setState('running_operation', 'Running native edit...');
           try {
             const result = await runner({
@@ -2265,14 +2276,14 @@ export function mountEditor() {
               bbox: toPdfBox(payload.pageIndex, selection),
               originalText: selection.text,
               newText: payload.text,
-              fontName: selection.fontName,
+              fontName: resolvedFontName,
               font: payload.font,
               size: payload.size,
               color: payload.color
             });
             const nextBytes = result?.bytes || result;
-            if (!nextBytes) {
-              throw new Error('Native edit failed.');
+            if (!(nextBytes instanceof Uint8Array) && !(nextBytes instanceof ArrayBuffer)) {
+              throw new Error(result?.reason || result?.error || 'Native edit failed.');
             }
             await setPdfBytes(nextBytes, { pushHistory: true });
             setState('ready', 'Text updated (native).');

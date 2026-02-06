@@ -31,13 +31,8 @@ function updateHeaderAuthState(user) {
 
 window.updateHeaderAuthState = updateHeaderAuthState;
 window.JUSTAPDF_NATIVE_TEXT_EDIT = async (payload) => {
-  try {
-    const module = await import('/tools/runNativeServerEdit.js');
-    return module.runNativeServerEdit(payload);
-  } catch (error) {
-    const module = await import('/tools/runNativeTextEdit.js');
-    return module.runNativeTextEdit(payload);
-  }
+  const module = await import('/tools/runNativeServerEdit.js');
+  return module.runNativeServerEdit(payload);
 };
 window.JUSTAPDF_OCR_TEXT_EDIT = async (payload) => {
   const module = await import('/tools/runOcrRebuild.js');
