@@ -1,8 +1,10 @@
 import express from "express";
 import cors from "cors";
 import fs from "fs";
+import os from "os";
 import path from "path";
 import { createRequire } from "module";
+import { spawn } from "child_process";
 import { Pdfcpu } from "pdfcpu-wasm";
 import { runPdfiumEdit } from "./pdfium/edit.js";
 import { extractPageText, renderPagePng, validateTextPresence } from "./pdfium/validate.js";
@@ -22,10 +24,70 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 
+async function runGlyphEdit({ bytes, pageIndex, originalText, newText, match = "exact" }) {
+  const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "glyph-edit-"));
+  const inputPath = path.join(tempDir, "input.pdf");
+  const outputPath = path.join(tempDir, "output.pdf");
+  const scriptPath = path.resolve("glyph_edit.py");
+  try {
+    await fs.promises.writeFile(inputPath, Buffer.from(bytes));
+    const runOnce = (mode) => new Promise((resolve, reject) => {
+      const pythonBin = process.env.PYTHON_BIN || "python3";
+      const args = [
+        scriptPath,
+        "--input",
+        inputPath,
+        "--output",
+        outputPath,
+        "--page",
+        String(Number(pageIndex) || 0),
+        "--original",
+        originalText,
+        "--new",
+        newText,
+        "--match",
+        mode
+      ];
+      const proc = spawn(pythonBin, args, { stdio: ["ignore", "pipe", "pipe"] });
+      let stdout = "";
+      let stderr = "";
+      proc.stdout.on("data", (chunk) => {
+        stdout += chunk.toString();
+      });
+      proc.stderr.on("data", (chunk) => {
+        stderr += chunk.toString();
+      });
+      proc.on("error", reject);
+      proc.on("close", (code) => {
+        if (code !== 0) {
+          reject(new Error(stderr || stdout || "Glyph edit failed."));
+          return;
+        }
+        resolve(stdout);
+      });
+    });
+
+    let result = await runOnce(match);
+    let info = JSON.parse(String(result || "{}"));
+    if (!info.ok && info.error === "No matching operands" && match !== "contains") {
+      result = await runOnce("contains");
+      info = JSON.parse(String(result || "{}"));
+    }
+
+    if (!info.ok) {
+      throw new Error(info.error || "Glyph edit failed.");
+    }
+    const outBytes = await fs.promises.readFile(outputPath);
+    return { bytes: new Uint8Array(outBytes), meta: info };
+  } finally {
+    await fs.promises.rm(tempDir, { recursive: true, force: true });
+  }
+}
+
 app.get("/health", (_req, res) => {
   const defaultWasmPath = path.resolve("pdfium/pdfium.wasm");
   const wasmPath = process.env.PDFIUM_WASM_PATH || defaultWasmPath;
-  const engine = process.env.NATIVE_EDIT_ENGINE || "pdfium";
+  const engine = process.env.NATIVE_EDIT_ENGINE || "glyph";
   res.json({
     ok: true,
     engine,
@@ -125,13 +187,12 @@ app.post("/native-edit", async (req, res) => {
       color
     } = req.body || {};
 
-    if (!pdfBase64 || !bbox || !newText || !originalText) {
+    const bytes = Uint8Array.from(Buffer.from(pdfBase64, "base64"));
+    const activeEngine = engine || process.env.NATIVE_EDIT_ENGINE || "glyph";
+    if (!pdfBase64 || !newText || !originalText || (activeEngine !== "glyph" && !bbox)) {
       res.status(400).json({ ok: false, error: "Invalid payload" });
       return;
     }
-
-    const bytes = Uint8Array.from(Buffer.from(pdfBase64, "base64"));
-    const activeEngine = engine || process.env.NATIVE_EDIT_ENGINE || "pdfium";
     const shouldValidate = process.env.NATIVE_EDIT_VALIDATE_PDFIUM === "true";
     if (shouldValidate) {
       if (!pdfiumAvailable) {
@@ -148,6 +209,23 @@ app.post("/native-edit", async (req, res) => {
         return;
       }
     }
+    if (activeEngine === "glyph") {
+      const result = await runGlyphEdit({
+        bytes,
+        pageIndex: Number(pageIndex),
+        originalText,
+        newText,
+        match: "exact"
+      });
+      res.json({
+        ok: true,
+        bytesBase64: Buffer.from(result.bytes).toString("base64"),
+        warnings: [],
+        meta: result.meta
+      });
+      return;
+    }
+
     if (activeEngine === "pdfium") {
       const outBytes = await runPdfiumEdit({
         bytes,

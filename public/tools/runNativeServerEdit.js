@@ -40,7 +40,7 @@ export async function runNativeServerEdit(payload) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       pdfBase64: toBase64(pdfBytes),
-      engine: payload.engine || apiConfig.nativeEditEngine || "pdfium",
+      engine: payload.engine || apiConfig.nativeEditEngine || "glyph",
       pageIndex: payload.pageIndex ?? 0,
       bbox: payload.bbox,
       originalText: payload.originalText,

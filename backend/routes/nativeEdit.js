@@ -17,7 +17,7 @@ router.post('/', async (req, res) => {
   try {
     const payload = {
       ...req.body,
-      engine: req.body?.engine || process.env.NATIVE_EDIT_ENGINE || 'pdfium'
+      engine: req.body?.engine || process.env.NATIVE_EDIT_ENGINE || 'glyph'
     };
 
     const response = await fetch(buildNativeEditUrl(nativeEditUrl), {
