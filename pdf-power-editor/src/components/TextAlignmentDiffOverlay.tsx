@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { pdfjs } from 'react-pdf'
-import { X, Eye, EyeSlash, ArrowsOutSimple, ArrowsInSimple, Warning } from '@phosphor-icons/react'
+import { X, Eye, EyeSlash, ArrowsOutSimple, ArrowsInSimple, Warning, ArrowSquareOut } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
@@ -9,10 +9,17 @@ import { Badge } from '@/components/ui/badge'
 import { Slider } from '@/components/ui/slider'
 import type { PDFDocument } from '@/lib/types'
 
+export interface AlignmentUpdate {
+  elementId: string
+  x: number
+  y: number
+}
+
 interface TextAlignmentDiffOverlayProps {
   document: PDFDocument
   currentPageIndex: number
   onClose: () => void
+  onApplyAlignment?: (updates: AlignmentUpdate[]) => void
 }
 
 interface TextPosition {
@@ -23,6 +30,7 @@ interface TextPosition {
   height: number
   fontSize: number
   id: string
+  elementId?: string
 }
 
 interface MismatchInfo {
@@ -37,7 +45,8 @@ interface MismatchInfo {
 export function TextAlignmentDiffOverlay({ 
   document: doc, 
   currentPageIndex, 
-  onClose
+  onClose,
+  onApplyAlignment
 }: TextAlignmentDiffOverlayProps) {
   const [pdfTextPositions, setPdfTextPositions] = useState<TextPosition[]>([])
   const [extractedElements, setExtractedElements] = useState<TextPosition[]>([])
@@ -122,7 +131,8 @@ export function TextAlignmentDiffOverlay({
         width: el.width,
         height: el.height,
         fontSize: el.data.fontSize || 12,
-        id: `ext-${index}`
+        id: `ext-${index}`,
+        elementId: el.id
       }))
 
     setExtractedElements(extracted)
@@ -211,6 +221,19 @@ export function TextAlignmentDiffOverlay({
   const mediumSeverityCount = mismatches.filter(m => m.severity === 'medium').length
   const lowSeverityCount = mismatches.filter(m => m.severity === 'low').length
 
+  const alignableMismatches = mismatches.filter(m => m.extractedText && m.extractedText.elementId)
+  const alignmentUpdates: AlignmentUpdate[] = alignableMismatches.map(m => ({
+    elementId: m.extractedText!.elementId!,
+    x: m.pdfText.x,
+    y: m.pdfText.y
+  }))
+
+  const handleAlignAll = () => {
+    if (alignmentUpdates.length === 0 || !onApplyAlignment) return
+    onApplyAlignment(alignmentUpdates)
+    onClose()
+  }
+
   return (
     <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm">
       <div className="h-full flex flex-col">
@@ -228,6 +251,20 @@ export function TextAlignmentDiffOverlay({
           </div>
           
           <div className="flex items-center gap-3">
+            {onApplyAlignment && alignmentUpdates.length > 0 && (
+              <>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleAlignAll}
+                  className="gap-2"
+                >
+                  <ArrowSquareOut className="h-4 w-4" />
+                  Align All & Save ({alignmentUpdates.length})
+                </Button>
+                <Separator orientation="vertical" className="h-6" />
+              </>
+            )}
             <Button
               variant={showDiffOverlay ? 'default' : 'outline'}
               size="sm"
@@ -585,6 +622,11 @@ export function TextAlignmentDiffOverlay({
                 <strong>Visual Diff Legend:</strong> Red/Orange/Yellow overlays highlight misaligned text. 
                 Connecting lines show the offset between PDF (blue) and extracted (red) text positions. 
                 Click any highlighted element for detailed mismatch information.
+                {alignmentUpdates.length > 0 && (
+                  <span className="block mt-2 font-medium">
+                    Use <strong>Align All & Save</strong> to move all misaligned extracted text to match PDF positions and save to the canvas for editing.
+                  </span>
+                )}
               </AlertDescription>
             </Alert>
           </div>

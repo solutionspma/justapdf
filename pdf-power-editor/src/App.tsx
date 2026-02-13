@@ -10,7 +10,7 @@ import { SearchDialog } from '@/components/SearchDialog'
 import { SignatureVerificationPanel } from '@/components/SignatureVerificationPanel'
 import { PageTemplatesDialog } from '@/components/PageTemplatesDialog'
 import { AlignmentComparisonOverlay } from '@/components/AlignmentComparisonOverlay'
-import { TextAlignmentDiffOverlay } from '@/components/TextAlignmentDiffOverlay'
+import { TextAlignmentDiffOverlay, type AlignmentUpdate } from '@/components/TextAlignmentDiffOverlay'
 import { AlignmentGuideOverlay } from '@/components/AlignmentGuideOverlay'
 import { BaselineOffsetDialog } from '@/components/BaselineOffsetDialog'
 import { GridSettingsDialog } from '@/components/GridSettingsDialog'
@@ -416,6 +416,40 @@ function App() {
       })
       saveToHistory(newDocs)
       return newDocs
+    })
+  }
+
+  const handleApplyAlignment = (updates: AlignmentUpdate[]) => {
+    if (!currentDoc || updates.length === 0) return
+
+    const updateMap = new Map(updates.map(u => [u.elementId, { x: u.x, y: u.y }]))
+
+    setDocuments((currentDocs) => {
+      const newDocs = (currentDocs || []).map(doc => {
+        if (doc.id !== currentDocId) return doc
+
+        return {
+          ...doc,
+          pages: doc.pages.map((page, i) => {
+            if (i !== currentPageIndex) return page
+
+            return {
+              ...page,
+              elements: page.elements.map(el => {
+                const pos = updateMap.get(el.id)
+                if (!pos) return el
+                return { ...el, x: pos.x, y: pos.y }
+              })
+            }
+          })
+        }
+      })
+      saveToHistory(newDocs)
+      return newDocs
+    })
+
+    toast.success(`✓ Aligned ${updates.length} text element${updates.length === 1 ? '' : 's'} to PDF positions`, {
+      description: 'Changes saved to canvas. You can continue editing.'
     })
   }
 
@@ -860,6 +894,7 @@ function App() {
           document={currentDoc}
           currentPageIndex={currentPageIndex}
           onClose={() => setShowAlignmentDiff(false)}
+          onApplyAlignment={handleApplyAlignment}
         />
       )}
 
