@@ -52,6 +52,12 @@ function handleLinkClick(event) {
   const link = event.target.closest('a[data-link]');
   if (!link) return;
 
+  // Editor is the React PDF Power Editor - full page load required
+  if (link.getAttribute('href') === '/editor') {
+    window.location.href = '/editor';
+    return;
+  }
+
   event.preventDefault();
   history.pushState(null, '', link.href);
   render(location.pathname);

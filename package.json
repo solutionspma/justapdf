@@ -9,6 +9,7 @@
     "dev": "nodemon backend/server.js",
     "dev:netlify": "netlify dev",
     "build": "echo 'Static frontend - no build required'",
+    "build:editor": "cd pdf-power-editor && npm install && npm run build && mkdir -p ../public/editor && cp -r dist/* ../public/editor/",
     "test": "jest",
     "lint": "eslint .",
     "deploy": "netlify deploy --prod"

@@ -42,6 +42,7 @@ import nativeEditRoutes from './routes/nativeEdit.js';
 import nativeValidateRoutes from './routes/nativeValidate.js';
 import nativeExtractRoutes from './routes/nativeExtract.js';
 import nativeRenderRoutes from './routes/nativeRender.js';
+import nativeOperandsRoutes from './routes/nativeOperands.js';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler.js';
@@ -91,7 +92,7 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// Static files
+// Static files (includes built PDF Power Editor at /editor/)
 app.use(express.static(path.join(__dirname, '../public')));
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -119,11 +120,13 @@ if (allowPublicNativeEdit) {
   app.use('/api/native-validate', nativeValidateRoutes);
   app.use('/api/native-extract', nativeExtractRoutes);
   app.use('/api/native-render', nativeRenderRoutes);
+  app.use('/api/native-operands', nativeOperandsRoutes);
 } else {
   app.use('/api/native-edit', authMiddleware, nativeEditRoutes);
   app.use('/api/native-validate', authMiddleware, nativeValidateRoutes);
   app.use('/api/native-extract', authMiddleware, nativeExtractRoutes);
   app.use('/api/native-render', authMiddleware, nativeRenderRoutes);
+  app.use('/api/native-operands', authMiddleware, nativeOperandsRoutes);
 }
 
 // Admin routes (requires root_master_admin role)

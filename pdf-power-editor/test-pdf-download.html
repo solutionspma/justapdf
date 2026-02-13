@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Test PDF</title>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        button {
+            background: #4F46E5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #4338CA;
+        }
+        button:active {
+            transform: translateY(1px);
+        }
+        .info {
+            margin-top: 30px;
+            padding: 20px;
+            background: #EEF2FF;
+            border-left: 4px solid #4F46E5;
+            border-radius: 4px;
+        }
+        .info h3 {
+            margin-top: 0;
+            color: #4F46E5;
+        }
+        .info ul {
+            margin: 10px 0;
+            padding-left: 20px;
+            color: #666;
+        }
+        .info li {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📄 Test PDF Generator</h1>
+        <p>Generate a test PDF document with various text elements to verify text extraction alignment in PDFlex.</p>
+        
+        <button onclick="generateAndDownloadPDF()">Generate & Download Test PDF</button>
+        
+        <div class="info">
+            <h3>📋 Test Document Contents</h3>
+            <ul>
+                <li><strong>Title:</strong> "Text Extraction Alignment Test"</li>
+                <li><strong>Paragraphs:</strong> Multiple paragraphs with different formatting</li>
+                <li><strong>Font Sizes:</strong> 8pt, 10pt, 12pt, 14pt, 16pt, 18pt, 20pt, 24pt</li>
+                <li><strong>Alignment:</strong> Corner markers and center text</li>
+                <li><strong>Lists:</strong> Numbered and bulleted lists</li>
+                <li><strong>Purpose:</strong> Verify that extracted text aligns perfectly with original PDF text</li>
+            </ul>
+            
+            <h3>🔍 How to Use</h3>
+            <ul>
+                <li>1. Click "Generate & Download Test PDF" button above</li>
+                <li>2. Open PDFlex app in your browser</li>
+                <li>3. Upload the downloaded PDF file</li>
+                <li>4. Click "Extract Text" button in the toolbar</li>
+                <li>5. Verify that extracted text overlays align perfectly with original text</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        async function generateAndDownloadPDF() {
+            const { PDFDocument, rgb, StandardFonts } = PDFLib;
+            
+            // Create a new PDF document
+            const pdfDoc = await PDFDocument.create();
+            const page = pdfDoc.addPage([612, 792]); // US Letter size
+            const { width, height } = page.getSize();
+            
+            // Embed fonts
+            const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
+            const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+            const courier = await pdfDoc.embedFont(StandardFonts.Courier);
+            
+            let yPos = height - 50;
+            
+            // Title
+            page.drawText('Text Extraction Alignment Test', {
+                x: 50,
+                y: yPos,
+                size: 24,
+                font: helveticaBold,
+                color: rgb(0, 0, 0),
+            });
+            yPos -= 40;
+            
+            // Subtitle
+            page.drawText('Verify that extracted text aligns perfectly with this document', {
+                x: 50,
+                y: yPos,
+                size: 12,
+                font: helvetica,
+                color: rgb(0.3, 0.3, 0.3),
+            });
+            yPos -= 40;
+            
+            // Corner markers
+            page.drawText('TOP-LEFT', {
+                x: 20,
+                y: height - 20,
+                size: 8,
+                font: courier,
+                color: rgb(0.5, 0.5, 0.5),
+            });
+            
+            page.drawText('TOP-RIGHT', {
+                x: width - 70,
+                y: height - 20,
+                size: 8,
+                font: courier,
+                color: rgb(0.5, 0.5, 0.5),
+            });
+            
+            page.drawText('BOTTOM-LEFT', {
+                x: 20,
+                y: 20,
+                size: 8,
+                font: courier,
+                color: rgb(0.5, 0.5, 0.5),
+            });
+            
+            page.drawText('BOTTOM-RIGHT', {
+                x: width - 90,
+                y: 20,
+                size: 8,
+                font: courier,
+                color: rgb(0.5, 0.5, 0.5),
+            });
+            
+            // Section: Font Sizes
+            page.drawText('Font Size Examples:', {
+                x: 50,
+                y: yPos,
+                size: 14,
+                font: helveticaBold,
+                color: rgb(0, 0, 0),
+            });
+            yPos -= 30;
+            
+            const fontSizes = [8, 10, 12, 14, 16, 18, 20, 24];
+            for (const size of fontSizes) {
+                page.drawText(`This is ${size}pt text - The quick brown fox jumps over the lazy dog`, {
+                    x: 60,
+                    y: yPos,
+                    size: size,
+                    font: helvetica,
+                    color: rgb(0, 0, 0),
+                });
+                yPos -= size + 10;
+            }
+            
+            yPos -= 20;
+            
+            // Section: Paragraphs
+            page.drawText('Paragraph Examples:', {
+                x: 50,
+                y: yPos,
+                size: 14,
+                font: helveticaBold,
+                color: rgb(0, 0, 0),
+            });
+            yPos -= 25;
+            
+            const paragraphs = [
+                'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod',
+                'tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim',
+                'veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea',
+                'commodo consequat. Duis aute irure dolor in reprehenderit in voluptate.',
+            ];
+            
+            for (const line of paragraphs) {
+                page.drawText(line, {
+                    x: 60,
+                    y: yPos,
+                    size: 11,
+                    font: helvetica,
+                    color: rgb(0, 0, 0),
+                });
+                yPos -= 16;
+            }
+            
+            yPos -= 20;
+            
+            // Section: Lists
+            page.drawText('List Examples:', {
+                x: 50,
+                y: yPos,
+                size: 14,
+                font: helveticaBold,
+                color: rgb(0, 0, 0),
+            });
+            yPos -= 25;
+            
+            const listItems = [
+                '1. First item in the numbered list',
+                '2. Second item with more text',
+                '3. Third item to test alignment',
+                '• Bullet point item one',
+                '• Bullet point item two',
+                '• Bullet point item three',
+            ];
+            
+            for (const item of listItems) {
+                page.drawText(item, {
+                    x: 60,
+                    y: yPos,
+                    size: 11,
+                    font: helvetica,
+                    color: rgb(0, 0, 0),
+                });
+                yPos -= 18;
+            }
+            
+            yPos -= 20;
+            
+            // Center text
+            const centerText = 'CENTERED TEXT';
+            const textWidth = helveticaBold.widthOfTextAtSize(centerText, 16);
+            page.drawText(centerText, {
+                x: (width - textWidth) / 2,
+                y: yPos,
+                size: 16,
+                font: helveticaBold,
+                color: rgb(0, 0, 0),
+            });
+            yPos -= 30;
+            
+            // Different styles
+            page.drawText('Bold Text Example', {
+                x: 60,
+                y: yPos,
+                size: 12,
+                font: helveticaBold,
+                color: rgb(0, 0, 0),
+            });
+            yPos -= 20;
+            
+            page.drawText('Regular Text Example', {
+                x: 60,
+                y: yPos,
+                size: 12,
+                font: helvetica,
+                color: rgb(0, 0, 0),
+            });
+            yPos -= 20;
+            
+            page.drawText('Monospace Text Example (Code)', {
+                x: 60,
+                y: yPos,
+                size: 11,
+                font: courier,
+                color: rgb(0, 0, 0),
+            });
+            
+            // Footer
+            page.drawText('Generated by PDFlex Test PDF Generator', {
+                x: 50,
+                y: 40,
+                size: 9,
+                font: helvetica,
+                color: rgb(0.5, 0.5, 0.5),
+            });
+            
+            // Save the PDF
+            const pdfBytes = await pdfDoc.save();
+            
+            // Create a blob and download
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'text-extraction-test.pdf';
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            alert('✅ Test PDF downloaded successfully!\n\nNow upload this PDF to PDFlex and click "Extract Text" to verify alignment.');
+        }
+    </script>
+</body>
+</html>

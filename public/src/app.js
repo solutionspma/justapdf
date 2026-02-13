@@ -10,6 +10,7 @@ import { initNavControls } from './ui/navControls.js';
 const routes = {
   '/': { render: Home },
   '/editor': { render: Editor, mount: mountEditor },
+  '/editor/': { render: Editor, mount: mountEditor },
   '/pricing': { render: Pricing },
   '/account': { render: Account, mount: mountAccount },
   '/login': { render: Login, mount: mountLogin },
