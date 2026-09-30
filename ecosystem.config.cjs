@@ -1,7 +1,7 @@
 module.exports = {
   apps: [{
     name: 'justapdf',
-    script: 'backend/server.js',
+    script: 'backend/start.js',
     cwd: __dirname,
     instances: 1,
     exec_mode: 'fork',

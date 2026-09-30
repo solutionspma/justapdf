@@ -1,0 +1,6 @@
+import { startServer } from './server.js';
+
+startServer().catch((error) => {
+  console.error(`Startup failed: ${error.message}`);
+  process.exitCode = 1;
+});
