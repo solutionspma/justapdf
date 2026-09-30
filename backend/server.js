@@ -14,12 +14,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
-import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
-// Load environment variables
-dotenv.config({ path: './config/.env' });
+import { validateEnvironment } from './config/env.js';
+import { checkDatabaseHealth, closeDatabase } from './database/connection.js';
 
 // ES Module dirname workaround
 const __filename = fileURLToPath(import.meta.url);
@@ -51,7 +49,7 @@ import { SUPRA_ADMIN_EMAIL } from './config/security.js';
 import { ensureSupraAdmin } from './services/supraAdmin.js';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = Number(process.env.PORT || 3000);
 const HOST = process.env.HOST || '0.0.0.0';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -72,9 +70,13 @@ app.use(helmet({
 }));
 
 // CORS
+const allowedOrigins = (process.env.CORS_ORIGIN || 'https://justapdf.com').split(',').map((origin) => origin.trim()).filter(Boolean);
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
-  credentials: true,
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('CORS origin not allowed'));
+  },
+  credentials: true
 }));
 
 // Compression
@@ -136,13 +138,22 @@ app.use('/api/admin', authMiddleware, adminRoutes);
 // HEALTH CHECK
 // ═══════════════════════════════════════════════════════════════════════════════
 
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'healthy',
+app.get('/api/health', async (_req, res) => {
+  const database = await checkDatabaseHealth();
+  const healthy = database.healthy || process.env.NODE_ENV !== 'production';
+  res.status(healthy ? 200 : 503).json({
+    status: healthy ? (database.healthy ? 'healthy' : 'degraded') : 'unhealthy',
     version: '1.0.0',
-    platform: 'Mod PDF',
-    ecosystem: 'Pitch Modular Spaces',
+    platform: 'JustaPDF',
+    database,
     timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/api/env', (_req, res) => {
+  res.json({
+    APP_URL: process.env.APP_URL || 'https://justapdf.com',
+    NATIVE_EDIT_ENGINE: process.env.NATIVE_EDIT_ENGINE || 'glyph'
   });
 });
 
@@ -188,7 +199,15 @@ app.use(errorHandler);
 // SERVER START
 // ═══════════════════════════════════════════════════════════════════════════════
 
-app.listen(PORT, HOST, () => {
+export async function startServer() {
+  validateEnvironment();
+  const database = await checkDatabaseHealth();
+  if (!database.healthy && process.env.NODE_ENV === 'production') {
+    throw new Error(`Database health check failed: ${database.error}`);
+  }
+  if (!database.healthy) console.warn(`⚠️  Database unavailable at startup: ${database.error}`);
+
+  const server = app.listen(PORT, HOST, () => {
   console.log(`
   ╔═══════════════════════════════════════════════════════════════════════════════╗
   ║                                                                               ║
@@ -206,11 +225,30 @@ app.listen(PORT, HOST, () => {
   ╚═══════════════════════════════════════════════════════════════════════════════╝
   `);
 
-  ensureSupraAdmin().then((result) => {
-    if (result?.created) {
-      console.log(`✅ Supra admin bootstrapped: ${SUPRA_ADMIN_EMAIL}`);
+    if (database.healthy) {
+      ensureSupraAdmin().then((result) => {
+        if (result?.created) console.log(`✅ Supra admin bootstrapped: ${SUPRA_ADMIN_EMAIL}`);
+      });
     }
   });
-});
+
+  const shutdown = async (signal) => {
+    console.log(`Received ${signal}; shutting down gracefully.`);
+    server.close(async () => {
+      await closeDatabase();
+      process.exit(0);
+    });
+  };
+  process.once('SIGTERM', () => shutdown('SIGTERM'));
+  process.once('SIGINT', () => shutdown('SIGINT'));
+  return server;
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  startServer().catch((error) => {
+    console.error(`Startup failed: ${error.message}`);
+    process.exitCode = 1;
+  });
+}
 
 export default app;

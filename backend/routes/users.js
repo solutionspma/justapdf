@@ -7,6 +7,8 @@
 
 import express from 'express';
 import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
+import { db } from '../database/connection.js';
 import { SUPRA_ADMIN_EMAIL } from '../config/security.js';
 
 const router = express.Router();
@@ -18,32 +20,9 @@ const router = express.Router();
 router.get('/me', async (req, res) => {
   try {
     const { userId } = req.user;
-    
-    const user = {
-      id: userId,
-      email: req.user.email,
-      firstName: 'John',
-      lastName: 'Doe',
-      avatar: null,
-      role: req.user.role,
-      organization: {
-        id: req.user.orgId,
-        name: 'Acme Corp',
-        plan: 'pro'
-      },
-      permissions: req.user.permissions,
-      preferences: {
-        theme: 'dark',
-        language: 'en',
-        timezone: 'America/New_York',
-        emailNotifications: true,
-        twoFactorEnabled: false
-      },
-      createdAt: new Date().toISOString(),
-      lastLoginAt: new Date().toISOString()
-    };
-    
-    res.json({ success: true, user });
+    const user = await db.findOne('users', { id: userId });
+    if (!user) return res.status(404).json({ success: false, error: 'User not found' });
+    return res.json({ success: true, user: { id: user.id, email: user.email, firstName: user.first_name, lastName: user.last_name, role: user.role, orgId: user.organization_id, permissions: user.permissions, preferences: { theme: user.theme || 'dark' }, createdAt: user.created_at, lastLoginAt: user.last_login_at } });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch user profile' });
   }
@@ -51,21 +30,9 @@ router.get('/me', async (req, res) => {
 
 router.put('/me', async (req, res) => {
   try {
-    const { firstName, lastName, avatar, phone, jobTitle, department } = req.body;
-    
-    res.json({
-      success: true,
-      message: 'Profile updated',
-      user: {
-        firstName,
-        lastName,
-        avatar,
-        phone,
-        jobTitle,
-        department,
-        updatedAt: new Date().toISOString()
-      }
-    });
+    const { firstName, lastName, phone, theme } = req.body;
+    const user = await db.update('users', { id: req.user.userId }, { ...(firstName !== undefined ? { first_name: firstName } : {}), ...(lastName !== undefined ? { last_name: lastName } : {}), ...(phone !== undefined ? { phone } : {}), ...(theme !== undefined ? { theme } : {}), updated_at: new Date().toISOString() });
+    return res.json({ success: true, message: 'Profile updated', user: { id: user.id, firstName: user.first_name, lastName: user.last_name, phone: user.phone, theme: user.theme, updatedAt: user.updated_at } });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to update profile' });
   }
@@ -75,15 +42,17 @@ router.put('/me/password', async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
     
-    // Validate password strength
-    if (newPassword.length < 8) {
+    if (!newPassword || newPassword.length < 8) {
       return res.status(400).json({
         success: false,
         error: 'Password must be at least 8 characters'
       });
     }
     
-    res.json({ success: true, message: 'Password updated' });
+    const user = await db.findOne('users', { id: req.user.userId });
+    if (!user || !user.password_hash || !(await bcrypt.compare(currentPassword || '', user.password_hash))) return res.status(401).json({ success: false, error: 'Current password is incorrect' });
+    await db.update('users', { id: req.user.userId }, { password_hash: await bcrypt.hash(newPassword, 12), updated_at: new Date().toISOString() });
+    return res.json({ success: true, message: 'Password updated' });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to update password' });
   }

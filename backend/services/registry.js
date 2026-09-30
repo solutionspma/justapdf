@@ -6,7 +6,7 @@
  */
 
 import crypto from 'crypto';
-import { db, supabase, firebase } from '../database/connection.js';
+import { db, query } from '../database/connection.js';
 
 const VALID_TYPES = [
   'tool',
@@ -78,31 +78,18 @@ export async function getRegistryEntry(key) {
 }
 
 export async function listRegistryEntries({ type, active, search, limit = 100, offset = 0 } = {}) {
-  if (search && !firebase.enabled) {
-    const query = supabase
-      .from('registry')
-      .select('*')
-      .ilike('name', `%${search}%`)
-      .range(offset, offset + limit - 1);
-
-    if (type) query.eq('type', type);
-    if (typeof active === 'boolean') query.eq('active', active);
-
-    const { data, error } = await query;
-    if (error) throw error;
-    return data || [];
-  }
-
   const conditions = {};
   if (type) conditions.type = type;
   if (typeof active === 'boolean') conditions.active = active;
-  const entries = await db.findMany('registry', conditions, { limit, offset, orderBy: 'created_at:desc' });
-
-  if (search) {
-    const needle = search.toLowerCase();
-    return entries.filter((entry) => entry.name?.toLowerCase().includes(needle));
-  }
-
-  return entries;
+  const values = [];
+  const clauses = [];
+  if (type) { values.push(type); clauses.push(`type = $${values.length}`); }
+  if (typeof active === 'boolean') { values.push(active); clauses.push(`active = $${values.length}`); }
+  if (search) { values.push(`%${search}%`); clauses.push(`(name ILIKE $${values.length} OR key ILIKE $${values.length})`); }
+  values.push(Math.max(0, Number(limit) || 100), Math.max(0, Number(offset) || 0));
+  const result = await query(
+    `SELECT * FROM registry${clauses.length ? ` WHERE ${clauses.join(' AND ')}` : ''} ORDER BY created_at DESC LIMIT $${values.length - 1} OFFSET $${values.length}`,
+    values
+  );
+  return result.rows;
 }
-

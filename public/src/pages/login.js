@@ -1,5 +1,7 @@
 import Header from '../components/Header.js';
 import Footer from '../components/Footer.js';
+import { apiFetch } from '../api.js';
+import { setSession } from '../auth.js';
 
 export default function Login() {
   return `
@@ -34,9 +36,9 @@ export function mountLogin() {
       return;
     }
     status.textContent = 'Signing in...';
-    const { signInWithEmailAndPassword, auth } = await import('../firebase.js');
     try {
-      await signInWithEmailAndPassword(auth, email.value, password.value);
+      const result = await apiFetch('/auth/login', { method: 'POST', body: JSON.stringify({ email: email.value, password: password.value }) });
+      setSession(result);
       status.textContent = 'Signed in. Redirecting...';
       window.history.pushState(null, '', '/editor');
       window.dispatchEvent(new PopStateEvent('popstate'));

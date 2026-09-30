@@ -4,4 +4,4 @@
 !package.json
 !package-lock.json
 !Dockerfile
-!fly.toml
+!config/env-template

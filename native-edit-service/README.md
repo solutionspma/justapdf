@@ -1,6 +1,6 @@
 # JustaPDF Native Edit Service
 
-Minimal HTTP service for native text edits using pdfcpu-wasm.
+Owner-controlled sidecar for conservative native PDF text edits.
 
 ## Run
 
@@ -20,7 +20,7 @@ Use the download script to fetch the WASM build:
 
 You can also set `PDFIUM_WASM_PATH` to point at a custom location.
 
-## PDFium validation (recommended)
+## PDFium validation (optional)
 
 Use this to validate text presence before edit:
 
@@ -36,9 +36,14 @@ This uses `@hyzyla/pdfium` to confirm the text exists on the page.
 NATIVE_EDIT_ENGINE=pdfium
 ```
 
-When set to `pdfium`, the service edits via PDFium (white-out + new text).
-When set to `rewrite`, the service performs operand-level rewrite via pdfcpu.
-Use `NATIVE_EDIT_VALIDATE_PDFIUM=true` to validate with PDFium before rewrite.
+The default `glyph` engine directly rewrites a traced text-showing operand in
+the source content stream. It returns `capability: native-direct` only after
+the output is re-opened by the PDF parser. Ambiguous encodings, Form XObject
+source mapping, and unsupported fonts fail conservatively.
+
+`pdfium` and `rewrite` are visual overlay compatibility paths. They are
+disabled unless `NATIVE_EDIT_ALLOW_OVERLAY=true` and return
+`capability: overlay-only`; they are never reported as native editing.
 
 ## API
 

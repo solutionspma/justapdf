@@ -6,10 +6,9 @@
  */
 
 import jwt from 'jsonwebtoken';
-import admin from 'firebase-admin';
+import { getJwtSecret } from '../config/env.js';
 import { SUPRA_ADMIN_EMAIL, SUPRA_ADMIN_ROLE, isSupraAdminEmail } from '../config/security.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'mod-pdf-jwt-secret-change-in-production';
 const INTERNAL_ADMIN_UID = process.env.INTERNAL_ADMIN_UID;
 // Role hierarchy
 const ROLE_HIERARCHY = {
@@ -153,12 +152,7 @@ export const authenticate = async (req, res, next) => {
     
     const token = parts[1];
     
-    // Check if it's an API key (starts with mpdf_)
-    if (token.startsWith('mpdf_')) {
-      return handleApiKeyAuth(token, req, res, next);
-    }
-    
-    const { decoded, source } = await resolveAuthToken(token);
+    const decoded = jwt.verify(token, getJwtSecret());
     const email = decoded.email || null;
     const userId = decoded.userId || decoded.uid;
     const role = decoded.role || 'user';
@@ -176,7 +170,7 @@ export const authenticate = async (req, res, next) => {
       isSupraAdmin,
       isGenesis: isSupraAdmin,
       isInternalAdmin,
-      authSource: source
+      authSource: 'jwt'
     };
     
     next();
@@ -205,34 +199,6 @@ export const authenticate = async (req, res, next) => {
 };
 
 /**
- * Handle API key authentication
- */
-async function handleApiKeyAuth(apiKey, req, res, next) {
-  try {
-    // In production, validate API key against database
-    // For now, extract info from key format
-    
-    // Mock API key validation
-    req.user = {
-      userId: 'api-user',
-      email: 'api@example.com',
-      role: 'user',
-      orgId: 'api-org',
-      plan: 'business',
-      permissions: PERMISSIONS.user,
-      isApiKey: true
-    };
-    
-    next();
-  } catch (error) {
-    res.status(401).json({
-      success: false,
-      error: 'Invalid API key'
-    });
-  }
-}
-
-/**
  * Optional authentication - continues even without token
  */
 export const optionalAuth = async (req, res, next) => {
@@ -251,7 +217,7 @@ export const optionalAuth = async (req, res, next) => {
       return next();
     }
     
-    const { decoded, source } = await resolveAuthToken(token);
+    const decoded = jwt.verify(token, getJwtSecret());
     const email = decoded.email || null;
     const userId = decoded.userId || decoded.uid;
     const role = decoded.role || 'user';
@@ -268,7 +234,7 @@ export const optionalAuth = async (req, res, next) => {
       isSupraAdmin,
       isGenesis: isSupraAdmin,
       isInternalAdmin,
-      authSource: source
+      authSource: 'jwt'
     };
     
     next();
@@ -277,20 +243,6 @@ export const optionalAuth = async (req, res, next) => {
     next();
   }
 };
-
-async function resolveAuthToken(token) {
-  if (admin.apps?.length) {
-    try {
-      const decoded = await admin.auth().verifyIdToken(token);
-      return { decoded, source: 'firebase' };
-    } catch (error) {
-      // Fall through to JWT if Firebase verification fails
-    }
-  }
-
-  const decoded = jwt.verify(token, JWT_SECRET);
-  return { decoded, source: 'jwt' };
-}
 
 /**
  * Require specific role(s)

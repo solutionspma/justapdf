@@ -1,173 +1,26 @@
-PROJECT: JustaPDF — Engine + Editor Build (Firebase)
+# JustaPDF PDF engine directive
 
-ROLE
-You are building a real PDF processing platform, not a static website.
-Prioritize functionality, correctness, and extensibility over polish.
+The editor must treat a PDF as a structured object graph, not as a Word document or a screenshot.
 
-STACK (LOCKED)
-- Frontend: Native JavaScript / TypeScript (ES Modules)
-- Auth: Firebase Auth
-- Database: Firestore
-- Storage: Firebase Storage
-- Compute: Firebase Cloud Functions
-- Hosting: Netlify (frontend only)
+## Editing modes
 
-DO NOT introduce frameworks, additional HTML files, or alternate backends.
+1. Native direct editing mutates the traced source `Tj`, `TJ`, `'`, or `"` operation in its page/content stream while retaining surrounding operators and resources.
+2. Native reconstruction removes only the traced text-showing operation and inserts a replacement using a compatible existing or embedded font/resource.
+3. Overlay editing is a labeled compatibility fallback only. It must never be reported as native editing and must never be the default native engine.
+4. Scanned pages are image-only and require an explicitly requested OCR operation.
 
---------------------------------
-STORAGE (FIREBASE)
---------------------------------
-Use ONE Firebase Storage bucket with structured paths:
+## Source mapping
 
-/uploads/
-  /users/{userId}/
-    /original/
-    /working/
-    /exports/
+Selection data must map to page, content stream or Form XObject, operator index/range, text object state, font resource, encoded string/TJ array, and coordinates. pdf.js rendering text items are useful for hit testing but are not authoritative source identity.
 
-/uploads/
-  /orgs/{orgId}/
-    /original/
-    /working/
-    /exports/
+## Font and stream requirements
 
-Original files are immutable. Never overwrite originals.
+Handle literal and hexadecimal strings, Flate streams, multiple page content streams, text matrices, CTMs, spacing/rise/rendering state, simple and composite fonts, CMaps, ToUnicode maps, subset fonts, Form XObjects, and incremental-update PDFs conservatively. If glyph encoding or source identity cannot be established, return a structured unsupported capability instead of changing the wrong object.
 
---------------------------------
-DATA MODEL (FIRESTORE)
---------------------------------
-Collections:
-- users
-- orgs
-- memberships
-- documents
-- operations
+## Credit rules
 
-documents schema:
-{
-  id,
-  ownerType: "user" | "org",
-  ownerId,
-  filename,
-  mimeType: "application/pdf",
-  storageOriginal,
-  storageWorking,
-  storageExport,
-  pageCount,
-  status: "uploaded" | "processing" | "ready" | "error",
-  availableOperations: string[],
-  operationsRun: [],
-  originalHash,
-  createdAt
-}
+Preview, open, upload, and download are free. A paid credit is reserved for an actual successful PDF operation. Failed operations must be refunded in the same database transaction.
 
-operations schema:
-{
-  id,
-  label,
-  category: "core" | "professional" | "print",
-  creditCost: number | "dynamic",
-  refundable: boolean,
-  previewable: boolean,
-  requires: string[],
-  produces: string[]
-}
+## Current known limitations
 
---------------------------------
-EDITOR (STATE-DRIVEN)
---------------------------------
-Editor states:
-- empty
-- uploading
-- document_loaded
-- processing
-- ready
-- error
-
-UI RULES:
-- No document → no tools
-- Upload must be drag & drop + click
-- Show progress during upload
-- Lock UI during processing
-- Enable operations only when document is ready
-
---------------------------------
-UPLOAD FLOW (MANDATORY ORDER)
---------------------------------
-1. User uploads PDF
-2. Store in /original/
-3. Create Firestore document record
-4. Call Cloud Function parsePdf
-5. Update pageCount + status=ready
-6. Unlock editor tools
-
---------------------------------
-CLOUD FUNCTIONS (PHASE 1)
---------------------------------
-Implement PDF processing ONLY in Cloud Functions.
-
-Functions to implement:
-- parsePdf(documentId)
-- splitPages(documentId, pages[])
-- mergeDocuments(documentIds[])
-
-Functions must:
-- Read from storage
-- Write results to /exports/
-- Update Firestore document state
-- Log operations
-- Return download URLs
-
---------------------------------
-OPERATIONS (PHASE 1 ONLY)
---------------------------------
-- upload_pdf (0 credits)
-- view_pages (0 credits)
-- split_pages (1 credit per page)
-- merge_documents (1 credit per document)
-- download_pdf (0 credits)
-
-Do NOT implement OCR, text editing, redaction, or preflight yet.
-
---------------------------------
-MULTI-ACCOUNT SUPPORT
---------------------------------
-Support both:
-- Personal users
-- Organizations (law firms, print shops)
-
-Use memberships collection:
-{
-  userId,
-  orgId,
-  role: "admin" | "member"
-}
-
-Documents belong to exactly ONE owner (user or org).
-
---------------------------------
-ACCOUNT PAGE
---------------------------------
-Account page must display real data:
-- Uploaded documents
-- Operation history
-- Credit balance (stub acceptable)
-- Org memberships
-
---------------------------------
-PRICING PAGE
---------------------------------
-Pricing must reflect real operations from the operations collection.
-No hardcoded pricing text.
-Support:
-- Pay-as-you-go credits
-- Optional subscriptions (credit preload)
-- Professional packs (discount modifiers, not feature locks)
-
---------------------------------
-PRIORITY
---------------------------------
-Make the editor FUNCTIONAL.
-A working split/merge beats a fake “edit text” feature.
-
-DO NOT BUILD DEMOS OR PLACEHOLDERS THAT PRETEND TO WORK.
+The current operand editor is suitable for direct edits where a decoded source string is unambiguous. Composite-font decoding, precise width compensation, native reconstruction with embedded replacement fonts, nested Form XObject selection mapping, OCR, signed-PDF refusal, and broad fixture coverage require explicit validation before being advertised as complete.

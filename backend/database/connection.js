@@ -1,529 +1,249 @@
 /**
- * ═══════════════════════════════════════════════════════════════════════════════
- * MOD PDF - DATABASE CONNECTION
- * Supabase client and database utilities
- * ═══════════════════════════════════════════════════════════════════════════════
+ * JustaPDF PostgreSQL and owner-controlled storage authority.
+ *
+ * All server-side data access goes through this module. Identifiers are
+ * validated before interpolation and all values are sent as query parameters.
  */
 
-import { createClient } from '@supabase/supabase-js';
-import admin from 'firebase-admin';
+import crypto from 'node:crypto';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import dotenv from 'dotenv';
+import { Pool } from 'pg';
 
-// Environment variables
-const SUPABASE_URL = process.env.SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+dotenv.config({ path: process.env.ENV_FILE || '.env' });
+dotenv.config({ path: 'config/.env', override: false });
 
-const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID;
-const FIREBASE_CLIENT_EMAIL = process.env.FIREBASE_CLIENT_EMAIL;
-const FIREBASE_PRIVATE_KEY = process.env.FIREBASE_PRIVATE_KEY;
-const FIREBASE_STORAGE_BUCKET = process.env.FIREBASE_STORAGE_BUCKET;
-const FIREBASE_SERVICE_ACCOUNT_JSON = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+const DATABASE_URL = process.env.DATABASE_URL || process.env.YAHBASE_DATABASE_URL;
+const STORAGE_ROOT = path.resolve(process.env.STORAGE_ROOT || path.join(process.cwd(), 'var', 'storage'));
 
-let firestore = null;
-let firebaseBucket = null;
-const FIREBASE_ENABLED = !!(
-  FIREBASE_PROJECT_ID ||
-  FIREBASE_SERVICE_ACCOUNT_JSON ||
-  (FIREBASE_CLIENT_EMAIL && FIREBASE_PRIVATE_KEY)
-);
+export const pool = new Pool({
+  connectionString: DATABASE_URL,
+  max: Number(process.env.DB_POOL_MAX || 10),
+  idleTimeoutMillis: Number(process.env.DB_IDLE_TIMEOUT_MS || 30_000),
+  connectionTimeoutMillis: Number(process.env.DB_CONNECTION_TIMEOUT_MS || 5_000),
+  ssl: process.env.DATABASE_SSL === 'true' ? { rejectUnauthorized: process.env.DATABASE_SSL_REJECT_UNAUTHORIZED !== 'false' } : undefined
+});
 
-// Validate required environment variables
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  if (!FIREBASE_ENABLED) {
-    console.warn('⚠️  Database credentials not configured. Database features will be limited.');
-  }
+const IDENTIFIER = /^[a-z_][a-z0-9_]*$/;
+const TABLES = new Set([
+  'registry', 'users', 'user_profiles', 'organizations', 'credit_ledger', 'events', 'sessions',
+  'campaigns', 'ads', 'seo_keywords', 'content_nodes', 'documents', 'document_revisions',
+  'operation_jobs', 'billing_transactions', 'subscriptions', 'audit_logs', 'shares', 'folders'
+]);
+
+function assertIdentifier(value, label) {
+  if (!IDENTIFIER.test(value)) throw new Error(`Invalid ${label}: ${value}`);
+  return value;
 }
 
-if (FIREBASE_ENABLED) {
-  try {
-    const credential = FIREBASE_SERVICE_ACCOUNT_JSON
-      ? admin.credential.cert(JSON.parse(FIREBASE_SERVICE_ACCOUNT_JSON))
-      : (FIREBASE_CLIENT_EMAIL && FIREBASE_PRIVATE_KEY)
-        ? admin.credential.cert({
-            projectId: FIREBASE_PROJECT_ID,
-            clientEmail: FIREBASE_CLIENT_EMAIL,
-            privateKey: FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
-          })
-        : admin.credential.applicationDefault();
-
-    admin.initializeApp({
-      credential,
-      projectId: FIREBASE_PROJECT_ID,
-      storageBucket: FIREBASE_STORAGE_BUCKET
-    });
-
-    firestore = admin.firestore();
-    if (FIREBASE_STORAGE_BUCKET) {
-      firebaseBucket = admin.storage().bucket(FIREBASE_STORAGE_BUCKET);
-    }
-  } catch (error) {
-    console.warn('⚠️  Firebase initialization failed:', error.message);
-  }
+function assertTable(table) {
+  if (!TABLES.has(table)) throw new Error(`Unsupported database table: ${table}`);
+  return table;
 }
 
-// Create Supabase clients
-export const supabase = createClient(
-  SUPABASE_URL || 'https://placeholder.supabase.co',
-  SUPABASE_ANON_KEY || 'placeholder',
-  {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: false
-    }
-  }
-);
-
-// Admin client with service role key (for server-side operations)
-export const supabaseAdmin = SUPABASE_SERVICE_KEY
-  ? createClient(
-      SUPABASE_URL || 'https://placeholder.supabase.co',
-      SUPABASE_SERVICE_KEY,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
-  : supabase;
-
-export const firebase = {
-  enabled: FIREBASE_ENABLED && !!firestore,
-  firestore,
-  bucket: firebaseBucket
-};
-
-// Storage bucket names
-export const STORAGE_BUCKETS = {
-  CMS: 'cms-content',
-  STATIC_MEDIA: 'static-media',
-  DOCUMENTS: 'documents',
-  SIGNATURES: 'signatures',
-  AVATARS: 'avatars',
-  THUMBNAILS: 'thumbnails',
-  EXPORTS: 'exports'
-};
-
-/**
- * Initialize database tables and buckets
- */
-export async function initializeDatabase() {
-  try {
-    console.log('🔧 Initializing database...');
-    if (firebase.enabled) {
-      console.log('✅ Firebase initialized (no bucket provisioning required)');
-      return true;
-    }
-
-    // Create storage buckets if they don't exist
-    for (const [name, bucket] of Object.entries(STORAGE_BUCKETS)) {
-      try {
-        const { error } = await supabaseAdmin.storage.createBucket(bucket, {
-          public: bucket === 'static-media' || bucket === 'avatars',
-          fileSizeLimit: bucket === 'documents' ? 100 * 1024 * 1024 : 10 * 1024 * 1024 // 100MB for docs, 10MB others
-        });
-        
-        if (error && !error.message.includes('already exists')) {
-          console.warn(`⚠️  Could not create bucket ${bucket}:`, error.message);
-        }
-      } catch (e) {
-        // Bucket might already exist
-      }
-    }
-    
-    console.log('✅ Database initialized');
-    return true;
-  } catch (error) {
-    console.error('❌ Database initialization failed:', error);
-    return false;
-  }
+function assertColumns(columns) {
+  for (const column of columns) assertIdentifier(column, 'column');
 }
 
-/**
- * Database health check
- */
+function normalizeValue(value) {
+  return value === undefined ? null : value;
+}
+
+function whereClause(conditions = {}, startIndex = 1) {
+  const entries = Object.entries(conditions);
+  assertColumns(entries.map(([key]) => key));
+  return {
+    text: entries.length
+      ? ` WHERE ${entries.map(([key], index) => `"${key}" IS NOT DISTINCT FROM $${startIndex + index}`).join(' AND ')}`
+      : '',
+    values: entries.map(([, value]) => normalizeValue(value))
+  };
+}
+
+function selectClause(select = '*') {
+  if (select === '*') return '*';
+  const columns = String(select).split(',').map((column) => column.trim()).filter(Boolean);
+  assertColumns(columns);
+  return columns.map((column) => `"${column}"`).join(', ');
+}
+
+export async function query(text, values = [], client = pool) {
+  return client.query(text, values);
+}
+
 export async function checkDatabaseHealth() {
+  const startedAt = Date.now();
+  if (!DATABASE_URL) {
+    return { healthy: false, latency: Date.now() - startedAt, provider: 'postgresql', error: 'DATABASE_URL is not configured', timestamp: new Date().toISOString() };
+  }
   try {
-    const start = Date.now();
-    if (firebase.enabled) {
-      await firebase.firestore.collection('_health').limit(1).get();
-      const latency = Date.now() - start;
-      return {
-        healthy: true,
-        latency,
-        timestamp: new Date().toISOString(),
-        provider: 'firebase'
-      };
-    }
-
-    // Simple query to check connection
-    const { error } = await supabase.from('users').select('count').limit(1);
-    
-    const latency = Date.now() - start;
-    
-    if (error && !error.message.includes('does not exist')) {
-      return {
-        healthy: false,
-        latency,
-        error: error.message
-      };
-    }
-    
-    return {
-      healthy: true,
-      latency,
-      timestamp: new Date().toISOString()
-    };
+    await query('SELECT 1');
+    return { healthy: true, latency: Date.now() - startedAt, provider: 'postgresql', timestamp: new Date().toISOString() };
   } catch (error) {
-    return {
-      healthy: false,
-      error: error.message,
-      timestamp: new Date().toISOString()
-    };
+    return { healthy: false, latency: Date.now() - startedAt, provider: 'postgresql', error: error.message || error.code || error.name || 'database connection failed', timestamp: new Date().toISOString() };
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// DATABASE HELPERS
-// ═══════════════════════════════════════════════════════════════════════════════
+export async function initializeDatabase() {
+  const schemaUrl = new URL('./schema.sql', import.meta.url);
+  const schema = await fs.readFile(schemaUrl, 'utf8');
+  await query(schema);
+  return true;
+}
 
-/**
- * Generic CRUD operations
- */
 export const db = {
-  /**
-   * Find one record
-   */
-  async findOne(table, conditions, select = '*') {
-    if (firebase.enabled) {
-      let query = firebase.firestore.collection(table);
-      for (const [key, value] of Object.entries(conditions)) {
-        query = query.where(key, '==', value);
-      }
-      const snapshot = await query.limit(1).get();
-      if (snapshot.empty) return null;
-      const doc = snapshot.docs[0];
-      return { id: doc.id, ...doc.data() };
-    }
-
-    const query = supabase.from(table).select(select);
-    for (const [key, value] of Object.entries(conditions)) {
-      query.eq(key, value);
-    }
-    const { data, error } = await query.single();
-    if (error && error.code !== 'PGRST116') throw error;
-    return data;
+  async findOne(table, conditions = {}, select = '*') {
+    const safeTable = assertTable(table);
+    const where = whereClause(conditions);
+    const result = await query(`SELECT ${selectClause(select)} FROM "${safeTable}"${where.text} LIMIT 1`, where.values);
+    return result.rows[0] || null;
   },
-  
-  /**
-   * Find multiple records
-   */
+
   async findMany(table, conditions = {}, options = {}) {
-    const { select = '*', orderBy, limit, offset } = options;
-    if (firebase.enabled) {
-      let query = firebase.firestore.collection(table);
-      for (const [key, value] of Object.entries(conditions)) {
-        if (Array.isArray(value)) {
-          query = query.where(key, 'in', value.slice(0, 10));
-        } else {
-          query = query.where(key, '==', value);
-        }
-      }
-      if (orderBy) {
-        const [column, direction] = orderBy.split(':');
-        query = query.orderBy(column, direction === 'desc' ? 'desc' : 'asc');
-      }
-      if (offset) query = query.offset(offset);
-      if (limit) query = query.limit(limit);
-      const snapshot = await query.get();
-      return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    }
-
-    let query = supabase.from(table).select(select);
-    for (const [key, value] of Object.entries(conditions)) {
-      if (Array.isArray(value)) {
-        query = query.in(key, value);
-      } else {
-        query = query.eq(key, value);
-      }
-    }
+    const safeTable = assertTable(table);
+    const { select = '*', orderBy, limit = 100, offset = 0 } = options;
+    const where = whereClause(conditions);
+    let order = '';
     if (orderBy) {
-      const [column, direction] = orderBy.split(':');
-      query = query.order(column, { ascending: direction !== 'desc' });
+      const [column, direction = 'asc'] = String(orderBy).split(':');
+      assertIdentifier(column, 'order column');
+      order = ` ORDER BY "${column}" ${direction.toLowerCase() === 'desc' ? 'DESC' : 'ASC'}`;
     }
-    if (limit) query = query.limit(limit);
-    if (offset) query = query.range(offset, offset + (limit || 20) - 1);
-    const { data, error } = await query;
-    if (error) throw error;
-    return data || [];
+    const values = [...where.values, Math.max(0, Number(limit) || 100), Math.max(0, Number(offset) || 0)];
+    const result = await query(
+      `SELECT ${selectClause(select)} FROM "${safeTable}"${where.text}${order} LIMIT $${values.length - 1} OFFSET $${values.length}`,
+      values
+    );
+    return result.rows;
   },
-  
-  /**
-   * Create a record
-   */
-  async create(table, data) {
-    if (firebase.enabled) {
-      const id = data.id || admin.firestore().collection(table).doc().id;
-      const record = { ...data, id };
-      await firebase.firestore.collection(table).doc(id).set(record);
-      return record;
-    }
 
-    const { data: created, error } = await supabase
-      .from(table)
-      .insert(data)
-      .select()
-      .single();
-    if (error) throw error;
-    return created;
+  async create(table, data, client = pool) {
+    const safeTable = assertTable(table);
+    const entries = Object.entries(data);
+    assertColumns(entries.map(([key]) => key));
+    if (!entries.length) throw new Error('Cannot insert an empty record');
+    const columns = entries.map(([key]) => `"${key}"`).join(', ');
+    const values = entries.map(([, value]) => normalizeValue(value));
+    const placeholders = values.map((_, index) => `$${index + 1}`).join(', ');
+    const result = await query(`INSERT INTO "${safeTable}" (${columns}) VALUES (${placeholders}) RETURNING *`, values, client);
+    return result.rows[0];
   },
-  
-  /**
-   * Update a record
-   */
-  async update(table, conditions, data) {
-    if (firebase.enabled) {
-      if (conditions.id) {
-        await firebase.firestore.collection(table).doc(conditions.id).update(data);
-        const doc = await firebase.firestore.collection(table).doc(conditions.id).get();
-        return doc.exists ? { id: doc.id, ...doc.data() } : null;
-      }
 
-      let query = firebase.firestore.collection(table);
-      for (const [key, value] of Object.entries(conditions)) {
-        query = query.where(key, '==', value);
-      }
-      const snapshot = await query.limit(1).get();
-      if (snapshot.empty) return null;
-      const docRef = snapshot.docs[0].ref;
-      await docRef.update(data);
-      const updated = await docRef.get();
-      return { id: updated.id, ...updated.data() };
-    }
-
-    let query = supabase.from(table).update(data);
-    for (const [key, value] of Object.entries(conditions)) {
-      query = query.eq(key, value);
-    }
-    const { data: updated, error } = await query.select().single();
-    if (error) throw error;
-    return updated;
+  async update(table, conditions, data, client = pool) {
+    const safeTable = assertTable(table);
+    const updates = Object.entries(data);
+    assertColumns(updates.map(([key]) => key));
+    if (!updates.length) throw new Error('Cannot update an empty record');
+    const where = whereClause(conditions, updates.length + 1);
+    const values = [...updates.map(([, value]) => normalizeValue(value)), ...where.values];
+    const setClause = updates.map(([key], index) => `"${key}" = $${index + 1}`).join(', ');
+    const result = await query(`UPDATE "${safeTable}" SET ${setClause}${where.text} RETURNING *`, values, client);
+    return result.rows[0] || null;
   },
-  
-  /**
-   * Delete a record
-   */
-  async delete(table, conditions) {
-    if (firebase.enabled) {
-      if (conditions.id) {
-        await firebase.firestore.collection(table).doc(conditions.id).delete();
-        return true;
-      }
-      let query = firebase.firestore.collection(table);
-      for (const [key, value] of Object.entries(conditions)) {
-        query = query.where(key, '==', value);
-      }
-      const snapshot = await query.get();
-      const batch = firebase.firestore.batch();
-      snapshot.docs.forEach((doc) => batch.delete(doc.ref));
-      await batch.commit();
-      return true;
-    }
 
-    let query = supabase.from(table).delete();
-    for (const [key, value] of Object.entries(conditions)) {
-      query = query.eq(key, value);
-    }
-    const { error } = await query;
-    if (error) throw error;
-    return true;
+  async delete(table, conditions, client = pool) {
+    const safeTable = assertTable(table);
+    const where = whereClause(conditions);
+    const result = await query(`DELETE FROM "${safeTable}"${where.text}`, where.values, client);
+    return result.rowCount > 0;
   },
-  
-  /**
-   * Count records
-   */
+
   async count(table, conditions = {}) {
-    if (firebase.enabled) {
-      let query = firebase.firestore.collection(table);
-      for (const [key, value] of Object.entries(conditions)) {
-        query = query.where(key, '==', value);
-      }
-      const snapshot = await query.get();
-      return snapshot.size;
-    }
-
-    let query = supabase.from(table).select('*', { count: 'exact', head: true });
-    for (const [key, value] of Object.entries(conditions)) {
-      query = query.eq(key, value);
-    }
-    const { count, error } = await query;
-    if (error) throw error;
-    return count || 0;
+    const safeTable = assertTable(table);
+    const where = whereClause(conditions);
+    const result = await query(`SELECT COUNT(*)::int AS count FROM "${safeTable}"${where.text}`, where.values);
+    return result.rows[0]?.count || 0;
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// STORAGE HELPERS
-// ═══════════════════════════════════════════════════════════════════════════════
+function safeStoragePath(bucket, relativePath) {
+  assertIdentifier(bucket.replace(/-/g, '_'), 'storage bucket');
+  if (typeof relativePath !== 'string' || !relativePath || path.isAbsolute(relativePath)) {
+    throw new Error('Invalid storage path');
+  }
+  const bucketRoot = path.resolve(STORAGE_ROOT, bucket);
+  const candidate = path.resolve(bucketRoot, relativePath);
+  if (candidate !== bucketRoot && !candidate.startsWith(`${bucketRoot}${path.sep}`)) {
+    throw new Error('Storage path escapes storage root');
+  }
+  return { bucketRoot, candidate };
+}
 
 export const storage = {
-  /**
-   * Upload a file
-   */
-  async upload(bucket, path, file, options = {}) {
-    const { contentType, upsert = false } = options;
-    if (firebase.enabled) {
-      if (!firebase.bucket) throw new Error('Firebase storage bucket not configured');
-      const fileRef = firebase.bucket.file(path);
-      await fileRef.save(file, { contentType, resumable: false });
-      return { path };
-    }
+  root: STORAGE_ROOT,
 
-    const { data, error } = await supabaseAdmin.storage
-      .from(bucket)
-      .upload(path, file, {
-        contentType,
-        upsert
-      });
-    if (error) throw error;
-    return data;
-  },
-  
-  /**
-   * Download a file
-   */
-  async download(bucket, path) {
-    if (firebase.enabled) {
-      if (!firebase.bucket) throw new Error('Firebase storage bucket not configured');
-      const [data] = await firebase.bucket.file(path).download();
-      return data;
+  async upload(bucket, relativePath, file, { contentType, upsert = false } = {}) {
+    const { candidate } = safeStoragePath(bucket, relativePath);
+    if (!upsert) {
+      try { await fs.access(candidate); throw new Error('Storage object already exists'); } catch (error) {
+        if (error.message === 'Storage object already exists') throw error;
+      }
     }
-
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .download(path);
-    if (error) throw error;
-    return data;
+    await fs.mkdir(path.dirname(candidate), { recursive: true, mode: 0o750 });
+    await fs.writeFile(candidate, file, { mode: 0o640 });
+    return { bucket, path: relativePath, size: Buffer.byteLength(file), contentType: contentType || 'application/octet-stream' };
   },
-  
-  /**
-   * Get public URL
-   */
-  getPublicUrl(bucket, path) {
-    if (firebase.enabled) {
-      if (!firebase.bucket) return null;
-      return `https://storage.googleapis.com/${firebase.bucket.name}/${path}`;
-    }
 
-    const { data } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(path);
-    return data.publicUrl;
+  async download(bucket, relativePath) {
+    const { candidate } = safeStoragePath(bucket, relativePath);
+    return fs.readFile(candidate);
   },
-  
-  /**
-   * Create signed URL
-   */
-  async createSignedUrl(bucket, path, expiresIn = 3600) {
-    if (firebase.enabled) {
-      if (!firebase.bucket) throw new Error('Firebase storage bucket not configured');
-      const [url] = await firebase.bucket.file(path).getSignedUrl({
-        action: 'read',
-        expires: Date.now() + expiresIn * 1000
-      });
-      return url;
-    }
 
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .createSignedUrl(path, expiresIn);
-    if (error) throw error;
-    return data.signedUrl;
+  getPublicUrl() { return null; },
+
+  async createSignedUrl(bucket, relativePath, expiresIn = 3600) {
+    safeStoragePath(bucket, relativePath);
+    return `/api/storage/${encodeURIComponent(bucket)}/${encodeURIComponent(relativePath)}?expires=${Date.now() + expiresIn * 1000}`;
   },
-  
-  /**
-   * Delete a file
-   */
+
   async delete(bucket, paths) {
-    const pathArray = Array.isArray(paths) ? paths : [paths];
-    if (firebase.enabled) {
-      if (!firebase.bucket) throw new Error('Firebase storage bucket not configured');
-      await Promise.all(pathArray.map((path) => firebase.bucket.file(path).delete()));
-      return true;
-    }
-
-    const { error } = await supabaseAdmin.storage
-      .from(bucket)
-      .remove(pathArray);
-    if (error) throw error;
+    const list = Array.isArray(paths) ? paths : [paths];
+    await Promise.all(list.map(async (relativePath) => {
+      const { candidate } = safeStoragePath(bucket, relativePath);
+      await fs.rm(candidate, { force: true });
+    }));
     return true;
   },
-  
-  /**
-   * List files in a folder
-   */
-  async list(bucket, folder = '', options = {}) {
-    const { limit = 100, offset = 0 } = options;
-    if (firebase.enabled) {
-      if (!firebase.bucket) throw new Error('Firebase storage bucket not configured');
-      const [files] = await firebase.bucket.getFiles({ prefix: folder, maxResults: limit });
-      return files.map((file) => ({ name: file.name }));
-    }
 
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .list(folder, { limit, offset });
-    if (error) throw error;
-    return data || [];
+  async list(bucket, folder = '', { limit = 100, offset = 0 } = {}) {
+    const directory = folder ? safeStoragePath(bucket, folder).candidate : path.resolve(STORAGE_ROOT, bucket);
+    let names = [];
+    try { names = await fs.readdir(directory); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+    return names.slice(offset, offset + limit).map((name) => ({ name }));
   }
 };
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// TRANSACTION HELPERS
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Run operations in a transaction-like manner
- * Note: Supabase doesn't support true transactions via JS client,
- * this is a best-effort implementation
- */
-export async function transaction(operations) {
-  const results = [];
-  const rollbacks = [];
-  
+export async function transaction(work) {
+  const client = await pool.connect();
   try {
-    for (const op of operations) {
-      const result = await op.execute();
-      results.push(result);
-      
-      if (op.rollback) {
-        rollbacks.unshift(op.rollback);
-      }
+    await client.query('BEGIN');
+    if (typeof work === 'function') {
+      const result = await work(client);
+      await client.query('COMMIT');
+      return result;
     }
-    
+    const results = [];
+    for (const operation of work) results.push(await operation.execute(client));
+    await client.query('COMMIT');
     return { success: true, results };
   } catch (error) {
-    // Attempt rollback
-    for (const rollback of rollbacks) {
-      try {
-        await rollback();
-      } catch (rollbackError) {
-        console.error('Rollback failed:', rollbackError);
-      }
-    }
-    
+    await client.query('ROLLBACK');
     throw error;
+  } finally {
+    client.release();
   }
 }
 
-export default {
-  supabase,
-  supabaseAdmin,
-  firebase,
-  db,
-  storage,
-  transaction,
-  initializeDatabase,
-  checkDatabaseHealth,
-  STORAGE_BUCKETS
-};
+export function newStorageKey(userId, filename = 'document.pdf') {
+  const extension = path.extname(filename).toLowerCase() === '.pdf' ? '.pdf' : '.bin';
+  return `uploads/users/${userId}/${crypto.randomUUID()}${extension}`;
+}
+
+export const STORAGE_BUCKETS = Object.freeze({ DOCUMENTS: 'documents', EXPORTS: 'exports', THUMBNAILS: 'thumbnails', MEDIA: 'media' });
+
+export async function closeDatabase() {
+  await pool.end();
+}
+
+export default { pool, query, db, storage, transaction, initializeDatabase, checkDatabaseHealth, closeDatabase, newStorageKey, STORAGE_BUCKETS };

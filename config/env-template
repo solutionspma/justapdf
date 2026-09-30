@@ -1,86 +1,27 @@
-# ═══════════════════════════════════════════════════════════════════════════════
-# MOD PDF - SUPRA ADMIN CONFIGURATION
-# Part of Pitch Modular Spaces Ecosystem
-# ═══════════════════════════════════════════════════════════════════════════════
+# JustaPDF production environment
+NODE_ENV=production
+APP_URL=https://justapdf.com
+HOST=127.0.0.1
+PORT=3000
+CORS_ORIGIN=https://justapdf.com
 
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ SUPRA ADMIN (Immutable Root Access)                                         │
-# └─────────────────────────────────────────────────────────────────────────────┘
-SUPRA_ADMIN_EMAIL=justapdf@pitchmarketing.agency
-ROOT_EMAIL=justapdf@pitchmarketing.agency
-ROOT_PASSWORD=<SET_ON_GENESIS_REGISTRATION>
-JWT_SECRET=<GENERATE_RANDOM_64>
+# YAHBASE PostgreSQL connection. DATABASE_URL is canonical; the alias is
+# accepted for runtimes that expose the YAHBASE connection under that name.
+DATABASE_URL=postgresql://user:password@127.0.0.1:5432/justapdf
+DATABASE_SSL=false
+DB_POOL_MAX=10
+STORAGE_ROOT=/var/lib/justapdf/storage
 
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ DATABASE (Supabase)                                                         │
-# └─────────────────────────────────────────────────────────────────────────────┘
-SUPABASE_URL=<USER_PROVIDED>
-SUPABASE_ANON=<USER_PROVIDED>
-SUPABASE_SERVICE=<USER_PROVIDED>
+# Authentication and first-admin bootstrap. Generate a long random JWT_SECRET.
+JWT_SECRET=replace-with-a-long-random-secret
+SUPRA_ADMIN_EMAIL=admin@example.com
+ROOT_PASSWORD=replace-with-a-long-random-password
 
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ DATABASE (Firebase)                                                         │
-# └─────────────────────────────────────────────────────────────────────────────┘
-FIREBASE_PROJECT_ID=<USER_PROVIDED>
-FIREBASE_CLIENT_EMAIL=<USER_PROVIDED>
-FIREBASE_PRIVATE_KEY=<USER_PROVIDED>
-FIREBASE_SERVICE_ACCOUNT_JSON=<OPTIONAL_JSON_STRING>
-FIREBASE_STORAGE_BUCKET=<OPTIONAL_BUCKET>
-
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ PAYMENT PROCESSORS                                                          │
-# └─────────────────────────────────────────────────────────────────────────────┘
-# Stripe
-STRIPE_PUBLIC_KEY=<USER_PROVIDED>
-STRIPE_SECRET_KEY=<USER_PROVIDED>
-
-# PaymentCloud (Authorize.net) - Placeholder
-PAYCLOUD_MERCHANT_ID=<PLACEHOLDER>
-PAYCLOUD_API_KEY=<PLACEHOLDER>
-PAYCLOUD_SECRET=<PLACEHOLDER>
-
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ MODCELLULAR DIALER                                                          │
-# └─────────────────────────────────────────────────────────────────────────────┘
-DIALER_API_KEY=<MODCELLULAR_KEY>
-DIALER_SENDER_ID="ModCellular"
-
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ STORAGE BUCKETS                                                             │
-# └─────────────────────────────────────────────────────────────────────────────┘
-CMS_BUCKET="cms_uploads"
-STATIC_MEDIA_BUCKET="justapdf_static"
-DOCUMENT_BUCKET="justapdf_documents"
-SIGNATURE_BUCKET="justapdf_signatures"
-
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ BLOCKCHAIN / LEDGER (Document Tokenization)                                 │
-# └─────────────────────────────────────────────────────────────────────────────┘
-LEDGER_NETWORK=<ethereum|polygon|internal>
-LEDGER_RPC_URL=<USER_PROVIDED>
-LEDGER_WALLET_ADDRESS=<USER_PROVIDED>
-LEDGER_PRIVATE_KEY=<USER_PROVIDED>
-
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ AI SERVICES                                                                 │
-# └─────────────────────────────────────────────────────────────────────────────┘
-OPENAI_API_KEY=<USER_PROVIDED>
-AI_CONTRACT_MODEL="gpt-4"
-
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ NATIVE EDIT SERVICE                                                         │
-# └─────────────────────────────────────────────────────────────────────────────┘
-NATIVE_EDIT_URL=<USER_PROVIDED>
-NATIVE_EDIT_VALIDATE_PDFIUM=true
-NATIVE_EDIT_ENGINE=rewrite
-
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ WEB3 / SMART CONTRACTS                                                      │
-# └─────────────────────────────────────────────────────────────────────────────┘
-WEB3_PROVIDER_URL=<USER_PROVIDED>
-SMART_CONTRACT_ADDRESS=<USER_PROVIDED>
-
-# ┌─────────────────────────────────────────────────────────────────────────────┐
-# │ PEXELS API (Stock Photos)                                                   │
-# └─────────────────────────────────────────────────────────────────────────────┘
-PEXELS_API_KEY=<USER_PROVIDED>
+# Optional integrations
+OPENAI_API_KEY=
+AI_CONTRACT_MODEL=gpt-4o-mini
+STRIPE_PUBLIC_KEY=
+STRIPE_SECRET_KEY=
+NATIVE_EDIT_URL=http://127.0.0.1:8787
+NATIVE_EDIT_ENGINE=glyph
+NATIVE_EDIT_VALIDATE_PDFIUM=false

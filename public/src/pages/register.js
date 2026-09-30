@@ -1,5 +1,7 @@
 import Header from '../components/Header.js';
 import Footer from '../components/Footer.js';
+import { apiFetch } from '../api.js';
+import { setSession } from '../auth.js';
 
 export default function Register() {
   return `
@@ -34,14 +36,9 @@ export function mountRegister() {
       return;
     }
     status.textContent = 'Creating account...';
-    const { auth, createUserWithEmailAndPassword, doc, setDoc, db, serverTimestamp } = await import('../firebase.js');
     try {
-      const result = await createUserWithEmailAndPassword(auth, email.value, password.value);
-      await setDoc(doc(db, 'users', result.user.uid), {
-        id: result.user.uid,
-        email: result.user.email,
-        createdAt: serverTimestamp()
-      });
+      const result = await apiFetch('/auth/register', { method: 'POST', body: JSON.stringify({ email: email.value, password: password.value }) });
+      setSession(result);
       status.textContent = 'Account created. Redirecting...';
       window.history.pushState(null, '', '/editor');
       window.dispatchEvent(new PopStateEvent('popstate'));

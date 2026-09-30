@@ -1,5 +1,4 @@
 import { getTheme, applyTheme, listThemes, persistTheme } from '../engine/themes.js';
-import { auth } from '../firebase.js';
 
 export function initThemeControls() {
   const toggle = document.getElementById('theme-toggle');
@@ -12,7 +11,7 @@ export function initThemeControls() {
       const nextIndex = (themes.findIndex((t) => t.id === current) + 1) % themes.length;
       const next = themes[nextIndex].id;
       applyTheme(next);
-      await persistTheme(auth.currentUser?.uid, next);
+      await persistTheme(window.currentUser?.id, next);
       renderSelector(selector);
     });
   }
@@ -41,7 +40,7 @@ function renderSelector(container) {
     button.addEventListener('click', async () => {
       const themeId = button.dataset.theme;
       applyTheme(themeId);
-      await persistTheme(auth.currentUser?.uid, themeId);
+      await persistTheme(window.currentUser?.id, themeId);
       renderSelector(container);
     });
   });

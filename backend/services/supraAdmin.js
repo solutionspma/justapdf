@@ -6,12 +6,17 @@
  */
 
 import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 import { db } from '../database/connection.js';
 import { SUPRA_ADMIN_EMAIL, SUPRA_ADMIN_ROLE } from '../config/security.js';
 import { getAllPermissions } from '../config/permissions.js';
 
 export async function ensureSupraAdmin() {
   try {
+    if (!process.env.ROOT_PASSWORD) {
+      console.warn('⚠️  Supra admin bootstrap skipped: ROOT_PASSWORD is not configured.');
+      return { created: false, error: 'ROOT_PASSWORD is not configured' };
+    }
     const existing = await db.findOne('users', { email: SUPRA_ADMIN_EMAIL });
     if (existing) {
       return { created: false, user: existing };
@@ -20,6 +25,7 @@ export async function ensureSupraAdmin() {
     const user = {
       id: crypto.randomUUID(),
       email: SUPRA_ADMIN_EMAIL,
+      password_hash: process.env.ROOT_PASSWORD ? await bcrypt.hash(process.env.ROOT_PASSWORD, 12) : null,
       role: SUPRA_ADMIN_ROLE,
       permissions: getAllPermissions(),
       status: 'active',
@@ -45,4 +51,3 @@ export async function ensureSupraAdmin() {
     return { created: false, error: error.message };
   }
 }
-

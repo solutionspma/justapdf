@@ -212,11 +212,13 @@ class PDFContentParser:
                 if len(hex_content) % 2:
                     hex_content += '0'
                 decoded = bytes.fromhex(hex_content)
-                # Try UTF-16BE first (common in PDF), then Latin-1
-                try:
-                    return decoded.decode('utf-16be')
-                except:
-                    return decoded.decode('latin-1', errors='replace')
+                # UTF-16BE is authoritative only when the string carries a
+                # BOM. A bare hex string is normally encoded in the active
+                # simple/composite font encoding and must not be guessed as
+                # UTF-16 merely because its byte count is even.
+                if decoded.startswith(b'\xfe\xff'):
+                    return decoded[2:].decode('utf-16be')
+                return decoded.decode('latin-1', errors='replace')
         except Exception:
             pass
         
@@ -248,8 +250,15 @@ class PDFContentParser:
             return ''.join(result).encode('latin-1')
         
         elif original.startswith(b'<'):
-            # Hex string - encode as UTF-16BE
-            hex_content = text.encode('utf-16be').hex().upper()
+            # Preserve the original encoding family. Only BOM-marked strings
+            # are encoded as UTF-16BE; other hex strings remain byte strings
+            # because their glyph mapping belongs to the active PDF font.
+            original_hex = original[1:-1].replace(b' ', b'').replace(b'\n', b'').replace(b'\r', b'')
+            original_bytes = bytes.fromhex(original_hex.decode('ascii')) if original_hex else b''
+            encoded = text.encode('utf-16be') if original_bytes.startswith(b'\xfe\xff') else text.encode('latin-1', errors='strict')
+            if original_bytes.startswith(b'\xfe\xff'):
+                encoded = b'\xfe\xff' + encoded
+            hex_content = encoded.hex().upper()
             return f'<{hex_content}>'.encode('ascii')
         
         return original

@@ -1,28 +1,27 @@
 // THIS IS A STATIC VANILLA JS PROJECT — NO FRAMEWORKS OR BUNDLERS.
 import { render } from './app.js';
-import { auth, onAuthStateChanged, db, doc, getDoc } from './firebase.js';
-import { seedOperations } from './engine/operations.js';
+import { getCurrentUser, onAuthChange, signOut } from './auth.js';
 import { applyTheme, getTheme } from './engine/themes.js';
 
 function updateHeaderAuthState(user) {
   const signIn = document.querySelector('[data-auth="signin"]');
   const signUp = document.querySelector('[data-auth="signup"]');
-  const signOut = document.querySelector('[data-auth="signout"]');
+  const signOutButton = document.querySelector('[data-auth="signout"]');
   const account = document.querySelector('[data-auth="account"]');
 
   document.body.dataset.auth = user ? 'signed-in' : 'signed-out';
 
   if (signIn) signIn.hidden = !!user;
   if (signUp) signUp.hidden = !!user;
-  if (signOut) signOut.hidden = !user;
+  if (signOutButton) signOutButton.hidden = !user;
   if (account) {
     account.hidden = !user;
     account.textContent = user?.email ? `Signed in as ${user.email}` : 'Signed in';
   }
 
-  if (signOut) {
-    signOut.onclick = async () => {
-      await import('./firebase.js').then(({ signOut }) => signOut(auth));
+  if (signOutButton) {
+    signOutButton.onclick = async () => {
+      signOut();
       window.history.pushState(null, '', '/login');
       window.dispatchEvent(new PopStateEvent('popstate'));
     };
@@ -81,19 +80,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   render(location.pathname);
   updateHeaderHeight();
-  updateHeaderAuthState(window.currentUser || null);
+  updateHeaderAuthState(getCurrentUser());
 
-  onAuthStateChanged(auth, async (user) => {
+  onAuthChange(async (user) => {
     window.currentUser = user || null;
     updateHeaderAuthState(user);
     const currentPath = window.location.pathname;
 
     if (user) {
-      await seedOperations();
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      if (userDoc.exists() && userDoc.data().theme) {
-        applyTheme(userDoc.data().theme);
-      }
       if (['/login', '/register'].includes(currentPath)) {
         window.history.replaceState(null, '', '/editor');
         render('/editor');

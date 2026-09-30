@@ -24,7 +24,7 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 
-async function runGlyphEdit({ bytes, pageIndex, originalText, newText, match = "exact" }) {
+async function runGlyphEdit({ bytes, pageIndex, originalText, newText, operandIndex, match = "exact" }) {
   const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "glyph-edit-"));
   const inputPath = path.join(tempDir, "input.pdf");
   const outputPath = path.join(tempDir, "output.pdf");
@@ -41,13 +41,16 @@ async function runGlyphEdit({ bytes, pageIndex, originalText, newText, match = "
         outputPath,
         "--page",
         String(Number(pageIndex) || 0),
-        "--original",
-        originalText,
         "--new",
         newText,
         "--match",
         mode
       ];
+      if (typeof operandIndex === "number" && Number.isFinite(operandIndex)) {
+        args.push("--index", String(operandIndex));
+      } else if (originalText) {
+        args.push("--original", originalText);
+      }
       const proc = spawn(pythonBin, args, { stdio: ["ignore", "pipe", "pipe"] });
       let stdout = "";
       let stderr = "";
@@ -84,6 +87,56 @@ async function runGlyphEdit({ bytes, pageIndex, originalText, newText, match = "
   }
 }
 
+async function runGlyphList({ bytes, pageIndex, searchText, limit = 500 }) {
+  const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), "glyph-list-"));
+  const inputPath = path.join(tempDir, "input.pdf");
+  const scriptPath = path.resolve("glyph_list.py");
+  try {
+    await fs.promises.writeFile(inputPath, Buffer.from(bytes));
+    const result = await new Promise((resolve, reject) => {
+      const pythonBin = process.env.PYTHON_BIN || "python3";
+      const args = [
+        scriptPath,
+        "--input",
+        inputPath,
+        "--limit",
+        String(Number(limit) || 500)
+      ];
+      if (typeof pageIndex === "number" && Number.isFinite(pageIndex)) {
+        args.push("--page", String(Number(pageIndex)));
+      }
+      if (searchText) {
+        args.push("--search", String(searchText));
+      }
+      const proc = spawn(pythonBin, args, { stdio: ["ignore", "pipe", "pipe"] });
+      let stdout = "";
+      let stderr = "";
+      proc.stdout.on("data", (chunk) => {
+        stdout += chunk.toString();
+      });
+      proc.stderr.on("data", (chunk) => {
+        stderr += chunk.toString();
+      });
+      proc.on("error", reject);
+      proc.on("close", (code) => {
+        if (code !== 0) {
+          reject(new Error(stderr || stdout || "Glyph list failed."));
+          return;
+        }
+        resolve(stdout);
+      });
+    });
+
+    const info = JSON.parse(String(result || "{}"));
+    if (!info.ok) {
+      throw new Error(info.error || "Glyph list failed.");
+    }
+    return info;
+  } finally {
+    await fs.promises.rm(tempDir, { recursive: true, force: true });
+  }
+}
+
 app.get("/health", (_req, res) => {
   const defaultWasmPath = path.resolve("pdfium/pdfium.wasm");
   const wasmPath = process.env.PDFIUM_WASM_PATH || defaultWasmPath;
@@ -91,6 +144,7 @@ app.get("/health", (_req, res) => {
   res.json({
     ok: true,
     engine,
+    overlayFallbackEnabled: process.env.NATIVE_EDIT_ALLOW_OVERLAY === "true",
     pdfium: {
       wasmPath,
       available: fs.existsSync(wasmPath),
@@ -173,6 +227,26 @@ app.post("/native-render", async (req, res) => {
   }
 });
 
+app.post("/native-operands", async (req, res) => {
+  try {
+    const { pdfBase64, pageIndex, searchText, limit } = req.body || {};
+    if (!pdfBase64) {
+      res.status(400).json({ ok: false, error: "Invalid payload" });
+      return;
+    }
+    const bytes = Uint8Array.from(Buffer.from(pdfBase64, "base64"));
+    const result = await runGlyphList({
+      bytes,
+      pageIndex: typeof pageIndex === "number" ? Number(pageIndex) : undefined,
+      searchText,
+      limit
+    });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error?.message || "Operand list failed." });
+  }
+});
+
 app.post("/native-edit", async (req, res) => {
   try {
     const {
@@ -181,6 +255,7 @@ app.post("/native-edit", async (req, res) => {
       pageIndex = 0,
       bbox,
       originalText,
+      operandIndex,
       newText,
       fontName,
       fontSize,
@@ -189,7 +264,8 @@ app.post("/native-edit", async (req, res) => {
 
     const bytes = Uint8Array.from(Buffer.from(pdfBase64, "base64"));
     const activeEngine = engine || process.env.NATIVE_EDIT_ENGINE || "glyph";
-    if (!pdfBase64 || !newText || !originalText || (activeEngine !== "glyph" && !bbox)) {
+    const hasOperandIndex = typeof operandIndex === "number" && Number.isFinite(operandIndex);
+    if (!pdfBase64 || !newText || (!originalText && !hasOperandIndex) || (activeEngine !== "glyph" && !bbox)) {
       res.status(400).json({ ok: false, error: "Invalid payload" });
       return;
     }
@@ -214,6 +290,7 @@ app.post("/native-edit", async (req, res) => {
         bytes,
         pageIndex: Number(pageIndex),
         originalText,
+        operandIndex: hasOperandIndex ? Number(operandIndex) : undefined,
         newText,
         match: "exact"
       });
@@ -221,7 +298,18 @@ app.post("/native-edit", async (req, res) => {
         ok: true,
         bytesBase64: Buffer.from(result.bytes).toString("base64"),
         warnings: [],
+        mode: result.meta.mode || "native-direct",
+        capability: result.meta.capability || "native-direct",
         meta: result.meta
+      });
+      return;
+    }
+
+    if (process.env.NATIVE_EDIT_ALLOW_OVERLAY !== "true") {
+      res.status(422).json({
+        ok: false,
+        capability: "overlay-only",
+        error: "This edit path is visual overlay fallback and is disabled unless explicitly enabled."
       });
       return;
     }
@@ -236,7 +324,7 @@ app.post("/native-edit", async (req, res) => {
         fontSize,
         color
       });
-      res.json({ ok: true, bytesBase64: Buffer.from(outBytes).toString("base64"), warnings: [] });
+      res.json({ ok: true, bytesBase64: Buffer.from(outBytes).toString("base64"), mode: "overlay-only", capability: "overlay-only", warnings: ["Visual overlay fallback; original text was not natively replaced."] });
       return;
     }
 
@@ -269,7 +357,7 @@ app.post("/native-edit", async (req, res) => {
       return;
     }
     const data = new Uint8Array(await outFile.arrayBuffer());
-    res.json({ ok: true, bytesBase64: Buffer.from(data).toString("base64"), warnings: [] });
+    res.json({ ok: true, bytesBase64: Buffer.from(data).toString("base64"), mode: "overlay-only", capability: "overlay-only", warnings: ["Visual overlay fallback; original text was not natively replaced."] });
   } catch (error) {
     res.status(500).json({ ok: false, error: error?.message || "Native edit failed" });
   }

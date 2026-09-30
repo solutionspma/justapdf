@@ -8,11 +8,40 @@
 import express from 'express';
 import crypto from 'crypto';
 import multer from 'multer';
-import { db } from '../database/connection.js';
+import { db, storage as documentStorage, newStorageKey } from '../database/connection.js';
 import { getOperationById } from '../services/operationRegistry.js';
 import { consumeCredits } from '../services/credits.js';
 
 const router = express.Router();
+
+function isAdmin(req) {
+  return req.user?.isSupraAdmin || ['root_master_admin', 'admin', 'org_admin', 'enterprise_admin'].includes(req.user?.role);
+}
+
+function documentConditions(req, id) {
+  return isAdmin(req) ? { id } : { id, owner_id: req.user.userId };
+}
+
+function presentDocument(document) {
+  if (!document) return null;
+  return {
+    id: document.id,
+    name: document.name,
+    filename: document.name,
+    type: document.mime_type?.split('/')[1] || 'pdf',
+    mimeType: document.mime_type,
+    size: Number(document.size_bytes || 0),
+    pages: document.page_count,
+    folder: document.folder_id,
+    owner: document.owner_id,
+    organization: document.organization_id,
+    status: document.status,
+    metadata: document.metadata || {},
+    createdAt: document.created_at,
+    updatedAt: document.updated_at,
+    thumbnail: `/api/documents/${document.id}/thumbnail`
+  };
+}
 
 // Configure multer for file uploads
 const storage = multer.memoryStorage();
@@ -50,35 +79,22 @@ const upload = multer({
 
 router.get('/', async (req, res) => {
   try {
-    const { userId, orgId } = req.user;
-    const { page = 1, limit = 20, folder, type, search, sort = 'updatedAt' } = req.query;
-    
-    // Mock documents response
-    const documents = [
-      {
-        id: crypto.randomUUID(),
-        name: 'Sample Contract.pdf',
-        type: 'pdf',
-        size: 245678,
-        folder: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        owner: userId,
-        shared: [],
-        status: 'draft',
-        signatureStatus: null,
-        thumbnail: '/api/documents/xxx/thumbnail'
-      }
-    ];
+    const { page = 1, limit = 20, folder, search } = req.query;
+    const conditions = { owner_id: req.user.userId };
+    if (folder) conditions.folder_id = folder;
+    const documents = await db.findMany('documents', conditions, { limit: Math.min(Number(limit) || 20, 100), offset: (Math.max(1, Number(page) || 1) - 1) * (Number(limit) || 20), orderBy: 'updated_at:desc' });
+    const filtered = search ? documents.filter((document) => document.name.toLowerCase().includes(String(search).toLowerCase())) : documents;
+    const total = await db.count('documents', conditions);
     
     res.json({
       success: true,
-      documents,
+      documents: filtered.map(presentDocument),
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
-        total: 1,
-        pages: 1
+        total,
+        pages: Math.ceil(total / (parseInt(limit) || 20)
+        )
       }
     });
   } catch (error) {
@@ -89,36 +105,9 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
-    const document = {
-      id,
-      name: 'Sample Contract.pdf',
-      type: 'pdf',
-      size: 245678,
-      pages: 5,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      metadata: {
-        author: 'Mod PDF',
-        title: 'Sample Contract',
-        subject: 'Legal Agreement',
-        keywords: ['contract', 'agreement'],
-        creator: 'Mod PDF Engine'
-      },
-      versions: [
-        { version: 1, createdAt: new Date().toISOString(), author: 'user1' }
-      ],
-      signatures: [],
-      permissions: {
-        canView: true,
-        canEdit: true,
-        canDelete: true,
-        canShare: true,
-        canSign: true
-      }
-    };
-    
-    res.json({ success: true, document });
+    const document = await db.findOne('documents', documentConditions(req, id));
+    if (!document) return res.status(404).json({ success: false, error: 'Document not found' });
+    return res.json({ success: true, document: presentDocument(document) });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch document' });
   }
@@ -126,26 +115,37 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', upload.single('file'), async (req, res) => {
   try {
-    const { userId, orgId } = req.user;
+    const { userId, orgId } = { userId: req.user.userId, orgId: req.user.orgId };
     const { name, folder } = req.body;
     
     if (!req.file) {
       return res.status(400).json({ success: false, error: 'No file uploaded' });
     }
     
-    const document = {
-      id: crypto.randomUUID(),
-      name: name || req.file.originalname,
-      type: req.file.mimetype.split('/')[1],
-      size: req.file.size,
-      folder: folder || null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      owner: userId,
-      organization: orgId
-    };
-    
-    res.status(201).json({ success: true, document });
+    const id = crypto.randomUUID();
+    const storagePath = newStorageKey(userId, req.file.originalname);
+    await documentStorage.upload('documents', storagePath, req.file.buffer, { contentType: req.file.mimetype });
+    try {
+      const document = await db.create('documents', {
+        id,
+        organization_id: orgId || null,
+        owner_id: userId,
+        name: name || req.file.originalname,
+        mime_type: req.file.mimetype,
+        size_bytes: req.file.size,
+        status: 'uploaded',
+        folder_id: folder || null,
+        storage_path_original: storagePath,
+        storage_path_working: storagePath,
+        metadata: {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+      return res.status(201).json({ success: true, document: presentDocument(document), storagePath });
+    } catch (error) {
+      await documentStorage.delete('documents', storagePath);
+      throw error;
+    }
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to upload document' });
   }
@@ -156,16 +156,15 @@ router.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { name, folder, metadata } = req.body;
     
-    res.json({
-      success: true,
-      document: {
-        id,
-        name,
-        folder,
-        metadata,
-        updatedAt: new Date().toISOString()
-      }
+    const existing = await db.findOne('documents', documentConditions(req, id));
+    if (!existing) return res.status(404).json({ success: false, error: 'Document not found' });
+    const document = await db.update('documents', { id }, {
+      ...(name !== undefined ? { name } : {}),
+      ...(folder !== undefined ? { folder_id: folder || null } : {}),
+      ...(metadata !== undefined ? { metadata } : {}),
+      updated_at: new Date().toISOString()
     });
+    return res.json({ success: true, document: presentDocument(document) });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to update document' });
   }
@@ -176,10 +175,15 @@ router.delete('/:id', async (req, res) => {
     const { id } = req.params;
     const { permanent = false } = req.query;
     
-    res.json({
-      success: true,
-      message: permanent ? 'Document permanently deleted' : 'Document moved to trash'
-    });
+    const document = await db.findOne('documents', documentConditions(req, id));
+    if (!document) return res.status(404).json({ success: false, error: 'Document not found' });
+    if (permanent === 'true' || permanent === true) {
+      await documentStorage.delete('documents', [document.storage_path_original, document.storage_path_working].filter(Boolean));
+      await db.delete('documents', { id });
+    } else {
+      await db.update('documents', { id }, { deleted_at: new Date().toISOString(), status: 'trashed', updated_at: new Date().toISOString() });
+    }
+    return res.json({ success: true, message: permanent ? 'Document permanently deleted' : 'Document moved to trash' });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to delete document' });
   }
@@ -224,6 +228,9 @@ router.post('/:id/execute', async (req, res) => {
     if (secondaryStoragePath && !secondaryStoragePath.startsWith(ownedPrefix)) {
       return res.status(403).json({ error: 'secondaryStoragePath does not belong to user' });
     }
+
+    const document = await db.findOne('documents', documentConditions(req, id));
+    if (!document) return res.status(404).json({ error: 'Document not found' });
 
     await consumeCredits({
       userId,
@@ -504,13 +511,14 @@ router.get('/:id/download', async (req, res) => {
   try {
     const { id } = req.params;
     const { version } = req.query;
-    
-    // In production, stream the file
-    res.json({
-      success: true,
-      downloadUrl: `https://storage.modpdf.com/documents/${id}`,
-      expiresIn: 3600
-    });
+    const document = await db.findOne('documents', documentConditions(req, id));
+    if (!document) return res.status(404).json({ success: false, error: 'Document not found' });
+    const storagePath = version ? (await db.findOne('document_revisions', { document_id: id, revision_number: Number(version) }))?.storage_path : document.storage_path_working || document.storage_path_original;
+    if (!storagePath) return res.status(404).json({ success: false, error: 'Document bytes not found' });
+    const bytes = await documentStorage.download('documents', storagePath);
+    res.setHeader('Content-Type', document.mime_type || 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${String(document.name).replace(/[^a-zA-Z0-9._ -]/g, '_')}"`);
+    return res.send(bytes);
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to generate download URL' });
   }
@@ -521,11 +529,9 @@ router.get('/:id/preview', async (req, res) => {
     const { id } = req.params;
     const { page = 1 } = req.query;
     
-    res.json({
-      success: true,
-      previewUrl: `https://storage.modpdf.com/previews/${id}/page-${page}.png`,
-      totalPages: 5
-    });
+    const document = await db.findOne('documents', documentConditions(req, id));
+    if (!document) return res.status(404).json({ success: false, error: 'Document not found' });
+    return res.status(501).json({ success: false, error: 'Preview rendering is provided by the PDF renderer; no preview artifact exists yet.', page: Number(page) });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to generate preview' });
   }
@@ -535,10 +541,9 @@ router.get('/:id/thumbnail', async (req, res) => {
   try {
     const { id } = req.params;
     
-    res.json({
-      success: true,
-      thumbnailUrl: `https://storage.modpdf.com/thumbnails/${id}.png`
-    });
+    const document = await db.findOne('documents', documentConditions(req, id));
+    if (!document) return res.status(404).json({ success: false, error: 'Document not found' });
+    return res.status(501).json({ success: false, error: 'Thumbnail has not been generated for this document.' });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to get thumbnail' });
   }
@@ -595,7 +600,7 @@ router.post('/:id/shares/link', async (req, res) => {
     
     const shareLink = {
       id: crypto.randomUUID(),
-      url: `https://modpdf.app/share/${crypto.randomBytes(16).toString('hex')}`,
+      url: `${process.env.APP_URL || 'https://justapdf.com'}/share/${crypto.randomBytes(16).toString('hex')}`,
       permission,
       passwordProtected: !!password,
       expiresAt,
