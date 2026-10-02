@@ -1,8 +1,14 @@
 import { ArrowClockwise, Trash } from '@phosphor-icons/react'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { useEffect, useState } from 'react'
+import { Document, Page, pdfjs } from 'react-pdf'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { PDFPage } from '@/lib/types'
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url
+).toString()
 
 interface SidebarProps {
   pages: PDFPage[]
@@ -12,6 +18,7 @@ interface SidebarProps {
   onReorderPages: (fromIndex: number, toIndex: number) => void
   onRotatePage: (index: number, degrees: number) => void
   documentName: string
+  originalFile?: File | string | null
 }
 
 export function Sidebar({
@@ -20,10 +27,27 @@ export function Sidebar({
   onPageSelect,
   onDeletePage,
   onRotatePage,
-  documentName
+  documentName,
+  originalFile = null
 }: SidebarProps) {
+  const [fileUrl, setFileUrl] = useState<string>('')
+
+  useEffect(() => {
+    if (!originalFile) {
+      setFileUrl('')
+      return
+    }
+    if (typeof originalFile === 'string') {
+      setFileUrl(originalFile)
+      return
+    }
+    const url = URL.createObjectURL(originalFile)
+    setFileUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [originalFile])
+
   return (
-    <aside className="w-64 border-r border-sidebar-border bg-sidebar text-sidebar-foreground flex flex-col shrink-0">
+    <aside className="w-64 min-h-0 border-r border-sidebar-border bg-sidebar text-sidebar-foreground flex flex-col shrink-0">
       <div className="p-4 border-b border-sidebar-border">
         <h2 className="font-semibold text-sm truncate" title={documentName}>
           {documentName}
@@ -33,7 +57,7 @@ export function Sidebar({
         </p>
       </div>
 
-      <ScrollArea className="flex-1">
+      <div className="flex-1 min-h-0 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="p-4 space-y-3">
           {pages.length === 0 ? (
             <div className="text-center py-8 text-sidebar-foreground/60 text-sm">
@@ -51,12 +75,20 @@ export function Sidebar({
                 )}
                 onClick={() => onPageSelect(index)}
               >
-                <div className="aspect-[8.5/11] bg-sidebar-accent/50 flex items-center justify-center">
-                  <div className="text-center">
-                    <span className="text-4xl font-bold text-sidebar-foreground/20">
-                      {index + 1}
-                    </span>
-                  </div>
+                <div className="aspect-[8.5/11] bg-sidebar-accent/50 flex items-center justify-center overflow-hidden">
+                  {fileUrl ? (
+                    <Document file={fileUrl} loading={null} error={null}>
+                      <Page
+                        pageNumber={index + 1}
+                        width={220}
+                        renderTextLayer={false}
+                        renderAnnotationLayer={false}
+                        loading={null}
+                      />
+                    </Document>
+                  ) : (
+                    <span className="text-4xl font-bold text-sidebar-foreground/20">{index + 1}</span>
+                  )}
                 </div>
 
                 <div className="absolute inset-0 bg-gradient-to-t from-sidebar/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
@@ -94,7 +126,7 @@ export function Sidebar({
             ))
           )}
         </div>
-      </ScrollArea>
+      </div>
     </aside>
   )
 }

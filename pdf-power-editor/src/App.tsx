@@ -358,10 +358,14 @@ function App() {
       
       setSelectedElement(null)
       setIsExtractingText(false)
+      setUseExtractedTextMode((current) => ({
+        ...(current || {}),
+        [currentDocId]: true
+      }))
       
       toast.success(`✓ Extracted ${textElements.length} text element${textElements.length === 1 ? '' : 's'}!`, { 
         id: toastId,
-        description: 'Text is now editable. Click any text to select and modify. Use Find & Replace to search.'
+        description: 'A high-contrast editable text layer is now visible. Click any text to select and modify.'
       })
     } catch (error: any) {
       console.error('Text extraction error:', error)
@@ -816,6 +820,7 @@ function App() {
           onReorderPages={handleReorderPages}
           onRotatePage={handleRotatePage}
           documentName={currentDoc.name}
+          originalFile={currentDoc.originalFile}
         />
         
         <main className="flex-1 overflow-auto bg-muted/30 relative">

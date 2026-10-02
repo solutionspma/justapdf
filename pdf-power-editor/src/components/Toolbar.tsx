@@ -277,7 +277,7 @@ export function Toolbar({
           <div className="hidden lg:flex items-center gap-1 pl-1 pr-1 border-l border-border">
             <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground px-1">Text</span>
             <DesktopTextTool icon={Robot} label="AI Agent" onClick={onOpenAgent} accent />
-            <DesktopTextTool icon={Eye} label="Extract" onClick={onOCR} disabled={isOCRProcessing} />
+            <DesktopTextTool icon={Eye} label="Show Text" onClick={onOCR} disabled={isOCRProcessing} />
             <DesktopTextTool icon={Eye} label="Compare" onClick={onShowAlignmentComparison} />
             <DesktopTextTool icon={Warning} label="Diff" onClick={onShowAlignmentDiff} />
             <DesktopTextTool icon={GridFour} label="Guides" onClick={onShowAlignmentGuides} />
