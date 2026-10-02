@@ -27,7 +27,8 @@ import {
   Wrench,
   CaretDown,
   Certificate,
-  Warning
+  Warning,
+  Robot
 } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -65,6 +66,41 @@ interface ToolbarProps {
   useExtractedTextMode?: boolean
   onToggleExtractedTextMode?: () => void
   onMergeTextElements?: () => void
+  onOpenAgent?: () => void
+}
+
+function DesktopTextTool({
+  icon: Icon,
+  label,
+  onClick,
+  active = false,
+  disabled = false,
+  accent = false
+}: {
+  icon: any
+  label: string
+  onClick?: () => void
+  active?: boolean
+  disabled?: boolean
+  accent?: boolean
+}) {
+  if (!onClick) return null
+  return (
+    <Button
+      variant={active ? 'default' : 'outline'}
+      size="sm"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        'h-8 gap-1.5 px-2 text-[11px] whitespace-nowrap',
+        accent && !active && 'border-primary/50 text-primary'
+      )}
+      title={label}
+    >
+      <Icon size={15} weight={active ? 'fill' : 'bold'} />
+      <span>{label}</span>
+    </Button>
+  )
 }
 
 export function Toolbar({
@@ -92,7 +128,8 @@ export function Toolbar({
   onOpenColorPalettes,
   useExtractedTextMode = false,
   onToggleExtractedTextMode,
-  onMergeTextElements
+  onMergeTextElements,
+  onOpenAgent
 }: ToolbarProps) {
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
@@ -237,6 +274,25 @@ export function Toolbar({
             </Tooltip>
           </TooltipProvider>
 
+          <div className="hidden lg:flex items-center gap-1 pl-1 pr-1 border-l border-border">
+            <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground px-1">Text</span>
+            <DesktopTextTool icon={Robot} label="AI Agent" onClick={onOpenAgent} accent />
+            <DesktopTextTool icon={Eye} label="Extract" onClick={onOCR} disabled={isOCRProcessing} />
+            <DesktopTextTool icon={Eye} label="Compare" onClick={onShowAlignmentComparison} />
+            <DesktopTextTool icon={Warning} label="Diff" onClick={onShowAlignmentDiff} />
+            <DesktopTextTool icon={GridFour} label="Guides" onClick={onShowAlignmentGuides} />
+            <DesktopTextTool icon={TextAa} label="Merge" onClick={onMergeTextElements} />
+            <DesktopTextTool icon={ArrowsOutLineVertical} label="Baseline" onClick={onOpenBaselineOffset} />
+            <DesktopTextTool icon={TextColumns} label="Spacing" onClick={onCalibrateLetterSpacing} />
+            <DesktopTextTool
+              icon={Eye}
+              label={useExtractedTextMode ? 'PDF Text Off' : 'Use Extracted'}
+              onClick={onToggleExtractedTextMode}
+              active={useExtractedTextMode}
+            />
+          </div>
+
+          <div className="lg:hidden">
           <DropdownMenu>
             <TooltipProvider>
               <Tooltip>
@@ -264,6 +320,16 @@ export function Toolbar({
             <DropdownMenuContent align="end" className="w-64">
               <DropdownMenuLabel>Text Tools</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              {onOpenAgent && (
+                <DropdownMenuItem onClick={onOpenAgent}>
+                  <Robot size={16} weight="duotone" className="mr-2 text-primary" />
+                  <div className="flex flex-col">
+                    <span className="font-semibold">AI Agent</span>
+                    <span className="text-xs text-muted-foreground">Auto-extract, align, and fix documents</span>
+                  </div>
+                </DropdownMenuItem>
+              )}
+              {onOpenAgent && <DropdownMenuSeparator />}
               {onOCR && (
                 <DropdownMenuItem onClick={onOCR} disabled={isOCRProcessing}>
                   <Eye size={16} weight="bold" className="mr-2" />
@@ -341,6 +407,7 @@ export function Toolbar({
               )}
             </DropdownMenuContent>
           </DropdownMenu>
+          </div>
 
           <DropdownMenu>
             <TooltipProvider>
