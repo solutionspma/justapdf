@@ -11,6 +11,7 @@ import { SignatureVerificationPanel } from '@/components/SignatureVerificationPa
 import { PageTemplatesDialog } from '@/components/PageTemplatesDialog'
 import { AlignmentComparisonOverlay } from '@/components/AlignmentComparisonOverlay'
 import { TextAlignmentDiffOverlay, type AlignmentUpdate } from '@/components/TextAlignmentDiffOverlay'
+import { AgentPanel } from '@/components/AgentPanel'
 import { AlignmentGuideOverlay } from '@/components/AlignmentGuideOverlay'
 import { BaselineOffsetDialog } from '@/components/BaselineOffsetDialog'
 import { GridSettingsDialog } from '@/components/GridSettingsDialog'
@@ -23,6 +24,7 @@ import { extractAndAddTextElements } from '@/lib/pdfTextExtraction'
 import { generateTestPDF } from '@/lib/testPdfGenerator'
 import { DEFAULT_GRID_SETTINGS, type GridSettings } from '@/lib/snapToGrid'
 import { mergeTextElementsIntoBlocks, replaceElementsWithMergedBlocks } from '@/lib/textMerging'
+import { runNativeServerEdit } from '@/lib/nativeEditClient'
 import type { DocumentColorPalette } from '@/lib/colorPalettes'
 import { toast } from 'sonner'
 import type { PDFDocument, EditMode, PDFElement, PageTemplate, PDFPage } from '@/lib/types'
@@ -42,6 +44,7 @@ function App() {
   const [colorPalettesOpen, setColorPalettesOpen] = useState(false)
   const [showAlignmentComparison, setShowAlignmentComparison] = useState(false)
   const [showAlignmentDiff, setShowAlignmentDiff] = useState(false)
+  const [agentOpen, setAgentOpen] = useState(false)
   const [currentPalette, setCurrentPalette] = useKV<DocumentColorPalette | null>('document-color-palette', null)
   const [annotationFilters, setAnnotationFilters] = useState<AnnotationFilter>(DEFAULT_FILTERS)
   const [highlightColor, setHighlightColor] = useState('#FFEB3B')
@@ -387,7 +390,54 @@ function App() {
     }
   }
 
-  const handleReplaceText = (docId: string, pageIndex: number, elementId: string, newText: string) => {
+  const handleReplaceText = async (docId: string, pageIndex: number, elementId: string, newText: string) => {
+    const sourceDoc = documents?.find((doc) => doc.id === docId)
+    const sourcePage = sourceDoc?.pages[pageIndex]
+    const sourceElement = sourcePage?.elements.find((element) => element.id === elementId)
+
+    // Extracted text is a source-trace candidate, not a canvas replacement.
+    // Mutate the PDF bytes first, then remove the temporary extracted overlay;
+    // otherwise export would paint a second copy over the original text.
+    if (sourceDoc && sourceElement?.type === 'text' && sourceElement.data?.isExtracted && sourceDoc.originalFile) {
+      try {
+        const sourceBytes = typeof sourceDoc.originalFile === 'string'
+          ? new Uint8Array(await (await fetch(sourceDoc.originalFile)).arrayBuffer())
+          : new Uint8Array(await sourceDoc.originalFile.arrayBuffer())
+        const editedBytes = await runNativeServerEdit({
+          bytes: sourceBytes,
+          engine: 'glyph',
+          pageIndex,
+          originalText: sourceElement.data.content,
+          newText
+        })
+        let binary = ''
+        const chunkSize = 0x8000
+        for (let i = 0; i < editedBytes.length; i += chunkSize) {
+          binary += String.fromCharCode(...editedBytes.subarray(i, i + chunkSize))
+        }
+        const editedDataUrl = `data:application/pdf;base64,${btoa(binary)}`
+        setDocuments((currentDocs) => {
+          const newDocs = (currentDocs || []).map(doc => {
+            if (doc.id !== docId) return doc
+            return {
+              ...doc,
+              originalFile: editedDataUrl,
+              pages: doc.pages.map((page, i) => i === pageIndex
+                ? { ...page, elements: page.elements.filter(element => element.id !== elementId) }
+                : page)
+            }
+          })
+          saveToHistory(newDocs)
+          return newDocs
+        })
+        toast.success('Native PDF text edit saved')
+        return
+      } catch (error: any) {
+        toast.error('Native text edit unavailable', { description: error?.message || 'The PDF text source could not be safely mutated.' })
+        return
+      }
+    }
+
     setDocuments((currentDocs) => {
       const newDocs = (currentDocs || []).map(doc => {
         if (doc.id !== docId) return doc
@@ -754,6 +804,7 @@ function App() {
         useExtractedTextMode={useExtractedTextMode?.[currentDoc.id] || false}
         onToggleExtractedTextMode={handleToggleExtractedTextMode}
         onMergeTextElements={handleMergeTextElements}
+        onOpenAgent={() => setAgentOpen(true)}
       />
       
       <div className="flex-1 flex overflow-hidden">
@@ -895,6 +946,17 @@ function App() {
           currentPageIndex={currentPageIndex}
           onClose={() => setShowAlignmentDiff(false)}
           onApplyAlignment={handleApplyAlignment}
+        />
+      )}
+
+      {agentOpen && currentDoc && (
+        <AgentPanel
+          document={currentDoc}
+          currentPageIndex={currentPageIndex}
+          onClose={() => setAgentOpen(false)}
+          onExtractText={handleExtractText}
+          onApplyAlignment={handleApplyAlignment}
+          apiBaseUrl="/api"
         />
       )}
 

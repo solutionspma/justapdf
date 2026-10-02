@@ -63,7 +63,12 @@ async function runGlyphEdit({ bytes, pageIndex, originalText, newText, operandIn
       proc.on("error", reject);
       proc.on("close", (code) => {
         if (code !== 0) {
-          reject(new Error(stderr || stdout || "Glyph edit failed."));
+          try {
+            JSON.parse(String(stdout || ""));
+            resolve(stdout);
+          } catch {
+            reject(new Error(stderr || stdout || "Glyph edit failed."));
+          }
           return;
         }
         resolve(stdout);
@@ -72,13 +77,13 @@ async function runGlyphEdit({ bytes, pageIndex, originalText, newText, operandIn
 
     let result = await runOnce(match);
     let info = JSON.parse(String(result || "{}"));
-    if (!info.ok && info.error === "No matching operands" && match !== "contains") {
+    if (!info.ok && (info.error === "NO_MATCHING_OPERANDS" || info.error === "No matching operands") && match !== "contains") {
       result = await runOnce("contains");
       info = JSON.parse(String(result || "{}"));
     }
 
     if (!info.ok) {
-      throw new Error(info.error || "Glyph edit failed.");
+      return { failed: true, meta: info };
     }
     const outBytes = await fs.promises.readFile(outputPath);
     return { bytes: new Uint8Array(outBytes), meta: info };
@@ -294,6 +299,15 @@ app.post("/native-edit", async (req, res) => {
         newText,
         match: "exact"
       });
+      if (result.failed) {
+        res.status(422).json({
+          ok: false,
+          error: result.meta.error || "Native edit unavailable.",
+          capability: result.meta.capability || "NATIVE_EDIT_UNAVAILABLE",
+          meta: result.meta
+        });
+        return;
+      }
       res.json({
         ok: true,
         bytesBase64: Buffer.from(result.bytes).toString("base64"),

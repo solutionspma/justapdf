@@ -49,15 +49,29 @@ def main():
                 candidates = [op for op in editor.operands if original in op.text]
 
             if not candidates:
-                print(json.dumps({"ok": False, "error": "No matching operands"}))
+                print(json.dumps({"ok": False, "error": "NO_MATCHING_OPERANDS", "capability": "UNSUPPORTED_TEXT_OR_SELECTION"}))
                 sys.exit(2)
 
             target = candidates[0]
             index = editor.operands.index(target)
 
-        ok = editor.edit_operand(index, args.new)
+        # Preserve all text in the selected source operand outside the user's
+        # selection. Replacing a whole Tj/TJ string is destructive when the
+        # selected phrase is only one part of a larger text run.
+        source_before = target.to_dict()
+        if editor.is_shared_form_instance(target):
+            print(json.dumps({
+                "ok": False,
+                "error": "SHARED_XOBJECT_REQUIRES_INSTANCE_HANDLING",
+                "capability": "SHARED_XOBJECT_REQUIRES_INSTANCE_HANDLING",
+                "source": source_before
+            }))
+            sys.exit(3)
+        ok = editor.edit_operand(index, args.new, None if args.index is not None else (args.original or ""))
         if not ok:
-            print(json.dumps({"ok": False, "error": "Failed to edit operand"}))
+            error = editor.last_error or "SERIALIZATION_FAILURE"
+            capability = "NATIVE_EDITABLE_WITH_FONT_RECONSTRUCTION_REQUIRED" if error == "FONT_GLYPH_UNAVAILABLE" else "NATIVE_EDIT_UNAVAILABLE"
+            print(json.dumps({"ok": False, "error": error, "capability": capability, "source": source_before}))
             sys.exit(3)
 
         editor.save(str(output_path))
@@ -66,13 +80,15 @@ def main():
         # that only existed in memory.
         with PDFGlyphEditor(str(output_path)) as validation_editor:
             validation_editor.extract_operands([page_num])
+        capability = "FORM_XOBJECT_EDITABLE" if "/XObject" in target.object_ref else "NATIVE_EDITABLE"
         print(json.dumps({
             "ok": True,
             "mode": "native-direct",
-            "capability": "native-direct",
+            "capability": capability,
             "index": index,
             "operator": target.operator,
-            "matched": target.text
+            "matched": args.original if args.index is None else target.text,
+            "source": source_before
         }))
 
 

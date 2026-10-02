@@ -44,6 +44,7 @@ class TextOperand:
     operand_index: int        # Index within multi-operand operators (for TJ arrays)
     byte_offset: int          # Approximate byte offset in content stream
     context: str              # Surrounding context for identification
+    font_resource: Optional[str] = None
     
     def to_dict(self) -> Dict:
         return {
@@ -55,6 +56,7 @@ class TextOperand:
             "operand_index": self.operand_index,
             "byte_offset": self.byte_offset,
             "context": self.context
+            ,"font_resource": self.font_resource
         }
 
 
@@ -276,6 +278,16 @@ class PDFContentParser:
             else:
                 context_str += f'\\x{b:02x}'
         return context_str
+
+    def _active_font_resource(self, pos: int) -> Optional[str]:
+        """Return the most recent simple ``/Font size Tf`` declaration.
+
+        This is diagnostic metadata, not a claim that the font is fully
+        decoded. Composite/CID fonts still require a CMap-aware decoder.
+        """
+        prefix = self.content[:pos]
+        matches = re.findall(rb"/(\S+)\s+[-+0-9.]+\s+Tf(?:\s|$)", prefix)
+        return ("/" + matches[-1].decode("latin-1")) if matches else None
     
     def _parse_literal_string_operator(self, page_num: int, object_ref: str):
         """Parse a literal string followed by an operator."""
@@ -312,6 +324,7 @@ class PDFContentParser:
                 operand_index=0,
                 byte_offset=string_start,
                 context=context
+                ,font_resource=self._active_font_resource(start_pos)
             ))
     
     def _parse_hex_string_operator(self, page_num: int, object_ref: str):
@@ -349,6 +362,7 @@ class PDFContentParser:
                 operand_index=0,
                 byte_offset=string_start,
                 context=context
+                ,font_resource=self._active_font_resource(start_pos)
             ))
     
     def _parse_tj_array(self, page_num: int, object_ref: str):
@@ -391,6 +405,7 @@ class PDFContentParser:
                         operand_index=operand_index,
                         byte_offset=string_start,
                         context=context
+                        ,font_resource=self._active_font_resource(start_pos)
                     ))
                     operand_index += 1
             elif self._peek() == ord('<'):
@@ -408,6 +423,7 @@ class PDFContentParser:
                         operand_index=operand_index,
                         byte_offset=string_start,
                         context=context
+                        ,font_resource=self._active_font_resource(start_pos)
                     ))
                     operand_index += 1
             else:
@@ -421,6 +437,7 @@ class PDFGlyphEditor:
         self.pdf_path = Path(pdf_path)
         self.pdf = None
         self.operands: List[TextOperand] = []
+        self.last_error: Optional[str] = None
     
     def open(self):
         """Open the PDF file."""
@@ -477,7 +494,7 @@ class PDFGlyphEditor:
         
         return self.operands
     
-    def _extract_from_xobjects(self, page: pikepdf.Dictionary, page_num: int, depth: int = 0):
+    def _extract_from_xobjects(self, page: pikepdf.Dictionary, page_num: int, depth: int = 0, prefix: Optional[str] = None):
         """Recursively extract text from Form XObjects."""
         if depth > 5:  # Limit recursion
             return
@@ -493,51 +510,58 @@ class PDFGlyphEditor:
         for name, xobj_ref in xobjects.items():
             if isinstance(xobj_ref, pikepdf.Stream):
                 xobj = xobj_ref
+                object_ref = (prefix or f"Page{page_num}") + f"/XObject{name}"
                 if xobj.get("/Subtype") == "/Form":
-                    if "/Contents" in xobj:
-                        content_data = xobj.read_bytes()  # Decompressed
-                        parser = PDFContentParser(content_data)
-                        object_ref = f"Page{page_num}/XObject{name}"
-                        operands = parser.parse(page_num, object_ref)
-                        self.operands.extend(operands)
+                    # A Form XObject is itself a stream. It does not have a
+                    # page-style /Contents entry; reading only /Contents made
+                    # the previous implementation silently skip all forms.
+                    content_data = xobj.read_bytes()
+                    parser = PDFContentParser(content_data)
+                    operands = parser.parse(page_num, object_ref)
+                    self.operands.extend(operands)
                     
                     # Recursively check nested XObjects
-                    self._extract_from_xobjects(xobj, page_num, depth + 1)
+                    self._extract_from_xobjects(xobj, page_num, depth + 1, object_ref)
     
-    def edit_operand(self, index: int, new_text: str) -> bool:
-        """Edit a text operand by index."""
+    def edit_operand(self, index: int, new_text: str, old_text: Optional[str] = None) -> bool:
+        """Edit a text operand while preserving surrounding source text.
+
+        ``old_text`` is the user-selected decoded text. When it is a substring
+        of a text-showing operand, only that substring is replaced; replacing
+        the entire Tj operand would silently delete unrelated characters.
+        """
+        self.last_error = None
         if index < 0 or index >= len(self.operands):
+            self.last_error = "OPERAND_INDEX_OUT_OF_RANGE"
             return False
         
         operand = self.operands[index]
         
-        # Find and modify the content stream
         page = self.pdf.pages[operand.page_num - 1]
-        
-        # Get the content stream
-        contents = page.get("/Contents")
-        if contents is None:
-            return False
-        
-        # Handle array of streams
-        if hasattr(contents, '__iter__') and not isinstance(contents, pikepdf.Stream):
-            stream_idx = self._get_stream_index_from_ref(operand.object_ref)
-            if stream_idx is not None and stream_idx < len(contents):
-                stream = contents[stream_idx]
-            else:
-                return False
-        else:
-            stream = contents
-        
-        if not isinstance(stream, pikepdf.Stream):
+        stream = self._get_stream_for_operand(page, operand.object_ref)
+        if stream is None:
             return False
         
         # Read current content (decompressed)
         content_data = stream.read_bytes()
         
-        # Create parser to encode new text
+        # Create parser to encode the replacement while preserving the source
+        # operand's literal/hex representation. The current engine still only
+        # supports encodings it can safely represent in that source string;
+        # font-aware reconstruction is handled by the capability work above
+        # this low-level fallback.
         parser = PDFContentParser(content_data)
-        new_bytes = parser._encode_pdf_string(new_text, operand.raw_bytes)
+        replacement_text = new_text
+        if old_text is not None:
+            if old_text not in operand.text:
+                self.last_error = "SELECTION_NOT_PRESENT_IN_SOURCE_OPERAND"
+                return False
+            replacement_text = operand.text.replace(old_text, new_text, 1)
+        try:
+            new_bytes = parser._encode_pdf_string(replacement_text, operand.raw_bytes)
+        except (UnicodeEncodeError, ValueError):
+            self.last_error = "FONT_GLYPH_UNAVAILABLE"
+            return False
         
         # Find and replace the operand in the content
         modified_content = self._replace_operand_in_content(
@@ -545,13 +569,14 @@ class PDFGlyphEditor:
         )
         
         if modified_content is None:
+            self.last_error = "SOURCE_OPERAND_NOT_FOUND"
             return False
         
         # Write modified content back (pikepdf handles recompression)
         stream.write(modified_content)
         
         # Update our local copy
-        operand.text = new_text
+        operand.text = replacement_text
         operand.raw_bytes = new_bytes
         
         return True
@@ -562,6 +587,56 @@ class PDFGlyphEditor:
         if match:
             return int(match.group(1))
         return None
+
+    def _get_stream_for_operand(self, page: pikepdf.Dictionary, object_ref: str) -> Optional[pikepdf.Stream]:
+        """Resolve the exact page/content or Form XObject stream that emitted text."""
+        contents = page.get("/Contents")
+        if "/Contents" in object_ref:
+            if contents is None:
+                return None
+            if isinstance(contents, pikepdf.Stream):
+                return contents
+            stream_idx = self._get_stream_index_from_ref(object_ref)
+            if stream_idx is not None and stream_idx < len(contents):
+                stream = contents[stream_idx]
+                return stream if isinstance(stream, pikepdf.Stream) else None
+            return None
+
+        marker = "/XObject"
+        if marker not in object_ref or "/Resources" not in page:
+            return None
+        path = object_ref.split(marker, 1)[1]
+        current = page
+        while path:
+            if not path.startswith("/"):
+                return None
+            path = path[1:]
+            name, separator, remainder = path.partition("/XObject")
+            resources = current.get("/Resources")
+            xobjects = resources.get("/XObject") if resources else None
+            if xobjects is None:
+                return None
+            try:
+                current = xobjects[pikepdf.Name("/" + name)]
+            except (KeyError, TypeError):
+                return None
+            if not separator:
+                return current if isinstance(current, pikepdf.Stream) else None
+            path = remainder
+        return current if isinstance(current, pikepdf.Stream) else None
+
+    def is_shared_form_instance(self, operand: TextOperand) -> bool:
+        """Whether the top-level Form containing this operand is painted more than once."""
+        if "/XObject" not in operand.object_ref:
+            return False
+        match = re.search(r"/XObject(/[^/]+)", operand.object_ref)
+        if not match:
+            return False
+        page = self.pdf.pages[operand.page_num - 1]
+        contents = page.get("/Contents")
+        streams = contents if isinstance(contents, pikepdf.Array) else [contents]
+        token = match.group(1).encode("latin-1") + b"\s+Do"
+        return sum(len(re.findall(token, stream.read_bytes())) for stream in streams if isinstance(stream, pikepdf.Stream)) > 1
     
     def _replace_operand_in_content(
         self, 
@@ -572,8 +647,12 @@ class PDFGlyphEditor:
         """Replace an operand in the content stream."""
         raw = operand.raw_bytes
         
-        # Search for the raw bytes in content
-        pos = content.find(raw)
+        # The parser recorded the source offset in the decompressed stream.
+        # Prefer that exact location so repeated identical strings cannot cause
+        # an edit to land on the wrong glyph run.
+        pos = operand.byte_offset
+        if pos < 0 or content[pos:pos + len(raw)] != raw:
+            pos = content.find(raw)
         if pos == -1:
             # Try to find by context
             return self._replace_by_context(content, operand, new_bytes)
