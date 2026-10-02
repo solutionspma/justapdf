@@ -12,7 +12,13 @@ import type { PDFDocument, PDFElement, EditMode, PDFPage } from '@/lib/types'
 import 'react-pdf/dist/Page/AnnotationLayer.css'
 import 'react-pdf/dist/Page/TextLayer.css'
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
+// The editor must not depend on a third-party CDN for PDF rendering. Vite
+// emits this worker as a same-origin asset, which also keeps production behind
+// nginx usable when CSP, DNS, or an offline browser blocks unpkg.com.
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url
+).toString()
 
 interface PDFCanvasProps {
   document: PDFDocument
